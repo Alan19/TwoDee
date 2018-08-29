@@ -1,3 +1,5 @@
+package network;
+
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -25,7 +27,6 @@ public class Main {
             diceList = new ArrayList<>(Arrays.asList(args));
             generateCommand(diceList);
         }
-
     }
 
     private static void generateCommand(ArrayList<String> diceList) {
@@ -45,6 +46,7 @@ public class Main {
         StringSelection stringSelection = new StringSelection(resultCommand);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(stringSelection, null);
+        AnydiceFetcher anydiceFetcher = new AnydiceFetcher();
     }
 
     //Generates the dice being rolled, separated by a space (1d6, 2d10, 3d8)
