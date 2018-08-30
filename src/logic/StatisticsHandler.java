@@ -3,17 +3,24 @@ package logic;
 import network.AnydiceFetcher;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class StatisticsHandler {
 
     private AnydiceFetcher fetcher;
 
     public StatisticsHandler(String message) {
-        //Add all of the dice to the arraylist and remove command invocation
-        ArrayList<String> diceList = new ArrayList<>(Arrays.asList(message.split(" ")));
-        diceList.remove("~s");
-        String command = Main.generateCommand(diceList);
+        //Add all of the dice to the arraylists based on dice type
+        ArrayList<String> diceList = new ArrayList<>();
+        ArrayList<String> plotDice = new ArrayList<>();
+        for (String dice: message.split(" ")) {
+            if (dice.contains("pd")){
+                plotDice.add(dice);
+            }
+            else if (dice.contains("d")){
+                diceList.add(dice);
+            }
+        }
+        String command = CommandGenerator.generateCommand(diceList, plotDice);
         fetcher = new AnydiceFetcher(command);
     }
 
