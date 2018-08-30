@@ -45,7 +45,7 @@ public class CommandGenerator {
                 }
             }
             diceList = new ArrayList<>(Arrays.asList(args));
-            generateCommand(diceList, null);
+            generateCommand(diceList, plotDice);
         }
     }
 

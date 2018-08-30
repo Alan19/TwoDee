@@ -13,7 +13,7 @@ public class TwoDee {
             api.addMessageCreateListener(event -> {
                 if (event.getMessage().getContent().startsWith("~s")) {
                     StatisticsHandler statistics = new StatisticsHandler(event.getMessage().getContent());
-                    event.getChannel().sendMessage(statistics.getFetcherJSON());
+                    event.getChannel().sendMessage(statistics.generateStatistics());
                 }
             });
 
