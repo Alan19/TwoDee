@@ -1,7 +1,6 @@
 package logic;
 
 import network.AnydiceFetcher;
-import network.Main;
 
 import java.util.ArrayList;
 import java.util.Arrays;

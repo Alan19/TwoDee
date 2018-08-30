@@ -1,4 +1,4 @@
-package network;
+package logic;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
