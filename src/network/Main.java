@@ -29,7 +29,9 @@ public class Main {
         }
     }
 
-    private static void generateCommand(ArrayList<String> diceList) {
+
+
+    public static String generateCommand(ArrayList<String> diceList) {
         //Check for dice that does not have a number before d and add 1 to represent one die
         for (int i = 0; i < diceList.size(); i++) {
             String die = diceList.get(i);
@@ -41,12 +43,12 @@ public class Main {
         String line1 = "function: highest N:n of " + generateParameters(diceList) + "{";
         String line2 = "result: {1..N}@[sort {" + generateListLengthAsLetters(diceList.size()) + "}]\n}";
         String line3 = "output [highest 2 of " + generateDiceListAsString(diceList) + "]";
-        String resultCommand = line1 + "\n" + line2 + "\n" + line3 + "\n";
+        String resultCommand = line1 + "\n" + line2 + "\n" + line3;
         System.out.println(resultCommand);
         StringSelection stringSelection = new StringSelection(resultCommand);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(stringSelection, null);
-        AnydiceFetcher anydiceFetcher = new AnydiceFetcher();
+        return resultCommand;
     }
 
     //Generates the dice being rolled, separated by a space (1d6, 2d10, 3d8)

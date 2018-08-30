@@ -1,18 +1,20 @@
 package network;
 
-import logic.StatisticsHandler;
 import okhttp3.*;
-import org.json.JSONObject;
 
 import java.io.IOException;
 
 
 public class AnydiceFetcher {
-    public static void main(String[] args) {
+
+    private String responseJson;
+
+    //Sends AnyDice command to website and returns the response as a JSON string
+    public AnydiceFetcher(String command) {
         OkHttpClient client = new OkHttpClient();
 
         MediaType mediaType = MediaType.parse("multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW");
-        RequestBody body = RequestBody.create(mediaType, "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"program\"\r\n\r\nfunction: highest N:n of A:s B:s C:s {\nresult: {1..N}@[sort {A, B, C}]\n}\noutput [highest 2 of 1d6 1d8 2d10]\n\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--");
+        RequestBody body = RequestBody.create(mediaType, "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"program\"\r\n\r\n" + command + "\n\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--");
         Request request = new Request.Builder()
                 .url("https://anydice.com/calculator_limited.php")
                 .post(body)
@@ -28,11 +30,13 @@ public class AnydiceFetcher {
             e.printStackTrace();
         }
         try {
-            String responseJson = response.body().string();
-            JSONObject statistics = new JSONObject(responseJson);
-            StatisticsHandler statisticsHandler = new StatisticsHandler(statistics);
+            responseJson = response.body().string();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getResponseJson() {
+        return responseJson;
     }
 }
