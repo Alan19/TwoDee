@@ -1,8 +1,6 @@
 package logic;
 
-import network.AnydiceFetcher;
 import org.jetbrains.annotations.NotNull;
-import org.json.*;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -11,46 +9,86 @@ import java.util.Map;
 
 public class StatisticsHandler {
 
-    private AnydiceFetcher fetcher;
-    private HashMap<Integer, Double> statisticsMap;
+    private ArrayList<DiceResult> resultList = new ArrayList<>();
+    private HashMap<Object, Object> statisticsMap;
 
     public StatisticsHandler(String message) {
         //Add all of the dice to the arraylists based on dice type
-        ArrayList<String> diceList = new ArrayList<>();
-        ArrayList<String> plotDice = new ArrayList<>();
+        ArrayList<Integer> diceList = new ArrayList<>();
+        ArrayList<Integer> plotDice = new ArrayList<>();
         for (String dice: message.split(" ")) {
             if (dice.contains("pd")){
-                plotDice.add(dice);
+                plotDice.add(Integer.parseInt(dice.replaceAll("[a-zA-Z]", "")));
             }
             else if (dice.contains("d")){
-                diceList.add(dice);
+                String test = dice.replaceAll("[a-zA-Z]", "");
+                diceList.add(Integer.parseInt(test));
             }
         }
-        //Generate and fetch results
-        String command = CommandGenerator.generateCommand(diceList, plotDice);
-        fetcher = new AnydiceFetcher(command);
+        generateResults(diceList);
+        
+        HashMap<Integer, Integer> resultHash = generateStatisticsTable();
+        HashMap<Integer, Double> statisticsMap = generateProbabilityHash(diceList, resultHash);
 
-        //Interpret results
-        JSONObject statisticJSON = new JSONObject(fetcher.getResponseJson());
-        //data is the array of arrays of roll probabilities
-        JSONArray data =  statisticJSON.getJSONObject("distributions").getJSONArray("data").getJSONArray(0);
 
-        //Add information to a <Integer, Double> hashmap
-        statisticsMap = new HashMap<>();
-        for (int i = 0; i < data.length(); i++){
-            JSONArray rollNum = data.getJSONArray(i);
-            //Cast integers differently from float percentages
-            if (rollNum.get(1) instanceof Double){
-                statisticsMap.put((Integer) rollNum.get(0), (Double) rollNum.get(1));
-            }
-            else {
-                statisticsMap.put((Integer) rollNum.get(0), new Double(String.valueOf(rollNum.get(1))));
-            }
-        }
     }
 
-    public String getFetcherJSON() {
-        return fetcher.getResponseJson();
+    private HashMap<Integer,Double> generateProbabilityHash(ArrayList<Integer> diceList, HashMap<Integer, Integer> resultHash) {
+        int totalCombos = 1;
+        for (int combo : diceList) {
+            totalCombos *= combo;
+        }
+        HashMap<Integer, Double> probHash = new HashMap<>();
+        for (Object o : resultHash.entrySet()) {
+            Map.Entry pair = (Map.Entry) o;
+            probHash.put((Integer) pair.getKey(), (Integer)pair.getValue() / (double)totalCombos);
+        }
+        return probHash;
+    }
+
+    public static void main(String[] args) {
+        new StatisticsHandler("d10 d12 d12");
+    }
+
+    private HashMap<Integer, Integer> generateStatisticsTable() {
+        //Add information to a <Integer, Double> hashmap
+        HashMap<Integer, Integer> resultHash = new HashMap<>();
+        for (DiceResult result: resultList) {
+            int key = result.getResult();
+            if (!resultHash.containsKey(key)){
+                resultHash.put(key, 1);
+            }
+            else {
+                resultHash.put(key, resultHash.get(key) + 1);
+            }
+        }
+        return resultHash;
+    }
+
+    //Prep method for generateResults to copy the dice list to prevent it from being modified
+    public void generateResults(ArrayList<Integer> diceList){
+        ArrayList<Integer> diceListCopy = new ArrayList<>(diceList);
+        int diceNum = diceList.get(0);
+        for (int i = 1; i <= diceNum; i++){
+            generateResults(diceListCopy, new DiceResult());
+        }
+        System.out.println(resultList.get(5).getResult());
+    }
+
+    //Recursive method to generate an ArrayList of results
+    public void generateResults(ArrayList<Integer> diceList, DiceResult result){
+        if (diceList.isEmpty()){
+            resultList.add(result);
+        }
+        else {
+            ArrayList<Integer> diceListCopy = new ArrayList<>(diceList);
+            int diceNum = diceListCopy.remove(0);
+            for (int i = 1; i <= diceNum; i++){
+                DiceResult diceResult = result.copy();
+                diceResult.addDiceToResult(i);
+                generateResults(diceListCopy, diceResult);
+            }
+        }
     }
 
     public String generateStatistics(){
