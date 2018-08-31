@@ -54,18 +54,38 @@ public class StatisticsHandler {
     }
 
     public String generateStatistics(){
-        StringBuilder result = generateIndividualStatistics();
-        result.append(generateMeetingDifficulty());
+        String result = generateIndividualStatistics();
+        String difficulties = generateMeetingDifficulty();
 
+        return result + "\n" + difficulties;
+    }
+
+    //Loop through HashMap, check for keys greater than difficulty, and sum it up.
+    private String generateMeetingDifficulty() {
+        StringBuilder result = new StringBuilder();
+        DecimalFormat df = new DecimalFormat("0.00");
+        String[] difficultyNames = {"Easy", "Average", "Hard", "Formidable", "Heroic", "Incredible", "Ridiculous", "Impossible"};
+        int[] difficulty = {3, 7, 11, 15, 19, 23, 27, 31};
+        double[] prob = new double[8];
+        String[] probString = new String[8];
+        for (int i = 0; i < difficulty.length; i++) {
+            prob[i] = 0.0;
+            for (Object o : statisticsMap.entrySet()) {
+                Map.Entry pair = (Map.Entry) o;
+                if (difficulty[i] <= (Integer) pair.getKey()){
+                    prob[i] += (double) pair.getValue();
+                }
+            }
+            probString[i] = df.format(prob[i]);
+        }
+        for (int i = 0; i < difficultyNames.length; i++){
+            result.append(difficultyNames[i]).append(": ").append(probString[i]).append("%\n");
+        }
         return result.toString();
     }
 
-    private String generateMeetingDifficulty() {
-        return null;
-    }
-
     @NotNull
-    private StringBuilder generateIndividualStatistics() {
+    private String generateIndividualStatistics() {
         //Iterate through HashMap to generate message
         StringBuilder result = new StringBuilder();
         for (Object o : statisticsMap.entrySet()) {
@@ -74,6 +94,6 @@ public class StatisticsHandler {
             String roundedChance = df.format(Double.valueOf(pair.getValue().toString()));
             result.append(pair.getKey()).append(": ").append(roundedChance).append("%\n");
         }
-        return result;
+        return result.toString();
     }
 }
