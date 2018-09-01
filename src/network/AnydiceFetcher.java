@@ -4,7 +4,7 @@ import okhttp3.*;
 
 import java.io.IOException;
 
-
+@Deprecated
 public class AnydiceFetcher {
 
     private String responseJson;

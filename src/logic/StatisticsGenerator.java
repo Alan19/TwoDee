@@ -23,24 +23,33 @@ public class StatisticsGenerator {
                 diceList.add(Integer.parseInt(test));
             }
         }
-        generateResults(diceList);
+        generateResults(diceList, plotDice);
         
         HashMap<Integer, Integer> resultHash = generateStatisticsTable();
-        statisticsMap = generateProbabilityHash(diceList, resultHash);
+        statisticsMap = generateProbabilityHash(diceList, plotDice, resultHash);
     }
 
     //Generate a HashMap with the roll as the keys and the percent as the values
-    private HashMap<Integer,Double> generateProbabilityHash(ArrayList<Integer> diceList, HashMap<Integer, Integer> resultHash) {
-        int totalCombos = 1;
-        for (int combo : diceList) {
-            totalCombos *= combo;
-        }
+    private HashMap<Integer,Double> generateProbabilityHash(ArrayList<Integer> diceList, ArrayList<Integer> plotDice, HashMap<Integer, Integer> resultHash) {
+        int totalCombos = getTotalCombos(diceList, plotDice);
         HashMap<Integer, Double> probHash = new HashMap<>();
         for (Object o : resultHash.entrySet()) {
             Map.Entry pair = (Map.Entry) o;
             probHash.put((Integer) pair.getKey(), (Integer)pair.getValue() / (double)totalCombos * 100);
         }
         return probHash;
+    }
+
+    //Get the total number of combinations by finding the product of all of the number of faces in all of the dice
+    private int getTotalCombos(ArrayList<Integer> diceList, ArrayList<Integer> plotDice) {
+        int totalCombos = 1;
+        for (int combo : diceList) {
+            totalCombos *= combo;
+        }
+        for (int pdCombo : plotDice) {
+            totalCombos *= pdCombo;
+        }
+        return totalCombos;
     }
 
     public static void main(String[] args) {
@@ -67,15 +76,15 @@ public class StatisticsGenerator {
     }
 
     //Prep method for generateResults to copy the dice list to prevent it from being modified
-    private void generateResults(ArrayList<Integer> diceList){
+    private void generateResults(ArrayList<Integer> diceList, ArrayList<Integer> plotDice){
         ArrayList<Integer> diceListCopy = new ArrayList<>(diceList);
-            generateResults(diceListCopy, new DiceResult());
+            generateResults(diceListCopy, plotDice, new DiceResult());
     }
 
     //Recursive method to generate an ArrayList of results
-    private void generateResults(ArrayList<Integer> diceList, DiceResult result){
+    private void generateResults(ArrayList<Integer> diceList, ArrayList<Integer> plotDice, DiceResult result){
         if (diceList.isEmpty()){
-            resultList.add(result);
+            generatePDResults(plotDice, result);
         }
         else {
             ArrayList<Integer> diceListCopy = new ArrayList<>(diceList);
@@ -83,7 +92,23 @@ public class StatisticsGenerator {
             for (int i = 1; i <= diceNum; i++){
                 DiceResult resultCopy = result.copy();
                 resultCopy.addDiceToResult(i);
-                generateResults(diceListCopy, resultCopy);
+                generateResults(diceListCopy, plotDice, resultCopy);
+            }
+        }
+    }
+
+    //Recursive method for handling plot dice
+    private void generatePDResults(ArrayList<Integer> plotDice, DiceResult result){
+        if (plotDice.isEmpty()){
+            resultList.add(result);
+        }
+        else {
+            ArrayList<Integer> diceListCopy = new ArrayList<>(plotDice);
+            int diceNum = diceListCopy.remove(0);
+            for (int i = 1; i <= diceNum; i++){
+                DiceResult resultCopy = result.copy();
+                resultCopy.addPlotDice(i);
+                generatePDResults(diceListCopy, resultCopy);
             }
         }
     }

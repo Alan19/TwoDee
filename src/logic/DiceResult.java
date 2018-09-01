@@ -7,10 +7,17 @@ import java.util.Comparator;
 public class DiceResult {
 
     private ArrayList<Integer> dice;
+    private ArrayList<Integer> plotDice;
     private int result;
 
     public DiceResult(){
         dice = new ArrayList<>();
+        plotDice = new ArrayList<>();
+    }
+
+    private DiceResult(ArrayList<Integer> diceList, ArrayList<Integer> pdList){
+        dice = diceList;
+        plotDice = pdList;
     }
 
     public void addDiceToResult(int num){
@@ -18,26 +25,27 @@ public class DiceResult {
     }
 
     public int getResult(){
+        int sum = 0;
         if (dice.size() == 1){
-            return dice.get(0);
+            sum += dice.get(0);
         }
         else {
             //Sorts dice and reverse to get descending order
             dice.sort(Comparator.naturalOrder());
+            Collections.reverse(dice);
+            sum += dice.get(0) + dice.get(1);
         }
-        Collections.reverse(dice);
-        return dice.get(0) + dice.get(1);
+        for (int pd : plotDice) {
+            sum += pd;
+        }
+        return sum;
     }
 
-    private DiceResult(ArrayList<Integer> diceList){
-        dice = diceList;
-    }
-
-    public int addPlotDice(int pd){
-        return getResult() + pd;
+    public void addPlotDice(int pd){
+        plotDice.add(pd);
     }
 
     public DiceResult copy(){
-        return new DiceResult(new ArrayList<>(dice));
+        return new DiceResult(new ArrayList<>(dice), new ArrayList<>(plotDice));
     }
 }
