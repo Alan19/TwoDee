@@ -64,7 +64,7 @@ public class StatisticsGenerator {
         new StatisticsGenerator("d10 d12 d12");
     }
 
-    public HashMap<Integer, Integer> generateDoomChance(){
+    private HashMap<Integer, Integer> generateDoomChance(){
         //Add information to a <Integer, Double> hashmap
         HashMap<Integer, Integer> doomHash = new HashMap<>();
         for (DiceResult result: resultList) {
