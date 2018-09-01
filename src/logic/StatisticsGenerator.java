@@ -9,6 +9,7 @@ public class StatisticsGenerator {
 
     private ArrayList<DiceResult> resultList = new ArrayList<>();
     private HashMap<Integer, Double> statisticsMap;
+    private boolean validCombo = false;
 
     public StatisticsGenerator(String message) {
         //Add all of the dice to the ArrayLists based on dice type
@@ -22,6 +23,9 @@ public class StatisticsGenerator {
                 String test = dice.replaceAll("[a-zA-Z]", "");
                 diceList.add(Integer.parseInt(test));
             }
+        }
+        if (!(diceList.isEmpty() && plotDice.isEmpty())){
+            validCombo = true;
         }
         generateResults(diceList, plotDice);
         
@@ -115,6 +119,9 @@ public class StatisticsGenerator {
 
     //Generates a message that combines the probability of possible rolls and the probability of making a difficulty
     public String generateStatistics(){
+        if (!validCombo){
+            return "I can't find any dice in your command. Try again.";
+        }
         String result = generateIndividualStatistics();
         String difficulties = generateMeetingDifficulty();
 

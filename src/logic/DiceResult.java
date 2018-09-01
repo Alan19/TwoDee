@@ -8,7 +8,6 @@ public class DiceResult {
 
     private ArrayList<Integer> dice;
     private ArrayList<Integer> plotDice;
-    private int result;
 
     public DiceResult(){
         dice = new ArrayList<>();
@@ -47,5 +46,15 @@ public class DiceResult {
 
     public DiceResult copy(){
         return new DiceResult(new ArrayList<>(dice), new ArrayList<>(plotDice));
+    }
+
+    public int getDoom(){
+        int doomCount = 0;
+        for (int roll : dice) {
+            if (roll == 1){
+                doomCount += 1;
+            }
+        }
+        return doomCount;
     }
 }

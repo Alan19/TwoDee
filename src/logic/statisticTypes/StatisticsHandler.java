@@ -1,4 +1,4 @@
-package logic;
+package logic.statisticTypes;
 
 import java.util.HashMap;
 
