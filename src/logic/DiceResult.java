@@ -1,7 +1,6 @@
 package logic;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 
@@ -23,13 +22,8 @@ public class DiceResult {
             return dice.get(0);
         }
         else {
-            //Sorts dice and reverse
-            dice.sort(new Comparator<Integer>() {
-                @Override
-                public int compare(Integer o1, Integer o2) {
-                    return o1.compareTo(o2);
-                }
-            });
+            //Sorts dice and reverse to get descending order
+            dice.sort(Comparator.naturalOrder());
         }
         Collections.reverse(dice);
         return dice.get(0) + dice.get(1);

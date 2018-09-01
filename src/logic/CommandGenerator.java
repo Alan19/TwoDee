@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
+//Use if you want to generate commands for AnyDice
+@Deprecated
 public class CommandGenerator {
 
     public static void main(String[] args) {

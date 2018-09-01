@@ -67,13 +67,13 @@ public class StatisticsGenerator {
     }
 
     //Prep method for generateResults to copy the dice list to prevent it from being modified
-    public void generateResults(ArrayList<Integer> diceList){
+    private void generateResults(ArrayList<Integer> diceList){
         ArrayList<Integer> diceListCopy = new ArrayList<>(diceList);
             generateResults(diceListCopy, new DiceResult());
     }
 
     //Recursive method to generate an ArrayList of results
-    public void generateResults(ArrayList<Integer> diceList, DiceResult result){
+    private void generateResults(ArrayList<Integer> diceList, DiceResult result){
         if (diceList.isEmpty()){
             resultList.add(result);
         }
