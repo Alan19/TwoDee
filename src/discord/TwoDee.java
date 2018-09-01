@@ -1,6 +1,6 @@
 package discord;
 
-import logic.StatisticsHandler;
+import logic.StatisticsGenerator;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.util.logging.ExceptionLogger;
 
@@ -12,7 +12,7 @@ public class TwoDee {
             // Add a listener that returns a JSON from AnyDice"
             api.addMessageCreateListener(event -> {
                 if (event.getMessage().getContent().startsWith("~s")) {
-                    StatisticsHandler statistics = new StatisticsHandler(event.getMessage().getContent());
+                    StatisticsGenerator statistics = new StatisticsGenerator(event.getMessage().getContent());
                     event.getChannel().sendMessage(statistics.generateStatistics());
                 }
             });
