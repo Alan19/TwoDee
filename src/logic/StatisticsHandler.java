@@ -68,11 +68,8 @@ public class StatisticsHandler {
     //Prep method for generateResults to copy the dice list to prevent it from being modified
     public void generateResults(ArrayList<Integer> diceList){
         ArrayList<Integer> diceListCopy = new ArrayList<>(diceList);
-        int diceNum = diceList.get(0);
-        for (int i = 1; i <= diceNum; i++){
             generateResults(diceListCopy, new DiceResult());
-        }
-        System.out.println(resultList.get(5).getResult());
+//        System.out.println(resultList.get(182).getResult());
     }
 
     //Recursive method to generate an ArrayList of results
@@ -84,9 +81,9 @@ public class StatisticsHandler {
             ArrayList<Integer> diceListCopy = new ArrayList<>(diceList);
             int diceNum = diceListCopy.remove(0);
             for (int i = 1; i <= diceNum; i++){
-                DiceResult diceResult = result.copy();
-                diceResult.addDiceToResult(i);
-                generateResults(diceListCopy, diceResult);
+                DiceResult resultCopy = result.copy();
+                resultCopy.addDiceToResult(i);
+                generateResults(diceListCopy, resultCopy);
             }
         }
     }
