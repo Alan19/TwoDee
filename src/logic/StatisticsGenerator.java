@@ -9,6 +9,7 @@ public class StatisticsGenerator {
 
     private ArrayList<DiceResult> resultList = new ArrayList<>();
     private HashMap<Integer, Double> statisticsMap;
+    private HashMap<Integer, Double> doomMap;
     private boolean validCombo = false;
 
     public StatisticsGenerator(String message) {
@@ -31,6 +32,9 @@ public class StatisticsGenerator {
         
         HashMap<Integer, Integer> resultHash = generateStatisticsTable();
         statisticsMap = generateProbabilityHash(diceList, plotDice, resultHash);
+
+        HashMap<Integer, Integer> doomHash = generateDoomChance();
+        doomMap = generateProbabilityHash(diceList, plotDice, doomHash);
     }
 
     //Generate a HashMap with the roll as the keys and the percent as the values
@@ -58,6 +62,21 @@ public class StatisticsGenerator {
 
     public static void main(String[] args) {
         new StatisticsGenerator("d10 d12 d12");
+    }
+
+    public HashMap<Integer, Integer> generateDoomChance(){
+        //Add information to a <Integer, Double> hashmap
+        HashMap<Integer, Integer> doomHash = new HashMap<>();
+        for (DiceResult result: resultList) {
+            int key = result.getDoom();
+            if (!doomHash.containsKey(key)){
+                doomHash.put(key, 1);
+            }
+            else {
+                doomHash.put(key, doomHash.get(key) + 1);
+            }
+        }
+        return doomHash;
     }
 
     /**
@@ -122,10 +141,11 @@ public class StatisticsGenerator {
         if (!validCombo){
             return "I can't find any dice in your command. Try again.";
         }
-        String result = generateIndividualStatistics();
+        String result = generateIndividualStatistics(statisticsMap);
         String difficulties = generateMeetingDifficulty();
+        String doom = generateIndividualStatistics(doomMap);
 
-        return result + "\n" + difficulties;
+        return result + "\n" + difficulties + "\nDoom:\n" + doom;
     }
 
     //Loop through HashMap, check for rolls greater than difficulty, and sum their values to calculate the chance of
@@ -154,10 +174,10 @@ public class StatisticsGenerator {
     }
 
     //Generate the probability of each possible roll and rounds it to two decimal places.
-    private String generateIndividualStatistics() {
+    private String generateIndividualStatistics(HashMap map) {
         //Iterate through HashMap to generate message
         StringBuilder result = new StringBuilder();
-        for (Object o : statisticsMap.entrySet()) {
+        for (Object o : map.entrySet()) {
             Map.Entry pair = (Map.Entry) o;
             DecimalFormat df = new DecimalFormat("0.####");
             String roundedChance = df.format(Double.valueOf(pair.getValue().toString()));
