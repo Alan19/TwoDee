@@ -4,10 +4,12 @@ import discord.TwoDee;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
+import java.awt.*;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class StatisticsGenerator {
 
@@ -15,22 +17,30 @@ public class StatisticsGenerator {
     private HashMap<Integer, Double> statisticsMap;
     private HashMap<Integer, Double> doomMap;
     private boolean validCombo = false;
+    private boolean overloaded = false;
 
     public StatisticsGenerator(String message) {
         //Add all of the dice to the ArrayLists based on dice type
         ArrayList<Integer> diceList = new ArrayList<>();
         ArrayList<Integer> plotDice = new ArrayList<>();
         for (String dice: message.split(" ")) {
-            if (dice.contains("pd")){
+            if (dice.contains("pd") && dice.matches(".*\\d+.*")){
                 plotDice.add(Integer.parseInt(dice.replaceAll("[a-zA-Z]", "")));
             }
-            else if (dice.contains("d")){
+            else if (dice.contains("d") && dice.matches(".*\\d+.*")){
                 String test = dice.replaceAll("[a-zA-Z]", "");
                 diceList.add(Integer.parseInt(test));
             }
         }
         if (!(diceList.isEmpty() && plotDice.isEmpty())){
             validCombo = true;
+        }
+        else {
+            return;
+        }
+        if (diceList.size() + plotDice.size() > 6){
+            overloaded = true;
+            return;
         }
         generateResults(diceList, plotDice);
         
@@ -142,6 +152,9 @@ public class StatisticsGenerator {
 
     //Generates a message that combines the probability of possible rolls and the probability of making a difficulty
     public EmbedBuilder generateStatistics(){
+        if (overloaded){
+            return new EmbedBuilder().setTitle("That's way too many dice for me to handle. Try using less dice.");
+        }
         if (!validCombo){
             return new EmbedBuilder().setTitle("I can't find any dice in your command. Try again.");
         }
@@ -149,8 +162,10 @@ public class StatisticsGenerator {
         String difficulties = generateMeetingDifficulty();
         String doom = generateIndividualStatistics(doomMap);
 
+        Random random = new Random();
         return new EmbedBuilder()
                 .setTitle(TwoDee.getRollTitleMessage())
+                .setColor(new Color(random.nextFloat() , random.nextFloat(), random.nextFloat()))
                 .addField("Chance to roll a", result, true)
                 .addField("Chance to meet", difficulties, true)
                 .addField("Chance to generate doom", doom, true);
@@ -187,7 +202,7 @@ public class StatisticsGenerator {
         StringBuilder result = new StringBuilder();
         for (Object o : map.entrySet()) {
             Map.Entry pair = (Map.Entry) o;
-            DecimalFormat df = new DecimalFormat("0.####");
+            DecimalFormat df = new DecimalFormat("0.#####");
             String roundedChance = df.format(Double.valueOf(pair.getValue().toString()));
             result.append(pair.getKey()).append(": ").append(roundedChance).append("%\n");
         }
