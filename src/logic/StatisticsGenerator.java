@@ -1,5 +1,9 @@
 package logic;
 
+import discord.TwoDee;
+import org.javacord.api.entity.message.embed.Embed;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
+
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -137,15 +141,19 @@ public class StatisticsGenerator {
     }
 
     //Generates a message that combines the probability of possible rolls and the probability of making a difficulty
-    public String generateStatistics(){
+    public EmbedBuilder generateStatistics(){
         if (!validCombo){
-            return "I can't find any dice in your command. Try again.";
+            return new EmbedBuilder().setTitle("I can't find any dice in your command. Try again.");
         }
         String result = generateIndividualStatistics(statisticsMap);
         String difficulties = generateMeetingDifficulty();
         String doom = generateIndividualStatistics(doomMap);
 
-        return result + "\n" + difficulties + "\nDoom:\n" + doom;
+        return new EmbedBuilder()
+                .setTitle(TwoDee.getRollTitleMessage())
+                .addField("Chance to roll a", result, true)
+                .addField("Chance to meet", difficulties, true)
+                .addField("Chance to generate doom", doom, true);
     }
 
     //Loop through HashMap, check for rolls greater than difficulty, and sum their values to calculate the chance of

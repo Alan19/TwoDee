@@ -2,12 +2,18 @@ package discord;
 
 import logic.StatisticsGenerator;
 import org.javacord.api.DiscordApiBuilder;
+import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.util.logging.ExceptionLogger;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Properties;
+import java.util.Random;
 
-import static java.lang.System.*;
+import static java.lang.System.out;
 
 public class TwoDee {
 
@@ -21,7 +27,9 @@ public class TwoDee {
                 api.addMessageCreateListener(event -> {
                     if (event.getMessage().getContent().startsWith("~s")) {
                         StatisticsGenerator statistics = new StatisticsGenerator(event.getMessage().getContent());
-                        event.getChannel().sendMessage(statistics.generateStatistics());
+                        new MessageBuilder()
+                                .setEmbed(statistics.generateStatistics())
+                                .send(event.getChannel());
                     }
                 });
 
@@ -34,6 +42,23 @@ public class TwoDee {
             e.printStackTrace();
         }
 
+    }
+
+    //Returns a random dice roll line
+    public static String getRollTitleMessage() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/rollLines.txt"))) {
+            ArrayList<String> rollLines = new ArrayList<>();
+            String line = reader.readLine();
+            while (line != null)
+            {
+                rollLines.add(line);
+                line = reader.readLine();
+            }
+            return rollLines.get(new Random().nextInt(rollLines.size()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "I'm out of witty lines!";
     }
 
 }
