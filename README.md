@@ -1,2 +1,4 @@
 # TwoDee
-Discord bot that fetches probability odds from anydice.com
+Discord bot that generates probability odds to help players make better decisions
+
+You need to provide your own Discord bot token for this bot to work!
