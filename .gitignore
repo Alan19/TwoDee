@@ -1,1 +1,12 @@
-src/bot.properties
+
+.gitignore
+.idea/AnyDiceFacetRollerV2.iml
+.idea/artifacts/
+.idea/compiler.xml
+.idea/libraries/
+.idea/misc.xml
+.idea/modules.xml
+.idea/sonarlint/
+.idea/workspace.xml
+out/
+/src/bot.properties
