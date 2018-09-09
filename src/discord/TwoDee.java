@@ -38,7 +38,7 @@ public class TwoDee {
                     if (event.getMessage().getContent().startsWith("~r")){
                         DiceRoller diceRoller = new DiceRoller(event.getMessage().getContent());
                     }
-                })
+                });
                 // Print the invite url of your bot
                 out.println("You can invite the bot by using the following url: " + api.createBotInvite());
             })
