@@ -1,6 +1,8 @@
 package logic;
 
 import discord.TwoDee;
+import org.javacord.api.entity.message.MessageAuthor;
+import org.javacord.api.entity.message.embed.EmbedAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import java.awt.*;
@@ -37,11 +39,6 @@ public class DiceRoller {
         }
     }
 
-    public static void main(String[] args) {
-        DiceRoller diceRoller = new DiceRoller("1d12 2d10 3pd6");
-        diceRoller.generateResults();
-    }
-
     private void addToPool(String argCopy, String numDice, ArrayList<Integer> pool) {
         //Remove all letters so only numbers remain to get the dice value
         int diceVal = Integer.parseInt(argCopy.replaceAll("[a-zA-Z]", ""));
@@ -56,7 +53,7 @@ public class DiceRoller {
         }
     }
 
-    public EmbedBuilder generateResults() {
+    public EmbedBuilder generateResults(MessageAuthor author) {
         ArrayList<Integer> diceResults = new ArrayList<>();
         ArrayList<Integer> pdResults = new ArrayList<>();
         Random random = new Random();
@@ -66,11 +63,7 @@ public class DiceRoller {
             diceResults.add(random.nextInt(normalDice) + 1);
         }
         for (Integer pDice : plotDice) {
-            int pdResult = random.nextInt(pDice) + 1;
-            if (pdResult < pDice / 2){
-                pdResult = pDice / 2;
-            }
-            pdResults.add(pdResult);
+            pdResults.add(random.nextInt(pDice) + 1);
         }
         System.out.println("Regular dice: " + diceResults.toString());
         System.out.println("Plot dice: " + pdResults.toString());
@@ -100,10 +93,10 @@ public class DiceRoller {
         }
         //Sum up total
         int total = topTwo.stream().mapToInt(Integer::intValue).sum() + plotResult;
-
         //Build embed
         return new EmbedBuilder()
                 .setTitle(TwoDee.getRollTitleMessage())
+                .setAuthor(author)
                 .setColor(new Color(random.nextFloat() , random.nextFloat(), random.nextFloat()))
                 .addField("Regular dice", replaceBrackets(diceResults.toString()), true)
                 .addField("Picked", replaceBrackets(topTwo.toString()), true)

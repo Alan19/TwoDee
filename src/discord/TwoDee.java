@@ -30,22 +30,38 @@ public class TwoDee {
                     if (event.getMessage().getContent().startsWith("~s")) {
                         StatisticsGenerator statistics = new StatisticsGenerator(event.getMessage().getContent());
                         new MessageBuilder()
-                                .setEmbed(statistics.generateStatistics())
+                                .setEmbed(statistics.generateStatistics(event.getMessage().getAuthor()))
                                 .send(event.getChannel());
                     }
                 });
 
                 //Add a listener that outputs a dice roll result
                 api.addMessageCreateListener(event -> {
-                    if (messageStartsWith(event, "~r")){
+                    if (messageStartsWith(event, "~r")) {
                         DiceRoller diceRoller = new DiceRoller(event.getMessage().getContent());
                         new MessageBuilder()
-                                .setEmbed(diceRoller.generateResults())
+                                .setEmbed(diceRoller.generateResults(event.getMessage().getAuthor()))
                                 .send(event.getChannel());
                     }
                 });
+
+                //Send startup messsage
+                new MessageBuilder()
+                        .setContent(getStartupMessage())
+                        .send(api.getTextChannelById("484544303247523840").get());
                 // Print the invite url of your bot
                 out.println("You can invite the bot by using the following url: " + api.createBotInvite());
+
+                //Listen for shutdown command
+                api.addMessageCreateListener(event -> {
+                    if (messageStartsWith(event, "~kill")){
+                        new MessageBuilder()
+                                .setContent("TwoDee shutting down...")
+                                .send(event.getChannel());
+                        api.disconnect();
+                        System.exit(1);
+                    }
+                });
             })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
@@ -64,8 +80,7 @@ public class TwoDee {
         try (BufferedReader reader = new BufferedReader(new FileReader("src/rollLines.txt"))) {
             ArrayList<String> rollLines = new ArrayList<>();
             String line = reader.readLine();
-            while (line != null)
-            {
+            while (line != null) {
                 rollLines.add(line);
                 line = reader.readLine();
             }
@@ -76,4 +91,19 @@ public class TwoDee {
         return "I'm out of witty lines!";
     }
 
+    //Returns a random startup line
+    private static String getStartupMessage() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/StartupLines.txt"))) {
+            ArrayList<String> startupLines = new ArrayList<>();
+            String line = reader.readLine();
+            while (line != null) {
+                startupLines.add(line);
+                line = reader.readLine();
+            }
+            return startupLines.get(new Random().nextInt(startupLines.size()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "I'm out of witty lines!";
+    }
 }

@@ -1,6 +1,7 @@
 package logic;
 
 import discord.TwoDee;
+import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
@@ -151,7 +152,7 @@ public class StatisticsGenerator {
     }
 
     //Generates a message that combines the probability of possible rolls and the probability of making a difficulty
-    public EmbedBuilder generateStatistics(){
+    public EmbedBuilder generateStatistics(MessageAuthor author){
         if (overloaded){
             return new EmbedBuilder().setTitle("That's way too many dice for me to handle. Try using less dice.");
         }
@@ -165,6 +166,7 @@ public class StatisticsGenerator {
         Random random = new Random();
         return new EmbedBuilder()
                 .setTitle(TwoDee.getRollTitleMessage())
+                .setAuthor(author)
                 .setColor(new Color(random.nextFloat() , random.nextFloat(), random.nextFloat()))
                 .addField("Chance to roll a", result, true)
                 .addField("Chance to meet", difficulties, true)
