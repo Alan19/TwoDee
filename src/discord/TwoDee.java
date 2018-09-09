@@ -4,6 +4,7 @@ import logic.DiceRoller;
 import logic.StatisticsGenerator;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.message.MessageBuilder;
+import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.util.logging.ExceptionLogger;
 
 import java.io.BufferedReader;
@@ -33,10 +34,14 @@ public class TwoDee {
                                 .send(event.getChannel());
                     }
                 });
-                //Add listener for dice roll command
+
+                //Add a listener that outputs a dice roll result
                 api.addMessageCreateListener(event -> {
-                    if (event.getMessage().getContent().startsWith("~r")){
+                    if (messageStartsWith(event, "~r")){
                         DiceRoller diceRoller = new DiceRoller(event.getMessage().getContent());
+                        new MessageBuilder()
+                                .setEmbed(diceRoller.generateResults())
+                                .send(event.getChannel());
                     }
                 });
                 // Print the invite url of your bot
@@ -48,6 +53,10 @@ public class TwoDee {
             e.printStackTrace();
         }
 
+    }
+
+    private static boolean messageStartsWith(MessageCreateEvent event, String s) {
+        return event.getMessage().getContent().startsWith(s);
     }
 
     //Returns a random dice roll line

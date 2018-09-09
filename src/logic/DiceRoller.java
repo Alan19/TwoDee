@@ -1,35 +1,45 @@
 package logic;
 
+import discord.TwoDee;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Random;
 
 public class DiceRoller {
 
-    ArrayList<Integer> regDice = new ArrayList<>();
-    ArrayList<Integer> plotDice = new ArrayList<>();
+    private ArrayList<Integer> regDice = new ArrayList<>();
+    private ArrayList<Integer> plotDice = new ArrayList<>();
 
     public DiceRoller(String content) {
         //Split up content
         ArrayList<String> args = new ArrayList<>(Arrays.asList(content.split(" ")));
         args.remove("~r");
         //Split dice into regular dice and plot dice
-        for (String arg: args) {
+        for (String arg : args) {
             String argCopy = arg;
             String numDice = "";
 
             //Find number of dice being rolled
-            while (Character.isDigit(argCopy.charAt(0))){
+            while (Character.isDigit(argCopy.charAt(0))) {
                 numDice += argCopy.charAt(0);
                 argCopy = argCopy.substring(1);
             }
             //Check for dice type
-            if (argCopy.contains("pd")){
+            if (argCopy.contains("pd")) {
                 addToPool(argCopy, numDice, plotDice);
-            }
-            else if (argCopy.contains("d")){
+            } else if (argCopy.contains("d")) {
                 addToPool(argCopy, numDice, regDice);
             }
         }
+    }
+
+    public static void main(String[] args) {
+        DiceRoller diceRoller = new DiceRoller("1d12 2d10 3pd6");
+        diceRoller.generateResults();
     }
 
     private void addToPool(String argCopy, String numDice, ArrayList<Integer> pool) {
@@ -37,32 +47,77 @@ public class DiceRoller {
         int diceVal = Integer.parseInt(argCopy.replaceAll("[a-zA-Z]", ""));
 
         //If there are multiple dice being rolled, add all of them to the pool. Otherwise, only add one.
-        if (numDice.equals("")){
+        if (numDice.equals("")) {
             pool.add(diceVal);
-        }
-        else {
-            for (int i = 0; i < Integer.parseInt(numDice); i++){
+        } else {
+            for (int i = 0; i < Integer.parseInt(numDice); i++) {
                 pool.add(diceVal);
             }
         }
     }
 
-    public String generateResults(){
+    public EmbedBuilder generateResults() {
         ArrayList<Integer> diceResults = new ArrayList<>();
         ArrayList<Integer> pdResults = new ArrayList<>();
+        Random random = new Random();
+
+        //Roll dice
         for (Integer normalDice : regDice) {
-            diceResults.add((int) Math.ceil(Math.random() * normalDice));
+            diceResults.add(random.nextInt(normalDice) + 1);
         }
         for (Integer pDice : plotDice) {
-            pdResults.add((int) Math.ceil(Math.random() * pDice));
+            int pdResult = random.nextInt(pDice) + 1;
+            if (pdResult < pDice / 2){
+                pdResult = pDice / 2;
+            }
+            pdResults.add(pdResult);
         }
-        System.out.println(diceResults.toString());
-        System.out.println(pdResults.toString());
-        return "";
+        System.out.println("Regular dice: " + diceResults.toString());
+        System.out.println("Plot dice: " + pdResults.toString());
+        ArrayList<Integer> topTwo = new ArrayList<>();
+        ArrayList<Integer> dropped = new ArrayList<>();
+        int plotResult = 0;
+        if (diceResults.size() == 1) {
+            topTwo.add(diceResults.get(0));
+        } else {
+            //Sort ArrayList in descending order
+            ArrayList<Integer> sortedResults = new ArrayList<>(diceResults);
+            Collections.sort(sortedResults);
+            Collections.reverse(sortedResults);
+            for (int i = 0; i < sortedResults.size(); i++) {
+                if (i < 2){
+                    topTwo.add(sortedResults.get(i));
+                }
+                else {
+                    dropped.add(sortedResults.get(i));
+                }
+            }
+        }
+        if (!pdResults.isEmpty()) {
+            for (int pDice : pdResults) {
+                plotResult += pDice;
+            }
+        }
+        //Sum up total
+        int total = topTwo.stream().mapToInt(Integer::intValue).sum() + plotResult;
+
+        //Build embed
+        return new EmbedBuilder()
+                .setTitle(TwoDee.getRollTitleMessage())
+                .setColor(new Color(random.nextFloat() , random.nextFloat(), random.nextFloat()))
+                .addField("Regular dice", replaceBrackets(diceResults.toString()), true)
+                .addField("Picked", replaceBrackets(topTwo.toString()), true)
+                .addField("Dropped", replaceBrackets(dropped.toString()), true)
+                .addField("Plot dice", replaceBrackets(pdResults.toString()), true)
+                .addField("Total", String.valueOf(total), true);
     }
 
-    public static void main(String[] args) {
-        DiceRoller diceRoller = new DiceRoller("1d12 2d10 3pd6");
-        diceRoller.generateResults();
+    //Replaces brackets in the string. If the string is blank, returns "none" in italics
+    private String replaceBrackets(String s){
+        String newStr = s.replaceAll("\\[", "").replaceAll("\\]","");
+        if (newStr.equals("")){
+            return "*none*";
+        }
+        return newStr;
     }
 }
