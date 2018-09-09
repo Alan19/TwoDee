@@ -24,15 +24,9 @@ public class StatisticsGenerator {
         //Add all of the dice to the ArrayLists based on dice type
         ArrayList<Integer> diceList = new ArrayList<>();
         ArrayList<Integer> plotDice = new ArrayList<>();
-        for (String dice: message.split(" ")) {
-            if (dice.contains("pd") && dice.matches(".*\\d+.*")){
-                plotDice.add(Integer.parseInt(dice.replaceAll("[a-zA-Z]", "")));
-            }
-            else if (dice.contains("d") && dice.matches(".*\\d+.*")){
-                String test = dice.replaceAll("[a-zA-Z]", "");
-                diceList.add(Integer.parseInt(test));
-            }
-        }
+        populatePool(message, diceList, plotDice);
+
+        //Check if command is valid
         if (!(diceList.isEmpty() && plotDice.isEmpty())){
             validCombo = true;
         }
@@ -52,6 +46,18 @@ public class StatisticsGenerator {
         doomMap = generateProbabilityHash(diceList, plotDice, doomHash);
     }
 
+    private void populatePool(String message, ArrayList<Integer> diceList, ArrayList<Integer> plotDice) {
+        for (String dice: message.split(" ")) {
+            if (dice.contains("pd") && dice.matches(".*\\d+.*")){
+                plotDice.add(Integer.parseInt(dice.replaceAll("[a-zA-Z]", "")));
+            }
+            else if (dice.contains("d") && dice.matches(".*\\d+.*")){
+                String test = dice.replaceAll("[a-zA-Z]", "");
+                diceList.add(Integer.parseInt(test));
+            }
+        }
+    }
+
     //Generate a HashMap with the roll as the keys and the percent as the values
     private HashMap<Integer,Double> generateProbabilityHash(ArrayList<Integer> diceList, ArrayList<Integer> plotDice, HashMap<Integer, Integer> resultHash) {
         int totalCombos = getTotalCombos(diceList, plotDice);
@@ -69,8 +75,14 @@ public class StatisticsGenerator {
         for (int combo : diceList) {
             totalCombos *= combo;
         }
+
+        /*Plot dice have a minimum value of the die size / 2
+        //This means that you need to divide it by two and add one to get the number of combinations from it if the
+        value is greater than 2 */
         for (int pdCombo : plotDice) {
-            totalCombos *= pdCombo;
+            if (pdCombo > 2){
+                totalCombos *= pdCombo / 2 + 1 ;
+            }
         }
         return totalCombos;
     }
@@ -143,7 +155,7 @@ public class StatisticsGenerator {
         else {
             ArrayList<Integer> diceListCopy = new ArrayList<>(plotDice);
             int diceNum = diceListCopy.remove(0);
-            for (int i = 1; i <= diceNum; i++){
+            for (int i = diceNum / 2; i <= diceNum; i++){
                 DiceResult resultCopy = result.copy();
                 resultCopy.addPlotDice(i);
                 generatePDResults(diceListCopy, resultCopy);
