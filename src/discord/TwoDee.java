@@ -1,5 +1,6 @@
 package discord;
 
+import logic.DiceRoller;
 import logic.StatisticsGenerator;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -32,7 +33,12 @@ public class TwoDee {
                                 .send(event.getChannel());
                     }
                 });
-
+                //Add listener for dice roll command
+                api.addMessageCreateListener(event -> {
+                    if (event.getMessage().getContent().startsWith("~r")){
+                        DiceRoller diceRoller = new DiceRoller(event.getMessage().getContent());
+                    }
+                })
                 // Print the invite url of your bot
                 out.println("You can invite the bot by using the following url: " + api.createBotInvite());
             })
