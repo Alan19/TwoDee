@@ -108,7 +108,12 @@ public class DiceRoller {
                     resultString += s.get(i) + ", ";
                 }
             }
-            resultString += s.get(s.size() - 1);
+            if (s.get(s.size() - 1) == 1){
+                resultString += "**1**";
+            }
+            else {
+                resultString += s.get(s.size() - 1);
+            }
         }
         else if (s.size() == 1){
             if (s.get(0) == 1){
