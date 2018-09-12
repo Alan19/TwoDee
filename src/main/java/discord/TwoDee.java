@@ -6,11 +6,13 @@ import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.util.logging.ExceptionLogger;
+import sheets.SheetsQuickstart;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
@@ -22,7 +24,7 @@ public class TwoDee {
     public static void main(String[] args) {
         try {
             Properties prop = new Properties();
-            prop.load(new FileInputStream("bot.properties"));
+            prop.load(new FileInputStream("src/main/resources/bot.properties"));
             String token = prop.getProperty("token");
             new DiscordApiBuilder().setToken(token).login().thenAccept(api -> {
                 // Add a listener that outputs statistics when you prefix a message with ~s
@@ -62,6 +64,17 @@ public class TwoDee {
                         System.exit(1);
                     }
                 });
+
+                //Add listener for fetching skills
+                api.addMessageCreateListener(event -> {
+                    if (messageStartsWith(event, "~f")){
+                        try {
+                            SheetsQuickstart aSheet = new SheetsQuickstart(event.getMessage().getAuthor());
+                        } catch (IOException | GeneralSecurityException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
             })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
@@ -77,7 +90,7 @@ public class TwoDee {
 
     //Returns a random dice roll line
     public static String getRollTitleMessage() {
-        try (BufferedReader reader = new BufferedReader(new FileReader("rollLines.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/rollLines.txt"))) {
             ArrayList<String> rollLines = new ArrayList<>();
             String line = reader.readLine();
             while (line != null) {
@@ -93,7 +106,7 @@ public class TwoDee {
 
     //Returns a random startup line
     private static String getStartupMessage() {
-        try (BufferedReader reader = new BufferedReader(new FileReader("StartupLines.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/StartupLines.txt"))) {
             ArrayList<String> startupLines = new ArrayList<>();
             String line = reader.readLine();
             while (line != null) {
