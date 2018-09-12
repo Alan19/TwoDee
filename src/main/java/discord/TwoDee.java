@@ -22,7 +22,7 @@ public class TwoDee {
     public static void main(String[] args) {
         try {
             Properties prop = new Properties();
-            prop.load(new FileInputStream("src/bot.properties"));
+            prop.load(new FileInputStream("bot.properties"));
             String token = prop.getProperty("token");
             new DiscordApiBuilder().setToken(token).login().thenAccept(api -> {
                 // Add a listener that outputs statistics when you prefix a message with ~s
@@ -77,7 +77,7 @@ public class TwoDee {
 
     //Returns a random dice roll line
     public static String getRollTitleMessage() {
-        try (BufferedReader reader = new BufferedReader(new FileReader("src/rollLines.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("rollLines.txt"))) {
             ArrayList<String> rollLines = new ArrayList<>();
             String line = reader.readLine();
             while (line != null) {
@@ -93,7 +93,7 @@ public class TwoDee {
 
     //Returns a random startup line
     private static String getStartupMessage() {
-        try (BufferedReader reader = new BufferedReader(new FileReader("src/StartupLines.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("StartupLines.txt"))) {
             ArrayList<String> startupLines = new ArrayList<>();
             String line = reader.readLine();
             while (line != null) {

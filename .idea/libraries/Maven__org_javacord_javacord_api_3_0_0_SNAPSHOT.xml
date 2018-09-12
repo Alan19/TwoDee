@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.javacord:javacord-api:3.0.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/javacord/javacord-api/3.0.0-SNAPSHOT/javacord-api-3.0.0-20180804.152616-39.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/javacord/javacord-api/3.0.0-SNAPSHOT/javacord-api-3.0.0-20180804.152616-39-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/javacord/javacord-api/3.0.0-SNAPSHOT/javacord-api-3.0.0-20180804.152616-39-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
