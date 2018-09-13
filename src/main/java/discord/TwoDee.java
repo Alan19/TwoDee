@@ -1,5 +1,6 @@
 package discord;
 
+import logic.CommandHandler;
 import logic.DiceRoller;
 import logic.StatisticsGenerator;
 import org.javacord.api.DiscordApiBuilder;
@@ -69,7 +70,7 @@ public class TwoDee {
                 api.addMessageCreateListener(event -> {
                     if (messageStartsWith(event, "~f")){
                         try {
-                            SheetsQuickstart aSheet = new SheetsQuickstart(event.getMessage().getAuthor());
+                            SheetsQuickstart aSheet = new SheetsQuickstart(event.getMessage().getAuthor().getIdAsString());
                         } catch (IOException | GeneralSecurityException e) {
                             e.printStackTrace();
                         }

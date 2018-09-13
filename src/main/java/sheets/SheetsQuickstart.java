@@ -32,6 +32,21 @@ public class SheetsQuickstart {
      */
     private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS_READONLY);
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
+    private ValueRange result;
+
+    //Builds a new sheet object that contain information about the user's character
+    public SheetsQuickstart (String id) throws IOException, GeneralSecurityException {
+        // Build a new authorized API client service.
+        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+        final String spreadsheetId = "18McJSYbBDRr40ZHK7oG4gXqzORoz3B5nrJ0o9zF0F-8";
+        final String range = generateRangeCommand(id);
+        Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+                .setApplicationName(APPLICATION_NAME)
+                .build();
+        result = service.spreadsheets().values().get(spreadsheetId, range).execute();
+        int numRows = result.getValues() != null ? result.getValues().size() : 0;
+        System.out.printf("%d rows retrieved.", numRows);
+    }
 
     /**
      * Creates an authorized Credential object.
@@ -75,19 +90,8 @@ public class SheetsQuickstart {
 
     }
 
-    private ValueRange result;
-
-    public SheetsQuickstart (MessageAuthor id) throws IOException, GeneralSecurityException {
-        // Build a new authorized API client service.
-        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-        final String spreadsheetId = "18McJSYbBDRr40ZHK7oG4gXqzORoz3B5nrJ0o9zF0F-8";
-        final String range = generateRangeCommand(id.getIdAsString());
-        Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
-                .setApplicationName(APPLICATION_NAME)
-                .build();
-        result = service.spreadsheets().values().get(spreadsheetId, range).execute();
-        int numRows = result.getValues() != null ? result.getValues().size() : 0;
-        System.out.printf("%d rows retrieved.", numRows);
+    public ValueRange getResult() {
+        return result;
     }
 
     private String generateRangeCommand(String id) throws IOException {
@@ -96,4 +100,5 @@ public class SheetsQuickstart {
         String[] range = prop.getProperty(id).split(",");
         return "Data!" + range[0] + "1:" + range[1] + "270";
     }
+
 }
