@@ -28,26 +28,6 @@ public class TwoDee {
             prop.load(new FileInputStream("src/main/resources/bot.properties"));
             String token = prop.getProperty("token");
             new DiscordApiBuilder().setToken(token).login().thenAccept(api -> {
-                // Add a listener that outputs statistics when you prefix a message with ~s
-                api.addMessageCreateListener(event -> {
-                    if (event.getMessage().getContent().startsWith("~s")) {
-                        StatisticsGenerator statistics = new StatisticsGenerator(event.getMessage().getContent());
-                        new MessageBuilder()
-                                .setEmbed(statistics.generateStatistics(event.getMessage().getAuthor()))
-                                .send(event.getChannel());
-                    }
-                });
-
-                //Add a listener that outputs a dice roll result
-                api.addMessageCreateListener(event -> {
-                    if (messageStartsWith(event, "~r")) {
-                        DiceRoller diceRoller = new DiceRoller(event.getMessage().getContent());
-                        new MessageBuilder()
-                                .setEmbed(diceRoller.generateResults(event.getMessage().getAuthor()))
-                                .send(event.getChannel());
-                    }
-                });
-
                 //Send startup messsage
                 new MessageBuilder()
                         .setContent(getStartupMessage())
@@ -55,27 +35,13 @@ public class TwoDee {
                 // Print the invite url of your bot
                 out.println("You can invite the bot by using the following url: " + api.createBotInvite());
 
-                //Listen for shutdown command
+                //Listen for commands
                 api.addMessageCreateListener(event -> {
-                    if (messageStartsWith(event, "~kill")){
-                        new MessageBuilder()
-                                .setContent("TwoDee shutting down...")
-                                .send(event.getChannel());
-                        api.disconnect();
-                        System.exit(1);
-                    }
-                });
-
-                //Add listener for fetching skills
-                api.addMessageCreateListener(event -> {
-                    if (messageStartsWith(event, "~f")){
-                        try {
-                            SheetsQuickstart aSheet = new SheetsQuickstart(event.getMessage().getAuthor().getIdAsString());
-                        } catch (IOException | GeneralSecurityException e) {
-                            e.printStackTrace();
+                            if (event.getMessage().getContent().startsWith("~")) {
+                                new CommandHandler(event.getMessage().getContent(), event.getMessage().getAuthor(), event.getChannel(), api);
+                            }
                         }
-                    }
-                });
+                );
             })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
