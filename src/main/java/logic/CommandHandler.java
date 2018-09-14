@@ -39,14 +39,15 @@ public class CommandHandler {
         String[] paramArray = message.split(" ");
         for (int i = 0; i < paramArray.length; i++) {
             //If a parameter is a string, look into sheets for appropriate dice
-            if (paramArray[i].chars().allMatch(Character::isLetter)) {
-                if (fetchLevelFromSpreadsheet(paramArray, i)) return null;
+            if (paramArray[i].chars().allMatch(Character::isLetter) && skillExists(paramArray, i)) {
+                return null;
             }
         }
         return String.join(" ", paramArray);
     }
 
-    private boolean fetchLevelFromSpreadsheet(String[] paramArray, int i) {
+    //If the skill exists, renames array element and returns true. Otherwise, returns false.
+    private boolean skillExists(String[] paramArray, int i) {
         try {
             SheetsQuickstart characterInfo = new SheetsQuickstart(author.getIdAsString());
             String change = retrieveDice(paramArray[i].toLowerCase(), characterInfo.getResult());
@@ -90,7 +91,7 @@ public class CommandHandler {
                         .send(channel);
                 break;
 
-            case "~kill":
+            case "~stop":
                 new MessageBuilder()
                         .setContent("TwoDee shutting down...")
                         .send(channel);

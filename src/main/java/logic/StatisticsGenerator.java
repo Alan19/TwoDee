@@ -7,10 +7,7 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import java.awt.*;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class StatisticsGenerator {
 
@@ -19,12 +16,15 @@ public class StatisticsGenerator {
     private HashMap<Integer, Double> doomMap;
     private boolean validCombo = false;
     private boolean overloaded = false;
+    private ArrayList<Integer> diceList;
+    private ArrayList<Integer> plotDice;
 
     public StatisticsGenerator(String message) {
         //Add all of the dice to the ArrayLists based on dice type
-        ArrayList<Integer> diceList = new ArrayList<>();
-        ArrayList<Integer> plotDice = new ArrayList<>();
-        populatePool(message, diceList, plotDice);
+        diceList = new ArrayList<>();
+        plotDice = new ArrayList<>();
+        ArrayList<String> args = new ArrayList<>(Arrays.asList(message.split(" ")));
+        addDiceToPools(args);
 
         //Check if command is valid
         if (!(diceList.isEmpty() && plotDice.isEmpty())){
@@ -46,14 +46,35 @@ public class StatisticsGenerator {
         doomMap = generateProbabilityHash(diceList, plotDice, doomHash);
     }
 
-    private void populatePool(String message, ArrayList<Integer> diceList, ArrayList<Integer> plotDice) {
-        for (String dice: message.split(" ")) {
-            if (dice.contains("pd") && dice.matches(".*\\d+.*")){
-                plotDice.add(Integer.parseInt(dice.replaceAll("[a-zA-Z]", "")));
+    private void addToPool(String argCopy, String numDice, ArrayList<Integer> pool) {
+        //Remove all letters so only numbers remain to get the dice value
+        int diceVal = Integer.parseInt(argCopy.replaceAll("[a-zA-Z]", ""));
+
+        //If there are multiple dice being rolled, add all of them to the pool. Otherwise, only add one.
+        if (numDice.equals("")) {
+            pool.add(diceVal);
+        } else {
+            for (int i = 0; i < Integer.parseInt(numDice); i++) {
+                pool.add(diceVal);
             }
-            else if (dice.contains("d") && dice.matches(".*\\d+.*")){
-                String test = dice.replaceAll("[a-zA-Z]", "");
-                diceList.add(Integer.parseInt(test));
+        }
+    }
+
+    private void addDiceToPools(ArrayList<String> args) {
+        for (String arg : args) {
+            String argCopy = arg;
+            StringBuilder numDice = new StringBuilder();
+
+            //Find number of dice being rolled
+            while (Character.isDigit(argCopy.charAt(0))) {
+                numDice.append(argCopy.charAt(0));
+                argCopy = argCopy.substring(1);
+            }
+            //Check for dice type
+            if (argCopy.contains("pd")) {
+                addToPool(argCopy, numDice.toString(), plotDice);
+            } else if (argCopy.contains("d")) {
+                addToPool(argCopy, numDice.toString(), diceList);
             }
         }
     }
