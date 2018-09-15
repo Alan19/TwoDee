@@ -143,11 +143,4 @@ public class DiceRoller {
         return newStr;
     }
 
-    public ArrayList<Integer> getRegDice() {
-        return regDice;
-    }
-
-    public ArrayList<Integer> getPlotDice() {
-        return plotDice;
-    }
 }
