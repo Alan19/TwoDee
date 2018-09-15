@@ -1,19 +1,15 @@
 package discord;
 
 import logic.CommandHandler;
-import logic.DiceRoller;
-import logic.StatisticsGenerator;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.util.logging.ExceptionLogger;
-import sheets.SheetsQuickstart;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
@@ -49,10 +45,6 @@ public class TwoDee {
             e.printStackTrace();
         }
 
-    }
-
-    private static boolean messageStartsWith(MessageCreateEvent event, String s) {
-        return event.getMessage().getContent().startsWith(s);
     }
 
     //Returns a random dice roll line

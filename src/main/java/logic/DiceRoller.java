@@ -20,40 +20,8 @@ public class DiceRoller {
         ArrayList<String> args = new ArrayList<>(Arrays.asList(content.split(" ")));
         args.remove("~r");
         //Split dice into regular dice and plot dice
-        addDiceToPools(args);
-    }
-
-    private void addDiceToPools(ArrayList<String> args) {
-        for (String arg : args) {
-            String argCopy = arg;
-            String numDice = "";
-
-            //Find number of dice being rolled
-            while (Character.isDigit(argCopy.charAt(0))) {
-                numDice += argCopy.charAt(0);
-                argCopy = argCopy.substring(1);
-            }
-            //Check for dice type
-            if (argCopy.contains("pd")) {
-                addToPool(argCopy, numDice, plotDice);
-            } else if (argCopy.contains("d")) {
-                addToPool(argCopy, numDice, regDice);
-            }
-        }
-    }
-
-    private void addToPool(String argCopy, String numDice, ArrayList<Integer> pool) {
-        //Remove all letters so only numbers remain to get the dice value
-        int diceVal = Integer.parseInt(argCopy.replaceAll("[a-zA-Z]", ""));
-
-        //If there are multiple dice being rolled, add all of them to the pool. Otherwise, only add one.
-        if (numDice.equals("")) {
-            pool.add(diceVal);
-        } else {
-            for (int i = 0; i < Integer.parseInt(numDice); i++) {
-                pool.add(diceVal);
-            }
-        }
+        DiceParameterHandler diceParameterHandler = new DiceParameterHandler(args, regDice, plotDice);
+        diceParameterHandler.addDiceToPools();
     }
 
     public EmbedBuilder generateResults(MessageAuthor author) {
@@ -173,5 +141,13 @@ public class DiceRoller {
             return "*none*";
         }
         return newStr;
+    }
+
+    public ArrayList<Integer> getRegDice() {
+        return regDice;
+    }
+
+    public ArrayList<Integer> getPlotDice() {
+        return plotDice;
     }
 }

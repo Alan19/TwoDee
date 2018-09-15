@@ -2,7 +2,6 @@ package logic;
 
 import discord.TwoDee;
 import org.javacord.api.entity.message.MessageAuthor;
-import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import java.awt.*;
@@ -24,7 +23,7 @@ public class StatisticsGenerator {
         diceList = new ArrayList<>();
         plotDice = new ArrayList<>();
         ArrayList<String> args = new ArrayList<>(Arrays.asList(message.split(" ")));
-        addDiceToPools(args);
+        DiceParameterHandler diceParameterHandler = new DiceParameterHandler(args, diceList, plotDice);
 
         //Check if command is valid
         if (!(diceList.isEmpty() && plotDice.isEmpty())){
@@ -56,25 +55,6 @@ public class StatisticsGenerator {
         } else {
             for (int i = 0; i < Integer.parseInt(numDice); i++) {
                 pool.add(diceVal);
-            }
-        }
-    }
-
-    private void addDiceToPools(ArrayList<String> args) {
-        for (String arg : args) {
-            String argCopy = arg;
-            StringBuilder numDice = new StringBuilder();
-
-            //Find number of dice being rolled
-            while (Character.isDigit(argCopy.charAt(0))) {
-                numDice.append(argCopy.charAt(0));
-                argCopy = argCopy.substring(1);
-            }
-            //Check for dice type
-            if (argCopy.contains("pd")) {
-                addToPool(argCopy, numDice.toString(), plotDice);
-            } else if (argCopy.contains("d")) {
-                addToPool(argCopy, numDice.toString(), diceList);
             }
         }
     }
