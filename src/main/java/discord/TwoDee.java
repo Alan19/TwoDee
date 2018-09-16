@@ -3,6 +3,7 @@ package discord;
 import logic.CommandHandler;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.message.MessageBuilder;
+import org.javacord.api.entity.user.User;
 import org.javacord.api.util.logging.ExceptionLogger;
 
 import java.io.BufferedReader;
@@ -77,4 +78,6 @@ public class TwoDee {
         }
         return "I'm out of witty lines!";
     }
+
+
 }

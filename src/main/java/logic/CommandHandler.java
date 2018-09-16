@@ -25,6 +25,7 @@ public class CommandHandler {
         this.channel = channel;
         this.api = api;
         commandSelector(content);
+        System.out.println(content);
     }
 
     //Checks to see if any parameters are words to find appropriate replacements in the Google doc
@@ -93,6 +94,12 @@ public class CommandHandler {
                 new MessageBuilder()
                         .setEmbed(diceRoller.generateResults(author))
                         .send(channel);
+                EmbedBuilder doomEmbed = diceRoller.addDoom(author, api);
+                if (doomEmbed != null) {
+                    new MessageBuilder()
+                            .setEmbed(doomEmbed)
+                            .send(channel);
+                }
                 break;
 
             case "~stop":

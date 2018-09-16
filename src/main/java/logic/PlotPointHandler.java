@@ -20,7 +20,6 @@ public class PlotPointHandler {
     private DiscordApi api;
 
     public PlotPointHandler(String args, MessageAuthor author, DiscordApi api) {
-
         this.args = args.split(" ");
         this.messageAuthor = author;
         this.api = api;
@@ -46,9 +45,9 @@ public class PlotPointHandler {
         }
         //User specified
         else {
-            target = args[0];
-            commandType = args[1];
-            amount = Integer.parseInt(args[2]);
+            target = convertPingToID(args[1]);
+            commandType = args[2];
+            amount = Integer.parseInt(args[3]);
         }
         return executeCommand(commandType, target, amount);
     }

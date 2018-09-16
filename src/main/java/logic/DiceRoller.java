@@ -1,8 +1,10 @@
 package logic;
 
 import discord.TwoDee;
+import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
+import org.javacord.api.entity.user.User;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -14,6 +16,7 @@ public class DiceRoller {
 
     private ArrayList<Integer> regDice = new ArrayList<>();
     private ArrayList<Integer> plotDice = new ArrayList<>();
+    private int doom;
 
     public DiceRoller(String content) {
         //Split up content
@@ -57,15 +60,15 @@ public class DiceRoller {
                 .setTitle(TwoDee.getRollTitleMessage())
                 .setAuthor(author)
                 .setColor(new Color(random.nextFloat(), random.nextFloat(), random.nextFloat()))
-                .addField("Regular dice", formatResults(diceResults), true)
+                .addField("Regular dice", formatResults(diceResults, author), true)
                 .addField("Picked", replaceBrackets(topTwo.toString()), true)
                 .addField("Dropped", replaceBrackets(dropped.toString()), true)
                 .addField("Plot dice", replaceBrackets(pdResults.toString()), true)
                 .addField("Total", String.valueOf(total), true);
     }
 
-    //Bold 1s to show total doom generated
-    private String formatResults(ArrayList<Integer> s) {
+    //Bold 1s to show total doom generated. Runs doom increasing method afterwards.
+    private String formatResults(ArrayList<Integer> s, MessageAuthor author) {
         String resultString = "";
         if (s.size() > 1){
             for (int i = 0; i < s.size() - 1; i++){
@@ -97,6 +100,17 @@ public class DiceRoller {
         return resultString;
     }
 
+    // Username is stored as <@!140973544891744256>
+    public EmbedBuilder addDoom(MessageAuthor author, DiscordApi api) {
+        PlotPointHandler handler = new PlotPointHandler("~p <@!" + author.getIdAsString() + "> add 1", author, api);
+        if (doom != 0){
+            return handler.processCommandType();
+        }
+        else {
+            return null;
+        }
+    }
+
     private int getTotal(ArrayList<Integer> topTwo, int plotResult) {
         return topTwo.stream().mapToInt(Integer::intValue).sum() + plotResult;
     }
@@ -119,10 +133,15 @@ public class DiceRoller {
         }
     }
 
+    //Roll all of the dice. Plot dice have a minimum value of its maximum roll/2
     private void rollDice(ArrayList<Integer> diceResults, ArrayList<Integer> pdResults, Random random) {
         //Roll dice
         for (Integer normalDice : regDice) {
-            diceResults.add(random.nextInt(normalDice) + 1);
+            int diceVal = random.nextInt(normalDice) + 1;
+            diceResults.add(diceVal);
+            if (diceVal == 1){
+                doom++;
+            }
         }
         //A plot die's minimum value is its number of faces / 2
         for (Integer pDice : plotDice) {
