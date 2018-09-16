@@ -94,12 +94,23 @@ public class CommandHandler {
                 new MessageBuilder()
                         .setEmbed(diceRoller.generateResults(author))
                         .send(channel);
-                EmbedBuilder doomEmbed = diceRoller.addDoom(author, api);
+                EmbedBuilder doomEmbed = diceRoller.addPlotPoints(author, api);
                 if (doomEmbed != null) {
                     new MessageBuilder()
                             .setEmbed(doomEmbed)
                             .send(channel);
+                    new MessageBuilder()
+                            .setEmbed(diceRoller.addDoom(diceRoller.getDoom()))
+                            .send(channel);
                 }
+                break;
+
+            //Doom management
+            case "~d":
+                DoomHandler doomHandler = new DoomHandler(message);
+                new MessageBuilder()
+                        .setEmbed(doomHandler.newDoom())
+                        .send(channel);
                 break;
 
             case "~stop":
