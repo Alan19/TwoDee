@@ -8,6 +8,9 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Map;
 
+/**
+ * A class for handling the retrieval of user information from users.yml
+ */
 public class UserInfo {
 
     private Map playerList;
@@ -30,6 +33,7 @@ public class UserInfo {
             return null;
     }
 
+    //Gets all the users as an ArrayList of their user IDs
     public ArrayList<String> getUsers(){
         ArrayList<String> userIDs = new ArrayList<>();
         userIDs.addAll(playerList.keySet());

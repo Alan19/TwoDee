@@ -7,12 +7,15 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
 
+/**
+ * This class handles the getting and setting of the plot points from a player
+ */
 public class PPManager implements IPlotPointMethods{
 
     //Sets the plot points of a player using Google's provided write method and the player's document ID
     @Override
     public int setPlotPoints(String target, int number) {
-        SheetsQuickstart.writeSomething(number, new UserInfo().getDocID(target));
+        SheetsQuickstart.writePlotPoints(number, new UserInfo().getDocID(target));
         return number;
     }
 

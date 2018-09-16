@@ -1,7 +1,6 @@
 package logic;
 
 import org.javacord.api.DiscordApi;
-import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import sheets.PPManager;
@@ -33,25 +32,29 @@ public class PlotPointHandler {
     public EmbedBuilder processCommandType() {
         String commandType = "";
         String target = "";
-        int number = 1;
+        int amount;
         //Get user's plot points
-        if (args.length == 2){
+        if (args.length == 2) {
             String userID = convertPingToID(args[1]);
             return getPlotPoints(userID);
         }
         //No user specified
-        else if (args.length == 3){
+        else if (args.length == 3) {
             target = messageAuthor.getIdAsString();
             commandType = args[1];
-            number = Integer.parseInt(args[2]);
+            amount = Integer.parseInt(args[2]);
         }
         //User specified
         else {
             target = args[0];
             commandType = args[1];
-            number = Integer.parseInt(args[2]);
+            amount = Integer.parseInt(args[2]);
         }
-        switch (commandType){
+        return executeCommand(commandType, target, amount);
+    }
+
+    private EmbedBuilder executeCommand(String commandType, String target, int number) {
+        switch (commandType) {
             case "add":
                 return addPlotPoints(target, number);
 
@@ -76,27 +79,32 @@ public class PlotPointHandler {
     }
 
     private EmbedBuilder setPlotPoints(String target, int number) {
-        return new EmbedBuilder()
-                .setTitle("Plot points")
-                .setAuthor(messageAuthor)
-                .setDescription(String.valueOf(ppManager.setPlotPoints(target, number)));
+        ppManager.setPlotPoints(target, number);
+        return getPlotPoints(target);
     }
 
     private EmbedBuilder addPlotPointsToAll(int number) {
         for (String ID : userInfo.getUsers()) {
             ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number);
         }
-        return null;
+        EmbedBuilder allPlayerEmbed = new EmbedBuilder()
+                .setTitle("Everyone's plot points!");
+        for (String id : userInfo.getUsers()) {
+            try {
+                allPlayerEmbed.addField(api.getUserById(id).get().getName(), String.valueOf(ppManager.getPlotPoints(id)), true);
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        return getPlotPoints(null);
     }
 
     private EmbedBuilder addPlotPoints(String target, int number) {
-        return new EmbedBuilder()
-                .setAuthor(messageAuthor)
-                .setTitle("Plot points")
-                .setDescription(String.valueOf(ppManager.setPlotPoints(target, ppManager.getPlotPoints(target + number))));
+        ppManager.setPlotPoints(target, ppManager.getPlotPoints(target) + number);
+        return getPlotPoints(target);
     }
 
-    private EmbedBuilder getPlotPoints(String target){
+    private EmbedBuilder getPlotPoints(String target) {
         try {
             return new EmbedBuilder()
                     .setAuthor(api.getUserById(target).get())
@@ -104,10 +112,10 @@ public class PlotPointHandler {
                     .setDescription(String.valueOf(ppManager.getPlotPoints(target)));
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
+            return new EmbedBuilder()
+                    .setAuthor(messageAuthor)
+                    .setTitle("User not found!");
         }
-        return new EmbedBuilder()
-                .setAuthor(messageAuthor)
-                .setTitle("User not found!");
     }
 
 }

@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class SheetsQuickstart {
-    public static final String RANGE = "B12:C12";
+    private static final String RANGE = "B12:C12";
     private static final String APPLICATION_NAME = "Summary Stat Fetcher";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
@@ -118,11 +118,9 @@ public class SheetsQuickstart {
     }
 
     //Writes a value to the plot point field of a spreadsheet
-    public static void writeSomething(int plotPoints, String docID) {
+    public static void writePlotPoints(int plotPoints, String docID) {
         List<List<Object>> values = Arrays.asList(
-                Arrays.asList(
-                        plotPoints
-                )
+                Arrays.asList(plotPoints)
         );
         try {
             NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
