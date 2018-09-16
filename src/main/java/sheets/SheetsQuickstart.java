@@ -12,6 +12,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 import java.io.FileInputStream;
@@ -19,20 +20,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
 public class SheetsQuickstart {
+    public static final String RANGE = "B12:C12";
     private static final String APPLICATION_NAME = "Summary Stat Fetcher";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
-
     /**
      * Global instance of the scopes required by this quickstart.
      * If modifying these scopes, delete your previously saved tokens/ folder.
      */
-    private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS_READONLY);
+    private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
     private static final String CREDENTIALS_FILE_PATH = "/credentials.json";
     private ValueRange result;
 
@@ -88,8 +90,20 @@ public class SheetsQuickstart {
         ValueRange result = service.spreadsheets().values().get(spreadsheetId, range).execute();
         int numRows = result.getValues() != null ? result.getValues().size() : 0;
         System.out.printf("%d rows retrieved.", numRows);
+    }
 
-
+    public static ValueRange getPlotPointCell(String docID) throws IOException, GeneralSecurityException {
+        // Build a new authorized API client service.
+        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+        final String spreadsheetId = docID;
+        final String range = RANGE;
+        Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+                .setApplicationName(APPLICATION_NAME)
+                .build();
+        ValueRange response = service.spreadsheets().values()
+                .get(spreadsheetId, range)
+                .execute();
+        return response;
     }
 
     public ValueRange getResult() {
@@ -102,5 +116,31 @@ public class SheetsQuickstart {
         String[] range = prop.getProperty(id).split(",");
         return "Data!" + range[0] + "1:" + range[1] + "270";
     }
+
+    //Writes a value to the plot point field of a spreadsheet
+    public static void writeSomething(int plotPoints, String docID) {
+        List<List<Object>> values = Arrays.asList(
+                Arrays.asList(
+                        plotPoints
+                )
+        );
+        try {
+            NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+            Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+
+            ValueRange body = new ValueRange().setValues(values);
+            UpdateValuesResponse result = service.spreadsheets().values().update(docID, RANGE, body)
+                    .setValueInputOption("RAW")
+                    .execute();
+            System.out.printf("%d cells updated.", result.getUpdatedCells());
+
+        } catch (GeneralSecurityException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
 }

@@ -72,7 +72,7 @@ public class CommandHandler {
         return false;
     }
 
-    private void commandSelector(String message) {
+    private EmbedBuilder commandSelector(String message) {
         String prefix = message.split(" ")[0];
         switch (prefix) {
             //Statistics listener
@@ -99,15 +99,18 @@ public class CommandHandler {
                 System.exit(1);
                 break;
 
+//            case "~p":
+//                PlotPointManager plotPointManager = new PlotPointManager(message, author);
+//                break;
+
             default:
-                new MessageBuilder()
-                        .setEmbed(
-                                new EmbedBuilder()
-                                        .setAuthor(author)
-                                        .setDescription("Command not recognized")
-                        )
-                        .send(channel);
+                return new EmbedBuilder()
+                        .setAuthor(author)
+                        .setDescription("Command not recognized");
         }
+        return new EmbedBuilder()
+                .setAuthor(author)
+                .setDescription("Command not recognized");
     }
 
     //Convert a skill into a dice value (euphemanu -> d12)
