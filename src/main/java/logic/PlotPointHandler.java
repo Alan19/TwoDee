@@ -53,6 +53,7 @@ public class PlotPointHandler {
         return executeCommand(commandType, target, amount);
     }
 
+    //Execute a command based on the command type. If an invalid command is entered, send an error embed message
     private EmbedBuilder executeCommand(String commandType, String target, int number) {
         switch (commandType) {
             case "add":
@@ -74,6 +75,7 @@ public class PlotPointHandler {
         }
     }
 
+    //Converts a ping into a user ID
     private String convertPingToID(String arg) {
         return arg.replaceAll("[^A-Za-z0-9]", "");
     }

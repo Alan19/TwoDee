@@ -24,6 +24,7 @@ public class StatisticsGenerator {
         plotDice = new ArrayList<>();
         ArrayList<String> args = new ArrayList<>(Arrays.asList(message.split(" ")));
         DiceParameterHandler diceParameterHandler = new DiceParameterHandler(args, diceList, plotDice);
+        diceParameterHandler.addDiceToPools();
 
         //Check if command is valid
         if (!(diceList.isEmpty() && plotDice.isEmpty())){

@@ -28,11 +28,11 @@ public class CommandHandler {
     }
 
     //Checks to see if any parameters are words to find appropriate replacements in the Google doc
-    private void handleCommand() {
+    private String handleCommand() {
         String convertedCommand = getConvertedCommand();
-        if (convertedCommand == null) return;
+        if (convertedCommand == null) return null;
         System.out.println(convertedCommand);
-
+        return convertedCommand;
     }
 
     private String getConvertedCommand() {
@@ -77,7 +77,8 @@ public class CommandHandler {
         switch (prefix) {
             //Statistics listener
             case "~s":
-                handleCommand();
+                message = handleCommand();
+                assert message != null;
                 StatisticsGenerator statistics = new StatisticsGenerator(message);
                 new MessageBuilder()
                         .setEmbed(statistics.generateStatistics(author))
@@ -86,7 +87,8 @@ public class CommandHandler {
 
             //Dice roll listener
             case "~r":
-                handleCommand();
+                message = handleCommand();
+                assert message != null;
                 DiceRoller diceRoller = new DiceRoller(message);
                 new MessageBuilder()
                         .setEmbed(diceRoller.generateResults(author))

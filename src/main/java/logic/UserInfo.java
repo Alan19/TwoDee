@@ -15,7 +15,7 @@ public class UserInfo {
 
     private Map playerList;
 
-    public UserInfo(){
+    public UserInfo() {
         try {
             YamlReader playerInfo = new YamlReader(new FileReader("src/main/resources/users.yaml"));
             playerList = (Map) playerInfo.read();
@@ -26,15 +26,15 @@ public class UserInfo {
 
     //Returns the string of the document ID if the user is a match. If not, return null.
     public String getDocID(String potentialUserID) {
-        if (getUsers().contains(potentialUserID)){
+        if (getUsers().contains(potentialUserID)) {
             Map playerRecord = (Map) playerList.get(potentialUserID);
             return (String) playerRecord.get("sid");
         }
-            return null;
+        return null;
     }
 
     //Gets all the users as an ArrayList of their user IDs
-    public ArrayList<String> getUsers(){
+    public ArrayList<String> getUsers() {
         ArrayList<String> userIDs = new ArrayList<>();
         userIDs.addAll(playerList.keySet());
         return userIDs;
