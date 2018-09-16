@@ -62,7 +62,7 @@ public class DiceRoller {
                 .setTitle(TwoDee.getRollTitleMessage())
                 .setAuthor(author)
                 .setColor(new Color(random.nextFloat(), random.nextFloat(), random.nextFloat()))
-                .addField("Regular dice", formatResults(diceResults, author), true)
+                .addField("Regular dice", formatResults(diceResults), true)
                 .addField("Picked", replaceBrackets(topTwo.toString()), true)
                 .addField("Dropped", replaceBrackets(dropped.toString()), true)
                 .addField("Plot dice", replaceBrackets(pdResults.toString()), true)
@@ -70,7 +70,7 @@ public class DiceRoller {
     }
 
     //Bold 1s to show total doom generated. Runs doom increasing method afterwards.
-    private String formatResults(ArrayList<Integer> s, MessageAuthor author) {
+    private String formatResults(ArrayList<Integer> s) {
         String resultString = "";
         if (s.size() > 1){
             for (int i = 0; i < s.size() - 1; i++){

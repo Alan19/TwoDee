@@ -46,20 +46,6 @@ public class StatisticsGenerator {
         doomMap = generateProbabilityHash(diceList, plotDice, doomHash);
     }
 
-    private void addToPool(String argCopy, String numDice, ArrayList<Integer> pool) {
-        //Remove all letters so only numbers remain to get the dice value
-        int diceVal = Integer.parseInt(argCopy.replaceAll("[a-zA-Z]", ""));
-
-        //If there are multiple dice being rolled, add all of them to the pool. Otherwise, only add one.
-        if (numDice.equals("")) {
-            pool.add(diceVal);
-        } else {
-            for (int i = 0; i < Integer.parseInt(numDice); i++) {
-                pool.add(diceVal);
-            }
-        }
-    }
-
     //Generate a HashMap with the roll as the keys and the percent as the values
     private HashMap<Integer,Double> generateProbabilityHash(ArrayList<Integer> diceList, ArrayList<Integer> plotDice, HashMap<Integer, Integer> resultHash) {
         int totalCombos = getTotalCombos(diceList, plotDice);
