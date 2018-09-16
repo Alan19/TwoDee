@@ -1,0 +1,113 @@
+package logic;
+
+import org.javacord.api.DiscordApi;
+import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.message.MessageAuthor;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
+import sheets.PPManager;
+
+import java.util.concurrent.ExecutionException;
+
+/**
+ * This class adds plot points, subtracts plot points, and sets plot points for players. This class will also keep
+ * track of doom points
+ */
+public class PlotPointHandler {
+
+    private PPManager ppManager = new PPManager();
+    private UserInfo userInfo = new UserInfo();
+    private String[] args;
+    private MessageAuthor messageAuthor;
+    private DiscordApi api;
+
+    public PlotPointHandler(String args, MessageAuthor author, DiscordApi api) {
+
+        this.args = args.split(" ");
+        this.messageAuthor = author;
+        this.api = api;
+    }
+
+    //2 args : ~p [add|sub|addall|set] number
+    //3 args: ~p name [add|sub|addall|set] number
+//    @Command(aliases = {"~p", "~plot", "~plotpoints"}, description = "Manages plot points and doom points", usage = "~p <name> <[add|sub|addall|set]> [number]")
+    public EmbedBuilder processCommandType() {
+        String commandType = "";
+        String target = "";
+        int number = 1;
+        //Get user's plot points
+        if (args.length == 2){
+            String userID = convertPingToID(args[1]);
+            return getPlotPoints(userID);
+        }
+        //No user specified
+        else if (args.length == 3){
+            target = messageAuthor.getIdAsString();
+            commandType = args[1];
+            number = Integer.parseInt(args[2]);
+        }
+        //User specified
+        else {
+            target = args[0];
+            commandType = args[1];
+            number = Integer.parseInt(args[2]);
+        }
+        switch (commandType){
+            case "add":
+                return addPlotPoints(target, number);
+
+            case "sub":
+                return addPlotPoints(target, number * -1);
+
+            case "addall":
+                return addPlotPointsToAll(number);
+
+            case "set":
+                return setPlotPoints(target, number);
+
+            default:
+                return new EmbedBuilder()
+                        .setAuthor(messageAuthor)
+                        .setTitle("Invalid command");
+        }
+    }
+
+    private String convertPingToID(String arg) {
+        return arg.replaceAll("[^A-Za-z0-9]", "");
+    }
+
+    private EmbedBuilder setPlotPoints(String target, int number) {
+        return new EmbedBuilder()
+                .setTitle("Plot points")
+                .setAuthor(messageAuthor)
+                .setDescription(String.valueOf(ppManager.setPlotPoints(target, number)));
+    }
+
+    private EmbedBuilder addPlotPointsToAll(int number) {
+        for (String ID : userInfo.getUsers()) {
+            ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number);
+        }
+        return null;
+    }
+
+    private EmbedBuilder addPlotPoints(String target, int number) {
+        return new EmbedBuilder()
+                .setAuthor(messageAuthor)
+                .setTitle("Plot points")
+                .setDescription(String.valueOf(ppManager.setPlotPoints(target, ppManager.getPlotPoints(target + number))));
+    }
+
+    private EmbedBuilder getPlotPoints(String target){
+        try {
+            return new EmbedBuilder()
+                    .setAuthor(api.getUserById(target).get())
+                    .setTitle("Plot points")
+                    .setDescription(String.valueOf(ppManager.getPlotPoints(target)));
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
+        return new EmbedBuilder()
+                .setAuthor(messageAuthor)
+                .setTitle("User not found!");
+    }
+
+}

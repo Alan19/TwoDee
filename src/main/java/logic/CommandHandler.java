@@ -24,7 +24,7 @@ public class CommandHandler {
         this.author = author;
         this.channel = channel;
         this.api = api;
-        handleCommand();
+        commandSelector(content);
     }
 
     //Checks to see if any parameters are words to find appropriate replacements in the Google doc
@@ -32,7 +32,7 @@ public class CommandHandler {
         String convertedCommand = getConvertedCommand();
         if (convertedCommand == null) return;
         System.out.println(convertedCommand);
-        commandSelector(convertedCommand);
+
     }
 
     private String getConvertedCommand() {
@@ -77,6 +77,7 @@ public class CommandHandler {
         switch (prefix) {
             //Statistics listener
             case "~s":
+                handleCommand();
                 StatisticsGenerator statistics = new StatisticsGenerator(message);
                 new MessageBuilder()
                         .setEmbed(statistics.generateStatistics(author))
@@ -85,6 +86,7 @@ public class CommandHandler {
 
             //Dice roll listener
             case "~r":
+                handleCommand();
                 DiceRoller diceRoller = new DiceRoller(message);
                 new MessageBuilder()
                         .setEmbed(diceRoller.generateResults(author))
@@ -99,9 +101,12 @@ public class CommandHandler {
                 System.exit(1);
                 break;
 
-//            case "~p":
-//                PlotPointManager plotPointManager = new PlotPointManager(message, author);
-//                break;
+            case "~p":
+                PlotPointHandler plotPointHandler = new PlotPointHandler(message, author, api);
+                new MessageBuilder()
+                        .setEmbed(plotPointHandler.processCommandType())
+                        .send(channel);
+                break;
 
             default:
                 return new EmbedBuilder()
