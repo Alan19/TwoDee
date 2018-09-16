@@ -37,5 +37,8 @@
     <orderEntry type="library" name="Maven: org.mortbay.jetty:jetty-util:6.1.26" level="project" />
     <orderEntry type="library" name="Maven: org.mortbay.jetty:servlet-api:2.5-20081211" level="project" />
     <orderEntry type="library" name="Maven: com.google.apis:google-api-services-sheets:v4-rev539-1.23.0" level="project" />
+    <orderEntry type="library" name="Maven: com.esotericsoftware.yamlbeans:yamlbeans:1.06" level="project" />
+    <orderEntry type="library" name="Maven: de.btobastian.sdcf4j:sdcf4j-core:v1.0.10" level="project" />
+    <orderEntry type="library" name="Maven: de.btobastian.sdcf4j:sdcf4j-javacord:v1.0.10" level="project" />
   </component>
 </module>
