@@ -87,7 +87,7 @@ public class PlotPointHandler {
     private EmbedBuilder addPlotPointsToAll(int number) {
         for (String ID : userInfo.getUsers()) {
             try {
-                if (api.getServerVoiceChannelById("468046159781429254").get().isConnected(api.getUserById(ID).get())){
+                if (isConnected(ID)){
                     ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number);
                 }
             } catch (InterruptedException | ExecutionException e) {
@@ -104,6 +104,10 @@ public class PlotPointHandler {
             }
         }
         return getPlotPoints(null);
+    }
+
+    private boolean isConnected(String ID) throws InterruptedException, ExecutionException {
+        return api.getServerVoiceChannelById("468046159781429254").get().isConnected(api.getUserById(ID).get());
     }
 
     private EmbedBuilder addPlotPoints(String target, int number) {
