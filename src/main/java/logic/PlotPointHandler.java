@@ -86,7 +86,13 @@ public class PlotPointHandler {
 
     private EmbedBuilder addPlotPointsToAll(int number) {
         for (String ID : userInfo.getUsers()) {
-            ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number);
+            try {
+                if (api.getServerVoiceChannelById("468046159781429254").get().isConnected(api.getUserById(ID).get())){
+                    ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number);
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
         }
         EmbedBuilder allPlayerEmbed = new EmbedBuilder()
                 .setTitle("Everyone's plot points!");

@@ -86,7 +86,7 @@ public class CommandHandler {
                         .send(channel);
                 break;
 
-            //Dice roll listener
+            //Dice roll listener. Sends extra embeds for plot points and doom
             case "~r":
                 message = handleCommand();
                 assert message != null;
@@ -105,6 +105,16 @@ public class CommandHandler {
                 }
                 break;
 
+            //Version of ~r that doesn't generate doom
+            case "~test":
+                message = handleCommand();
+                assert message != null;
+                DiceRoller doomlessRoller = new DiceRoller(message);
+                new MessageBuilder()
+                        .setEmbed(doomlessRoller.generateResults(author))
+                        .send(channel);
+                break;
+
             //Doom management
             case "~d":
                 DoomHandler doomHandler = new DoomHandler(message);
@@ -113,6 +123,7 @@ public class CommandHandler {
                         .send(channel);
                 break;
 
+            //Kill the bot!
             case "~stop":
                 new MessageBuilder()
                         .setContent("TwoDee shutting down...")
@@ -121,6 +132,7 @@ public class CommandHandler {
                 System.exit(1);
                 break;
 
+            //Add, subtract, and set plot points
             case "~p":
                 PlotPointHandler plotPointHandler = new PlotPointHandler(message, author, api);
                 new MessageBuilder()
