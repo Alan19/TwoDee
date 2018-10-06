@@ -5,10 +5,33 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>main</groupId>
     <artifactId>TwoDee</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>4.0.1</version>
     <build>
 
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <mainClass>discord.TwoDee</mainClass>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>discord.TwoDee</mainClass>
+                        </manifest>
+                    </archive>
+
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -17,6 +40,7 @@
                     <target>8</target>
                 </configuration>
             </plugin>
+
         </plugins>
     </build>
     <repositories>
@@ -27,6 +51,12 @@
     </repositories>
 
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.codehaus.mojo/exec-maven-plugin -->
+        <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>1.6.0</version>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind -->
         <dependency>
@@ -84,5 +114,4 @@
 
 
     </dependencies>
-
 </project>
