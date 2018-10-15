@@ -78,6 +78,9 @@ public class CommandHandler {
         switch (prefix) {
             //Statistics listener
             case "~s":
+            case "~stat":
+            case "~stats":
+            case "~statistics":
                 message = handleCommand();
                 assert message != null;
                 StatisticsGenerator statistics = new StatisticsGenerator(message);
@@ -88,6 +91,7 @@ public class CommandHandler {
 
             //Dice roll listener. Sends extra embeds for plot points and doom
             case "~r":
+            case "~roll":
                 message = handleCommand();
                 assert message != null;
                 DiceRoller diceRoller = new DiceRoller(message);
@@ -117,6 +121,7 @@ public class CommandHandler {
 
             //Doom management
             case "~d":
+            case "~doom":
                 DoomHandler doomHandler = new DoomHandler(message);
                 new MessageBuilder()
                         .setEmbed(doomHandler.newDoom())
@@ -134,6 +139,9 @@ public class CommandHandler {
 
             //Add, subtract, and set plot points
             case "~p":
+            case "~pp":
+            case "~plot":
+            case "~plotpoints":
                 PlotPointHandler plotPointHandler = new PlotPointHandler(message, author, api);
                 new MessageBuilder()
                         .setEmbed(plotPointHandler.processCommandType())
