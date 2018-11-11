@@ -33,7 +33,7 @@ public class DoomWriter {
 
     public int getDoom() {
         try {
-            prop.load(new FileInputStream("src/main/resources/bot.properties"));
+            prop.load(new FileInputStream("resources/bot.properties"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -43,7 +43,7 @@ public class DoomWriter {
     public EmbedBuilder setDoom(int newDoom) {
         prop.setProperty("doom", String.valueOf(newDoom));
         try {
-            prop.store(new FileOutputStream("src/main/resources/bot.properties"), null);
+            prop.store(new FileOutputStream("resources/bot.properties"), null);
         } catch (IOException e) {
             e.printStackTrace();
         }

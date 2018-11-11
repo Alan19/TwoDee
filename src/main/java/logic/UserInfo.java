@@ -17,7 +17,7 @@ public class UserInfo {
 
     public UserInfo() {
         try {
-            YamlReader playerInfo = new YamlReader(new FileReader("src/main/resources/users.yaml"));
+            YamlReader playerInfo = new YamlReader(new FileReader("resources/users.yaml"));
             playerList = (Map) playerInfo.read();
         } catch (FileNotFoundException | YamlException e) {
             e.printStackTrace();

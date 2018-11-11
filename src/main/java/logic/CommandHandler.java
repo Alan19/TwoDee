@@ -92,21 +92,34 @@ public class CommandHandler {
             //Dice roll listener. Sends extra embeds for plot points and doom
             case "~r":
             case "~roll":
-                message = handleCommand();
-                assert message != null;
-                DiceRoller diceRoller = new DiceRoller(message);
-                new MessageBuilder()
-                        .setEmbed(diceRoller.generateResults(author))
-                        .send(channel);
-                EmbedBuilder doomEmbed = diceRoller.addPlotPoints(author, api);
-                if (doomEmbed != null) {
-                    new MessageBuilder()
-                            .setEmbed(doomEmbed)
-                            .send(channel);
-                    new MessageBuilder()
-                            .setEmbed(diceRoller.addDoom(diceRoller.getDoom()))
-                            .send(channel);
+                //Special case for GM
+                if (author.equals(api.getUserById("73478860120797184"))){
+                    if (commandContainsPlotDice(message)){
+                        DoomWriter writer = new DoomWriter();
+                        writer.addDoom(getPlotPointsSpent(message) * -1);
+                        writer.generateDoomEmbed();
+                    }
                 }
+                else {
+                    message = handleCommand();
+                    assert message != null;
+                    DiceRoller diceRoller = new DiceRoller(message);
+                    deductPlotPoints(message);
+
+                    new MessageBuilder()
+                            .setEmbed(diceRoller.generateResults(author))
+                            .send(channel);
+                    EmbedBuilder doomEmbed = diceRoller.addPlotPoints(author, api);
+                    if (doomEmbed != null) {
+                        new MessageBuilder()
+                                .setEmbed(doomEmbed)
+                                .send(channel);
+                        new MessageBuilder()
+                                .setEmbed(diceRoller.addDoom(diceRoller.getDoom()))
+                                .send(channel);
+                    }
+                }
+
                 break;
 
             //Version of ~r that doesn't generate doom
@@ -156,6 +169,45 @@ public class CommandHandler {
         return new EmbedBuilder()
                 .setAuthor(author)
                 .setDescription("Command not recognized");
+    }
+
+    private void deductPlotPoints(String message) {
+        if (commandContainsPlotDice(message)){
+            String ppCommand = generatePlotPointCommand(message);
+            PlotPointHandler ppHandler = new PlotPointHandler(ppCommand, author, api);
+            EmbedBuilder ppNotification = ppHandler.processCommandType();
+            channel.sendMessage(ppNotification);
+        }
+    }
+
+    /**
+     * If a user uses plot dice, remove plot points equal to half of the dice's total value
+     * @param message
+     * @return
+     */
+    private String generatePlotPointCommand(String message) {
+        int ppUsage = getPlotPointsSpent(message);
+        return "~p sub " + ppUsage;
+    }
+
+    private int getPlotPointsSpent(String message) {
+        String[] commandParams = message.split(" ");
+        int ppUsage = 0;
+        for (String args: commandParams) {
+            if (args.startsWith("pd")){
+                ppUsage += Integer.parseInt(args.replaceAll("[^\\d.]", "")) / 2;
+            }
+        }
+        return ppUsage;
+    }
+
+    private boolean commandContainsPlotDice(String message) {
+        for (String arg: message.split(" ")) {
+            if (arg.startsWith("pd")){
+                return true;
+            }
+        }
+        return false;
     }
 
     //Convert a skill into a dice value (euphemanu -> d12)

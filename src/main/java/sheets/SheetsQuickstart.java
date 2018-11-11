@@ -78,7 +78,7 @@ public class SheetsQuickstart {
      */
     public static void main(String... args) throws IOException, GeneralSecurityException {
         Properties prop = new Properties();
-        prop.load(new FileInputStream("src/main/resources/bot.properties"));
+        prop.load(new FileInputStream("resources/bot.properties"));
         String token = prop.getProperty("token");
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -112,7 +112,7 @@ public class SheetsQuickstart {
 
     private String generateRangeCommand(String id) throws IOException {
         Properties prop = new Properties();
-        prop.load(new FileInputStream("src/main/resources/players.properties"));
+        prop.load(new FileInputStream("resources/players.properties"));
         String[] range = prop.getProperty(id).split(",");
         return "Data!" + range[0] + "1:" + range[1] + "270";
     }

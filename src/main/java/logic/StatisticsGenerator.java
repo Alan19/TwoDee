@@ -15,7 +15,17 @@ public class StatisticsGenerator {
     private HashMap<Integer, Double> doomMap;
     private boolean validCombo = false;
     private boolean overloaded = false;
+
+    public ArrayList<Integer> getDiceList() {
+        return diceList;
+    }
+
     private ArrayList<Integer> diceList;
+
+    public ArrayList<Integer> getPlotDice() {
+        return plotDice;
+    }
+
     private ArrayList<Integer> plotDice;
 
     public StatisticsGenerator(String message) {

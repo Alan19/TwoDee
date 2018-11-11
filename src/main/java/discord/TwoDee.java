@@ -20,7 +20,7 @@ public class TwoDee {
     public static void main(String[] args) {
         try {
             Properties prop = new Properties();
-            prop.load(new FileInputStream("src/main/resources/bot.properties"));
+            prop.load(new FileInputStream("resources/bot.properties"));
             String token = prop.getProperty("token");
             new DiscordApiBuilder().setToken(token).login().thenAccept(api -> {
                 //Send startup messsage
@@ -48,7 +48,7 @@ public class TwoDee {
 
     //Returns a random dice roll line
     public static String getRollTitleMessage() {
-        try (BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/rollLines.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("resources/rollLines.txt"))) {
             ArrayList<String> rollLines = new ArrayList<>();
             String line = reader.readLine();
             while (line != null) {
@@ -64,7 +64,7 @@ public class TwoDee {
 
     //Returns a random startup line
     private static String getStartupMessage() {
-        try (BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/StartupLines.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("resources/StartupLines.txt"))) {
             ArrayList<String> startupLines = new ArrayList<>();
             String line = reader.readLine();
             while (line != null) {
