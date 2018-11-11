@@ -8,9 +8,12 @@ import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import sheets.SheetsQuickstart;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 public class CommandHandler {
 
@@ -93,31 +96,38 @@ public class CommandHandler {
             case "~r":
             case "~roll":
                 //Special case for GM
-                if (author.equals(api.getUserById("73478860120797184"))){
-                    if (commandContainsPlotDice(message)){
-                        DoomWriter writer = new DoomWriter();
-                        writer.addDoom(getPlotPointsSpent(message) * -1);
-                        writer.generateDoomEmbed();
+                try {
+                    Properties prop = new Properties();
+                    prop.load(new FileInputStream("resources/bot.properties"));
+                    if (author.getIdAsString().equals(prop.getProperty("gameMaster"))){
+                        if (commandContainsPlotDice(message)){
+                            DoomWriter writer = new DoomWriter();
+                            writer.addDoom(getPlotPointsSpent(message) * -1);
+                            EmbedBuilder doomEmbed = writer.generateDoomEmbed();
+                            channel.sendMessage(doomEmbed);
+                        }
                     }
-                }
-                else {
-                    message = handleCommand();
-                    assert message != null;
-                    DiceRoller diceRoller = new DiceRoller(message);
-                    deductPlotPoints(message);
+                    else {
+                        message = handleCommand();
+                        assert message != null;
+                        DiceRoller diceRoller = new DiceRoller(message);
+                        deductPlotPoints(message);
 
-                    new MessageBuilder()
-                            .setEmbed(diceRoller.generateResults(author))
-                            .send(channel);
-                    EmbedBuilder doomEmbed = diceRoller.addPlotPoints(author, api);
-                    if (doomEmbed != null) {
                         new MessageBuilder()
-                                .setEmbed(doomEmbed)
+                                .setEmbed(diceRoller.generateResults(author))
                                 .send(channel);
-                        new MessageBuilder()
-                                .setEmbed(diceRoller.addDoom(diceRoller.getDoom()))
-                                .send(channel);
+                        EmbedBuilder doomEmbed = diceRoller.addPlotPoints(author, api);
+                        if (doomEmbed != null) {
+                            new MessageBuilder()
+                                    .setEmbed(doomEmbed)
+                                    .send(channel);
+                            new MessageBuilder()
+                                    .setEmbed(diceRoller.addDoom(diceRoller.getDoom()))
+                                    .send(channel);
+                        }
                     }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
 
                 break;
