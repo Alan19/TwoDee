@@ -18,11 +18,9 @@ public class CommandHandler {
 
     private DiscordApi api;
     private TextChannel channel;
-    private String message;
     private MessageAuthor author;
 
     public CommandHandler(String content, MessageAuthor author, TextChannel channel, DiscordApi api) {
-        message = content;
         this.author = author;
         this.channel = channel;
         this.api = api;
@@ -31,15 +29,15 @@ public class CommandHandler {
     }
 
     //Checks to see if any parameters are words to find appropriate replacements in the Google doc
-    private String handleCommand() {
-        String convertedCommand = getConvertedCommand();
+    private String handleCommand(String command) {
+        String convertedCommand = getConvertedCommand(command);
         if (convertedCommand == null) return null;
         System.out.println(convertedCommand);
         return convertedCommand;
     }
 
-    private String getConvertedCommand() {
-        String[] paramArray = message.split(" ");
+    private String getConvertedCommand(String command) {
+        String[] paramArray = command.split(" ");
         for (int i = 0; i < paramArray.length; i++) {
             //If a parameter is a string, look into sheets for appropriate dice
             if (paramArray[i].chars().allMatch(Character::isLetter) && skillExists(paramArray, i)) {
@@ -75,15 +73,16 @@ public class CommandHandler {
         return false;
     }
 
-    private EmbedBuilder commandSelector(String message) {
-        String prefix = message.split(" ")[0];
+    private void commandSelector(String message) {
+        message = message.replaceAll("\\s+", " ");
+            String prefix = message.split(" ")[0];
         switch (prefix) {
             //Statistics listener
             case "~s":
             case "~stat":
             case "~stats":
             case "~statistics":
-                message = handleCommand();
+                message = handleCommand(message);
                 assert message != null;
                 StatisticsGenerator statistics = new StatisticsGenerator(message);
                 new MessageBuilder()
@@ -107,7 +106,7 @@ public class CommandHandler {
                         }
                     }
                     else {
-                        message = handleCommand();
+                        message = handleCommand(message);
                         assert message != null;
                         DiceRoller diceRoller = new DiceRoller(message);
                         deductPlotPoints(message);
@@ -133,7 +132,7 @@ public class CommandHandler {
 
             //Version of ~r that doesn't generate doom
             case "~test":
-                message = handleCommand();
+                message = handleCommand(message);
                 assert message != null;
                 DiceRoller doomlessRoller = new DiceRoller(message);
                 new MessageBuilder()
@@ -171,11 +170,12 @@ public class CommandHandler {
                 break;
 
             default:
-                return new EmbedBuilder()
+                new EmbedBuilder()
                         .setAuthor(author)
                         .setDescription("Command not recognized");
+                return;
         }
-        return new EmbedBuilder()
+        new EmbedBuilder()
                 .setAuthor(author)
                 .setDescription("Command not recognized");
     }
@@ -203,8 +203,19 @@ public class CommandHandler {
         String[] commandParams = message.split(" ");
         int ppUsage = 0;
         for (String args: commandParams) {
-            if (args.startsWith("pd")){
-                ppUsage += Integer.parseInt(args.replaceAll("[^\\d.]", "")) / 2;
+            if (args.contains("pd")){
+                if (args.startsWith("pd")){
+                    ppUsage += Integer.parseInt(args.replaceAll("[^\\d.]", "")) / 2;
+                }
+                else {
+                    int i = 0;
+                    String multiplier = "";
+                    while (args.charAt(i) != 'p'){
+                        multiplier += args.charAt(i);
+                        i++;
+                    }
+                    ppUsage += Integer.parseInt(multiplier) * Integer.parseInt(args.substring(args.indexOf("pd") + 2)) / 2;
+                }
             }
         }
         return ppUsage;
@@ -212,7 +223,7 @@ public class CommandHandler {
 
     private boolean commandContainsPlotDice(String message) {
         for (String arg: message.split(" ")) {
-            if (arg.startsWith("pd")){
+            if (arg.contains("pd")){
                 return true;
             }
         }
