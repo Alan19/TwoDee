@@ -131,6 +131,7 @@ public class CommandHandler {
                 break;
 
             //Version of ~r that doesn't generate doom
+            case "~t":
             case "~test":
                 message = handleCommand(message);
                 assert message != null;
@@ -169,10 +170,26 @@ public class CommandHandler {
                         .send(channel);
                 break;
 
+            //Help command
+            case "~h":
+            case "~help":
+                HelpCommand helpCommand;
+                if (message.split(" ").length == 2){
+                    helpCommand = new HelpCommand(message.split(" ")[1], author);
+                }
+                else {
+                    helpCommand = new HelpCommand(author);
+                }
+
+                new MessageBuilder()
+                        .setEmbed(helpCommand.getHelp())
+                        .send(channel);
+                break;
+
             default:
-                new EmbedBuilder()
-                        .setAuthor(author)
-                        .setDescription("Command not recognized");
+                new MessageBuilder()
+                        .setEmbed(new EmbedBuilder().setAuthor(author).setDescription("Command not recognized!"))
+                        .send(channel);
                 return;
         }
         new EmbedBuilder()

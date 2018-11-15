@@ -12,7 +12,12 @@ import java.util.List;
  */
 public class PPManager implements IPlotPointMethods{
 
-    //Sets the plot points of a player using Google's provided write method and the player's document ID
+    /**Sets the plot points of a player using Google's provided write method and the player's document ID. Returns the
+     * number of plot points the user has
+     * @param target
+     * @param number
+     * @return
+     */
     @Override
     public int setPlotPoints(String target, int number) {
         SheetsQuickstart.writePlotPoints(number, new UserInfo().getDocID(target));

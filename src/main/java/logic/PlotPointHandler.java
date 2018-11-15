@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class PlotPointHandler {
 
+    public static final String MAIN_CHANNEL_ID = "468046159781429254";
     private PPManager ppManager = new PPManager();
     private UserInfo userInfo = new UserInfo();
     private String[] args;
@@ -84,30 +85,31 @@ public class PlotPointHandler {
         return getPlotPoints(target);
     }
 
+    /**
+     * Adds x plot points to all players in the main voice channel for session replenishment
+     * @param number The number of plot points to add to all players in the channel
+     * @return An embed with the change in plot points for each player (Alan: 21 => 25)
+     */
     private EmbedBuilder addPlotPointsToAll(int number) {
+        EmbedBuilder allPlayerEmbed = new EmbedBuilder()
+                .setTitle("Everyone's plot points!");
         for (String ID : userInfo.getUsers()) {
+            String message = "";
             try {
                 if (isConnected(ID)){
+                    message += api.getUserById(ID).get().getName() + ": " + ppManager.getPlotPoints(ID) + " => " +
                     ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number);
                 }
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
+            allPlayerEmbed.setDescription(message);
         }
-        EmbedBuilder allPlayerEmbed = new EmbedBuilder()
-                .setTitle("Everyone's plot points!");
-        for (String id : userInfo.getUsers()) {
-            try {
-                allPlayerEmbed.addField(api.getUserById(id).get().getName(), String.valueOf(ppManager.getPlotPoints(id)), true);
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
-        }
-        return getPlotPoints(null);
+        return allPlayerEmbed;
     }
 
-    private boolean isConnected(String ID) throws InterruptedException, ExecutionException {
-        return api.getServerVoiceChannelById("468046159781429254").get().isConnected(api.getUserById(ID).get());
+    private boolean isConnected(String id) throws InterruptedException, ExecutionException {
+        return api.getServerVoiceChannelById(MAIN_CHANNEL_ID).get().isConnected(api.getUserById(id).get());
     }
 
     private EmbedBuilder addPlotPoints(String target, int number) {
