@@ -5,6 +5,8 @@ import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import sheets.PPManager;
 
+import java.awt.*;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -97,13 +99,15 @@ public class PlotPointHandler {
             String message = "";
             try {
                 if (isConnected(ID)){
-                    message += api.getUserById(ID).get().getName() + ": " + ppManager.getPlotPoints(ID) + " => " +
-                    ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number);
+                    allPlayerEmbed.addField(api.getUserById(ID).get().getName(), ppManager.getPlotPoints(ID) + " → " +
+                    ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number));
                 }
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
             allPlayerEmbed.setDescription(message);
+            Random random = new Random();
+            allPlayerEmbed.setColor(new Color(random.nextFloat(), random.nextFloat(), random.nextFloat()));
         }
         return allPlayerEmbed;
     }
