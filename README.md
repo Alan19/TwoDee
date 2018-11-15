@@ -29,4 +29,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-Thanks to JavaCord for providing an easy to use library for creating Discord bots, [wadeanthony0100](https://github.com/wadeanthony0100) for guiding me through this project, and [SuicidalSteve](https://github.com/SuicidalSteve) for giving me the idea on how to generate statistics.
+Thanks to JavaCord for providing an easy to use library for creating Discord bots, [wadeanthony0100](https://github.com/wadeanthony0100) for helping me with web requests, and [SuicidalSteve](https://github.com/SuicidalSteve) for giving me the idea on how to generate statistics.
