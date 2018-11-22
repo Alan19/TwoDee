@@ -1,0 +1,14 @@
+
+/.gradle/
+/.idea/
+/build/
+/tokens/
+/gradlew
+/build.gradle
+/target/
+/out/
+/settings.gradle
+/gradle/
+/resources/
+/gradlew.bat
+/TwoDee.iml

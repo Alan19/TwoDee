@@ -186,6 +186,10 @@ public class CommandHandler {
                         .send(channel);
                 break;
 
+            case "~snack":
+                SnackCommand snackCommand = new SnackCommand(author);
+                break;
+
             default:
                 new MessageBuilder()
                         .setEmbed(new EmbedBuilder().setAuthor(author).setDescription("Command not recognized!"))

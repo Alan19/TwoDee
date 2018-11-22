@@ -61,7 +61,7 @@ public class DiceRoller {
         return new EmbedBuilder()
                 .setTitle(TwoDee.getRollTitleMessage())
                 .setAuthor(author)
-                .setColor(new Color(random.nextFloat(), random.nextFloat(), random.nextFloat()))
+                .setColor(RandomColor.getRandomColor())
                 .addField("Regular dice", formatResults(diceResults), true)
                 .addField("Picked", replaceBrackets(topTwo.toString()), true)
                 .addField("Dropped", replaceBrackets(dropped.toString()), true)
