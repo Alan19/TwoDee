@@ -1,7 +1,12 @@
 package logic.statisticstates;
 
 import logic.DiceResult;
+import logic.EmbedField;
+import logic.statisticstates.resultvisitors.DifficultyVisitor;
+import logic.statisticstates.resultvisitors.DoomVisitor;
 import logic.statisticstates.resultvisitors.ResultVisitor;
+import logic.statisticstates.resultvisitors.SumVisitor;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,12 +24,22 @@ public class GenerateStatistics implements StatisticsState {
     @Override
     public void process(StatisticsContext context) {
         generateResults(regularDice, plotDice);
+        ArrayList<ResultVisitor> resultVisitors = new ArrayList<>();
+        resultVisitors.add(new SumVisitor());
+        resultVisitors.add(new DifficultyVisitor());
+        resultVisitors.add(new DoomVisitor());
         for (DiceResult result : resultList) {
-            ArrayList<ResultVisitor> resultVisitors = new ArrayList<>();
             for (ResultVisitor visitor : resultVisitors) {
                 visitor.visit(result);
             }
         }
+        EmbedBuilder statsEmbed = new EmbedBuilder();
+        for (ResultVisitor visitor : resultVisitors) {
+            for (EmbedField field: visitor.getEmbedField()) {
+                statsEmbed.addInlineField(field.getTitle(), field.getContent());
+            }
+        }
+        context.setEmbedBuilder(statsEmbed);
     }
 
     //Prep method for generateResults to copy the dice list to prevent it from being modified

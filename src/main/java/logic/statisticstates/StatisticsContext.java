@@ -8,17 +8,25 @@ public class StatisticsContext {
 
     public StatisticsContext(String message){
         state = new ScanDice(message);
+        execute();
     }
 
-    public void setState(StatisticsState state){
-        this.state = state;
+    public EmbedBuilder getEmbedBuilder() {
+        return embedBuilder;
     }
 
     public void setEmbedBuilder(EmbedBuilder embedBuilder){
         this.embedBuilder = embedBuilder;
     }
 
-    public void execute(){
-        state.process(this);
+    public void setState(StatisticsState state){
+        this.state = state;
+    }
+
+    public EmbedBuilder execute(){
+        while (embedBuilder == null){
+            state.process(this);
+        }
+        return embedBuilder;
     }
 }

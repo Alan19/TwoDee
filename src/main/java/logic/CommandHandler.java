@@ -1,6 +1,8 @@
 package logic;
 
 import com.google.api.services.sheets.v4.model.ValueRange;
+import discord.TwoDee;
+import logic.statisticstates.StatisticsContext;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.MessageAuthor;
@@ -26,6 +28,11 @@ public class CommandHandler {
         this.api = api;
         commandSelector(content);
         System.out.println(content);
+    }
+
+    private static boolean validSkill(String skillName, String param) {
+        String skill = skillName.replaceAll("\\s+", "").toLowerCase();
+        return skill.equals(param);
     }
 
     //Checks to see if any parameters are words to find appropriate replacements in the Google doc
@@ -75,7 +82,7 @@ public class CommandHandler {
 
     private void commandSelector(String message) {
         message = message.replaceAll("\\s+", " ");
-            String prefix = message.split(" ")[0];
+        String prefix = message.split(" ")[0];
         switch (prefix) {
             //Statistics listener
             case "~s":
@@ -84,9 +91,19 @@ public class CommandHandler {
             case "~statistics":
                 message = handleCommand(message);
                 assert message != null;
-                StatisticsGenerator statistics = new StatisticsGenerator(message);
+//                StatisticsGenerator statistics = new StatisticsGenerator(message);
+//                new MessageBuilder()
+//                        .setEmbed(statistics.generateStatistics(author))
+//                        .send(channel);
+//                break;
+                StatisticsContext context = new StatisticsContext(message);
                 new MessageBuilder()
-                        .setEmbed(statistics.generateStatistics(author))
+                        .setEmbed(
+                                context.getEmbedBuilder()
+                                        .setAuthor(author)
+                                        .setTitle(TwoDee.getRollTitleMessage())
+                                        .setColor(RandomColor.getRandomColor())
+                        )
                         .send(channel);
                 break;
 
@@ -97,15 +114,14 @@ public class CommandHandler {
                 try {
                     Properties prop = new Properties();
                     prop.load(new FileInputStream("resources/bot.properties"));
-                    if (author.getIdAsString().equals(prop.getProperty("gameMaster"))){
-                        if (commandContainsPlotDice(message)){
+                    if (author.getIdAsString().equals(prop.getProperty("gameMaster"))) {
+                        if (commandContainsPlotDice(message)) {
                             DoomWriter writer = new DoomWriter();
                             writer.addDoom(getPlotPointsSpent(message) * -1);
                             EmbedBuilder doomEmbed = writer.generateDoomEmbed();
                             channel.sendMessage(doomEmbed);
                         }
-                    }
-                    else {
+                    } else {
                         message = handleCommand(message);
                         assert message != null;
                         DiceRoller diceRoller = new DiceRoller(message);
@@ -174,10 +190,9 @@ public class CommandHandler {
             case "~h":
             case "~help":
                 HelpCommand helpCommand;
-                if (message.split(" ").length == 2){
+                if (message.split(" ").length == 2) {
                     helpCommand = new HelpCommand(message.split(" ")[1], author);
-                }
-                else {
+                } else {
                     helpCommand = new HelpCommand(author);
                 }
 
@@ -205,7 +220,7 @@ public class CommandHandler {
     }
 
     private void deductPlotPoints(String message) {
-        if (commandContainsPlotDice(message)){
+        if (commandContainsPlotDice(message)) {
             String ppCommand = generatePlotPointCommand(message);
             PlotPointHandler ppHandler = new PlotPointHandler(ppCommand, author, api);
             EmbedBuilder ppNotification = ppHandler.processCommandType();
@@ -215,6 +230,7 @@ public class CommandHandler {
 
     /**
      * If a user uses plot dice, remove plot points equal to half of the dice's total value
+     *
      * @param message
      * @return
      */
@@ -226,15 +242,14 @@ public class CommandHandler {
     private int getPlotPointsSpent(String message) {
         String[] commandParams = message.split(" ");
         int ppUsage = 0;
-        for (String args: commandParams) {
-            if (args.contains("pd")){
-                if (args.startsWith("pd")){
+        for (String args : commandParams) {
+            if (args.contains("pd")) {
+                if (args.startsWith("pd")) {
                     ppUsage += Integer.parseInt(args.replaceAll("[^\\d.]", "")) / 2;
-                }
-                else {
+                } else {
                     int i = 0;
                     String multiplier = "";
-                    while (args.charAt(i) != 'p'){
+                    while (args.charAt(i) != 'p') {
                         multiplier += args.charAt(i);
                         i++;
                     }
@@ -246,8 +261,8 @@ public class CommandHandler {
     }
 
     private boolean commandContainsPlotDice(String message) {
-        for (String arg: message.split(" ")) {
-            if (arg.contains("pd")){
+        for (String arg : message.split(" ")) {
+            if (arg.contains("pd")) {
                 return true;
             }
         }
@@ -284,10 +299,5 @@ public class CommandHandler {
             return pool.toString().trim();
         }
         return "d" + skill.get(1);
-    }
-
-    private static boolean validSkill(String skillName, String param) {
-        String skill = skillName.replaceAll("\\s+", "").toLowerCase();
-        return skill.equals(param);
     }
 }
