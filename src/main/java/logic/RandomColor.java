@@ -13,7 +13,6 @@ public class RandomColor {
     }
 
     public static Color getRandomColor(){
-
         return new Color(random.nextFloat(), random.nextFloat(), random.nextFloat());
     }
 }

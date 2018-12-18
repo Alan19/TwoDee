@@ -188,6 +188,9 @@ public class CommandHandler {
 
             case "~snack":
                 SnackCommand snackCommand = new SnackCommand(author);
+                new MessageBuilder()
+                        .setEmbed(snackCommand.dispenseSnack())
+                        .send(channel);
                 break;
 
             default:

@@ -16,7 +16,7 @@ public class SnackCommand {
                 .setColor(RandomColor.getRandomColor())
                 .setAuthor(author)
                 .setTitle("A snack for " + author.getDiscriminatedName())
-                .setDescription("Here is a ")
+                .setDescription("Here is a cookie")
                 .setImage("");
     }
 }
