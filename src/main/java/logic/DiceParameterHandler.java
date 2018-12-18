@@ -2,19 +2,19 @@ package logic;
 
 import java.util.ArrayList;
 
-class DiceParameterHandler {
+public class DiceParameterHandler {
     private ArrayList<Integer> plotDice;
     private ArrayList<Integer> regDice;
     private ArrayList<String> args;
 
-    DiceParameterHandler(ArrayList<String> args, ArrayList<Integer> regDice, ArrayList<Integer> plotDice) {
+    public DiceParameterHandler(ArrayList<String> args, ArrayList<Integer> regDice, ArrayList<Integer> plotDice) {
         this.args = args;
         this.regDice = regDice;
         this.plotDice = plotDice;
     }
 
     //Loop through command parameters and check for dice and add them to the appropriate dice type list
-    void addDiceToPools() {
+    public void addDiceToPools() {
         for (String arg : args) {
             String argCopy = arg;
             String numDice = "";
