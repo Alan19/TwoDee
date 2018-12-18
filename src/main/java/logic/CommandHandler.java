@@ -5,6 +5,7 @@ import discord.TwoDee;
 import logic.statisticstates.StatisticsContext;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 
 public class CommandHandler {
 
@@ -127,9 +129,13 @@ public class CommandHandler {
                         DiceRoller diceRoller = new DiceRoller(message);
                         deductPlotPoints(message);
 
-                        new MessageBuilder()
+                        Message rollMessage = new MessageBuilder()
                                 .setEmbed(diceRoller.generateResults(author))
-                                .send(channel);
+                                .send(channel)
+                                .get();
+                        if (diceRoller.getDoom() >= 1){
+                            rollMessage.addReaction("✴");
+                        }
                         EmbedBuilder doomEmbed = diceRoller.addPlotPoints(author, api);
                         if (doomEmbed != null) {
                             new MessageBuilder()
@@ -140,7 +146,7 @@ public class CommandHandler {
                                     .send(channel);
                         }
                     }
-                } catch (IOException e) {
+                } catch (IOException | InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }
 
