@@ -1,6 +1,7 @@
 package logic;
 
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.vdurmont.emoji.EmojiParser;
 import discord.TwoDee;
 import logic.statisticstates.StatisticsContext;
 import org.javacord.api.DiscordApi;
@@ -23,6 +24,7 @@ public class CommandHandler {
     private DiscordApi api;
     private TextChannel channel;
     private MessageAuthor author;
+
 
     public CommandHandler(String content, MessageAuthor author, TextChannel channel, DiscordApi api) {
         this.author = author;
@@ -85,6 +87,7 @@ public class CommandHandler {
     private void commandSelector(String message) {
         message = message.replaceAll("\\s+", " ");
         String prefix = message.split(" ")[0];
+        PlotPointEnhancementHelper pHelper = new PlotPointEnhancementHelper();
         switch (prefix) {
             //Statistics listener
             case "~s":
@@ -99,14 +102,20 @@ public class CommandHandler {
 //                        .send(channel);
 //                break;
                 StatisticsContext context = new StatisticsContext(message);
-                new MessageBuilder()
-                        .setEmbed(
-                                context.getEmbedBuilder()
-                                        .setAuthor(author)
-                                        .setTitle(TwoDee.getRollTitleMessage())
-                                        .setColor(RandomColor.getRandomColor())
-                        )
-                        .send(channel);
+                try {
+                    Message statsMessage = new MessageBuilder()
+                            .setEmbed(
+                                    context.getEmbedBuilder()
+                                            .setAuthor(author)
+                                            .setTitle(TwoDee.getRollTitleMessage())
+                                            .setColor(RandomColor.getRandomColor())
+                            )
+                            .send(channel)
+                            .get();
+                    statsMessage.addReaction("❌");
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
                 break;
 
             //Dice roll listener. Sends extra embeds for plot points and doom
@@ -133,7 +142,7 @@ public class CommandHandler {
                                 .setEmbed(diceRoller.generateResults(author))
                                 .send(channel)
                                 .get();
-                        if (diceRoller.getDoom() >= 1){
+                        if (diceRoller.getDoom() >= 1) {
                             rollMessage.addReaction("✴");
                         }
                         EmbedBuilder doomEmbed = diceRoller.addPlotPoints(author, api);
@@ -145,6 +154,7 @@ public class CommandHandler {
                                     .setEmbed(diceRoller.addDoom(diceRoller.getDoom()))
                                     .send(channel);
                         }
+                        pHelper.addPlotPointEnhancementEmojis(rollMessage);
                     }
                 } catch (IOException | InterruptedException | ExecutionException e) {
                     e.printStackTrace();
@@ -158,10 +168,17 @@ public class CommandHandler {
                 message = handleCommand(message);
                 assert message != null;
                 DiceRoller doomlessRoller = new DiceRoller(message);
-                new MessageBuilder()
-                        .setEmbed(doomlessRoller.generateResults(author))
-                        .send(channel);
+                try {
+                    Message testMessage = new MessageBuilder()
+                            .setEmbed(doomlessRoller.generateResults(author))
+                            .send(channel)
+                            .get();
+                    pHelper.addPlotPointEnhancementEmojis(testMessage);
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
                 break;
+
 
             //Doom management
             case "~d":
@@ -215,15 +232,17 @@ public class CommandHandler {
                 break;
 
             default:
-                new MessageBuilder()
-                        .setEmbed(new EmbedBuilder().setAuthor(author).setDescription("Command not recognized!"))
-                        .send(channel);
+//                new MessageBuilder()
+//                        .setEmbed(new EmbedBuilder().setAuthor(author).setDescription("Command not recognized!"))
+//                        .send(channel);
                 return;
         }
         new EmbedBuilder()
                 .setAuthor(author)
                 .setDescription("Command not recognized");
     }
+
+
 
     private void deductPlotPoints(String message) {
         if (commandContainsPlotDice(message)) {
