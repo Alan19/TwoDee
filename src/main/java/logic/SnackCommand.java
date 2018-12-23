@@ -15,8 +15,8 @@ public class SnackCommand {
         return new EmbedBuilder()
                 .setColor(RandomColor.getRandomColor())
                 .setAuthor(author)
-                .setTitle("A snack for " + author.getDiscriminatedName())
-                .setDescription("Here is a cookie")
+                .setTitle("A snack for " + author.getDisplayName())
+                .setDescription("Here is a cookie!")
                 .setImage("");
     }
 }
