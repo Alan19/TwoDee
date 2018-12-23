@@ -3,24 +3,26 @@ package listeners;
 import logic.PlotPointEnhancementHelper;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.emoji.Emoji;
+import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import sheets.PPManager;
 
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Listener that listens for a user using plot point enhancement
  */
 public class PlotPointEnhancementListener implements EventListener {
 
+    private DiscordApi api;
+
     public PlotPointEnhancementListener(DiscordApi api) {
-        startListening(api);
+        this.api = api;
     }
 
     @Override
-    public void startListening(DiscordApi api) {
+    public void startListening() {
         api.addReactionAddListener(event -> {
             //Do nothing if the bot is the one who reacts
             if (event.getUser().isYourself()) {
@@ -44,16 +46,22 @@ public class PlotPointEnhancementListener implements EventListener {
                                 .addInlineField("Enhancing roll...", rollVal + " → " + (rollVal + toAdd))
                                 .addInlineField("Plot points", oldPP + " → " + newPP);
                         message.edit(embedBuilder);
-                        try {
-                            message.removeAllReactions().get();
-                        } catch (InterruptedException | ExecutionException e) {
-                            e.printStackTrace();
-                        }
+                        //Wipe reactions and then add star emoji to show that it was enhanced with plot points
+                        removeEnhancementEmojis(message);
+                        message.addReaction("\uD83C\uDF1F");
                     });
                 }
             });
 
         });
+    }
+
+    private void removeEnhancementEmojis(Message message) {
+        PlotPointEnhancementHelper helper = new PlotPointEnhancementHelper();
+        for (String emoji : helper.getOneToTwelveEmojiMap().values()) {
+            message.removeReactionsByEmoji(emoji);
+        }
+        message.getServer().ifPresent(server -> message.removeReactionsByEmoji(server.getCustomEmojiById("525867366303793182").get(), server.getCustomEmojiById("525867383890509864").get()));
     }
 
     private int getAddAmount(Emoji emoji) {

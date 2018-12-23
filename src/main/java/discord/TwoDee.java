@@ -40,7 +40,9 @@ public class TwoDee {
                         }
                 );
                 PlotPointEnhancementListener enhancementListener = new PlotPointEnhancementListener(api);
+                enhancementListener.startListening();
                 DeleteStatsListener deleteStatsListener = new DeleteStatsListener(api);
+                deleteStatsListener.startListening();
 
             })
                     // Log any exceptions that happened

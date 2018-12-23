@@ -232,9 +232,6 @@ public class CommandHandler {
                 break;
 
             default:
-//                new MessageBuilder()
-//                        .setEmbed(new EmbedBuilder().setAuthor(author).setDescription("Command not recognized!"))
-//                        .send(channel);
                 return;
         }
         new EmbedBuilder()

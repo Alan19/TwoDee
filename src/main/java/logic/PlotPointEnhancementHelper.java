@@ -3,6 +3,7 @@ package logic;
 import com.vdurmont.emoji.EmojiParser;
 import org.javacord.api.entity.message.Message;
 
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class PlotPointEnhancementHelper {
@@ -25,7 +26,7 @@ public class PlotPointEnhancementHelper {
         oneToTwelveEmojiMap.put(12, "keycap_12:525867383890509864");
     }
 
-    public TreeMap<Integer, String> getOneToTwelveEmojiMap() {
+    public SortedMap<Integer, String> getOneToTwelveEmojiMap() {
         return oneToTwelveEmojiMap;
     }
 
