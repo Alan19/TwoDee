@@ -5,8 +5,10 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
-import java.awt.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Random;
 
 public class DiceRoller {
 
@@ -61,7 +63,7 @@ public class DiceRoller {
         return new EmbedBuilder()
                 .setTitle(TwoDee.getRollTitleMessage())
                 .setAuthor(author)
-                .setColor(new Color(random.nextFloat(), random.nextFloat(), random.nextFloat()))
+                .setColor(RandomColor.getRandomColor())
                 .addField("Regular dice", formatResults(diceResults), true)
                 .addField("Picked", replaceBrackets(topTwo.toString()), true)
                 .addField("Dropped", replaceBrackets(dropped.toString()), true)

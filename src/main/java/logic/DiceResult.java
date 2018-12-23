@@ -32,7 +32,9 @@ public class DiceResult {
             //Sorts dice and reverse to get descending order
             dice.sort(Comparator.naturalOrder());
             Collections.reverse(dice);
-            sum += dice.get(0) + dice.get(1);
+            for (int i = 0; i < dice.size() && i < 2; i++){
+                sum += dice.get(i);
+            }
         }
         for (int pd : plotDice) {
             sum += pd;

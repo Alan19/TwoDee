@@ -1,5 +1,7 @@
 package discord;
 
+import listeners.DeleteStatsListener;
+import listeners.PlotPointEnhancementListener;
 import logic.CommandHandler;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -37,6 +39,11 @@ public class TwoDee {
                             }
                         }
                 );
+                PlotPointEnhancementListener enhancementListener = new PlotPointEnhancementListener(api);
+                enhancementListener.startListening();
+                DeleteStatsListener deleteStatsListener = new DeleteStatsListener(api);
+                deleteStatsListener.startListening();
+
             })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
