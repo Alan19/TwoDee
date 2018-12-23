@@ -34,6 +34,7 @@ public class PlotPointEnhancementHelper {
         for (String emoji : oneToTwelveEmojiMap.values()) {
             rollMessage.addReaction(emoji);
         }
+        rollMessage.addReaction("\uD83C\uDDFD");
     }
 
     public String getCancelEmoji() {

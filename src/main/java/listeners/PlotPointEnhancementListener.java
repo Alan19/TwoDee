@@ -32,23 +32,27 @@ public class PlotPointEnhancementListener implements EventListener {
             event.getReaction().ifPresent(reaction -> {
                 if (reaction.containsYou()) {
                     event.requestMessage().thenAcceptAsync(message -> {
-                        //Get user roll value and add to that based on reaction. Then deduct plot points.
-                        int rollVal = Integer.parseInt(message.getEmbeds().get(0).getFields().get(4).getValue());
-                        Emoji emoji = reaction.getEmoji();
-                        int toAdd = getAddAmount(emoji);
-                        PPManager manager = new PPManager();
-                        User user = event.getUser();
-                        int oldPP = manager.getPlotPoints(user.getIdAsString());
-                        int newPP = manager.setPlotPoints(user.getIdAsString(), oldPP - toAdd);
-                        EmbedBuilder embedBuilder = message.getEmbeds()
-                                .get(0)
-                                .toBuilder()
-                                .addInlineField("Enhancing roll...", rollVal + " → " + (rollVal + toAdd))
-                                .addInlineField("Plot points", oldPP + " → " + newPP);
-                        message.edit(embedBuilder);
-                        //Wipe reactions and then add star emoji to show that it was enhanced with plot points
-                        removeEnhancementEmojis(message);
-                        message.addReaction("\uD83C\uDF1F");
+                        if (reaction.getEmoji().equalsEmoji("\uD83C\uDDFD")) {
+                            removeEnhancementEmojis(message);
+                        } else {
+                            //Get user roll value and add to that based on reaction. Then deduct plot points.
+                            int rollVal = Integer.parseInt(message.getEmbeds().get(0).getFields().get(4).getValue());
+                            Emoji emoji = reaction.getEmoji();
+                            int toAdd = getAddAmount(emoji);
+                            PPManager manager = new PPManager();
+                            User user = event.getUser();
+                            int oldPP = manager.getPlotPoints(user.getIdAsString());
+                            int newPP = manager.setPlotPoints(user.getIdAsString(), oldPP - toAdd);
+                            EmbedBuilder embedBuilder = message.getEmbeds()
+                                    .get(0)
+                                    .toBuilder()
+                                    .addInlineField("Enhancing roll...", rollVal + " → " + (rollVal + toAdd))
+                                    .addInlineField("Plot points", oldPP + " → " + newPP);
+                            message.edit(embedBuilder);
+                            //Wipe reactions and then add star emoji to show that it was enhanced with plot points
+                            removeEnhancementEmojis(message);
+                            message.addReaction("\uD83C\uDF1F");
+                        }
                     });
                 }
             });
@@ -62,6 +66,7 @@ public class PlotPointEnhancementListener implements EventListener {
             message.removeReactionsByEmoji(emoji);
         }
         message.getServer().ifPresent(server -> message.removeReactionsByEmoji(server.getCustomEmojiById("525867366303793182").get(), server.getCustomEmojiById("525867383890509864").get()));
+        message.removeReactionsByEmoji("\uD83C\uDDFD");
     }
 
     private int getAddAmount(Emoji emoji) {
@@ -75,7 +80,6 @@ public class PlotPointEnhancementListener implements EventListener {
                     toAdd = emojiEntry.getKey();
                 }
             }
-
         } else {
             String unicodeEmoji = emoji.asUnicodeEmoji().get();
             for (Map.Entry<Integer, String> emojiEntry :
