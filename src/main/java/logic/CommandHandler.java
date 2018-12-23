@@ -96,11 +96,6 @@ public class CommandHandler {
             case "~statistics":
                 message = handleCommand(message);
                 assert message != null;
-//                StatisticsGenerator statistics = new StatisticsGenerator(message);
-//                new MessageBuilder()
-//                        .setEmbed(statistics.generateStatistics(author))
-//                        .send(channel);
-//                break;
                 StatisticsContext context = new StatisticsContext(message);
                 try {
                     Message statsMessage = new MessageBuilder()
