@@ -1,13 +1,10 @@
 package discord;
 
+import listeners.DeleteStatsListener;
+import listeners.PlotPointEnhancementListener;
 import logic.CommandHandler;
-import logic.PlotPointEnhancementHelper;
 import org.javacord.api.DiscordApiBuilder;
-import org.javacord.api.entity.emoji.Emoji;
-import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.entity.message.Reaction;
-import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.util.logging.ExceptionLogger;
 
 import java.io.BufferedReader;
@@ -17,8 +14,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.lang.System.out;
 
@@ -44,64 +39,9 @@ public class TwoDee {
                             }
                         }
                 );
+                PlotPointEnhancementListener enhancementListener = new PlotPointEnhancementListener(api);
+                DeleteStatsListener deleteStatsListener = new DeleteStatsListener(api);
 
-                //Listen for a user reacting an X to a message
-                api.addReactionAddListener(event -> {
-                    event.requestMessage().thenAcceptAsync(message -> {
-                        Reaction reaction = event.getReaction().get();
-                        if (reaction.getEmoji().equalsEmoji("❌") && reaction.containsYou() && !event.getUser().isYourself()){
-                            message.delete();
-                        }
-                    });
-                });
-
-                //Listen for a user
-                api.addReactionAddListener(event -> {
-                    PlotPointEnhancementHelper pHelper = new PlotPointEnhancementHelper();
-                    ArrayList<String> enhancementEmojis = new ArrayList<>(pHelper.getOneToTwelveEmojiMap().keySet());
-                    boolean botDidNotAdd = !event.getUser().isBot();
-                    if (!botDidNotAdd){
-                        return;
-                    }
-                    AtomicBoolean botAlreadyAdded = new AtomicBoolean(false);
-                    event.getReaction().ifPresent(reaction -> botAlreadyAdded.set(reaction.containsYou()));
-//                    event.requestMessage().thenAcceptAsync(message -> {
-//                        System.out.println("Checking value...");
-//                        int rollVal = Integer.parseInt(message.getEmbeds().get(0).getFields().get(5).getValue());
-//                        int toAdd = pHelper.getOneToTwelveEmojiMap().get(event.getReaction().get().getEmoji().asUnicodeEmoji());
-//                        EmbedBuilder embedBuilder = new EmbedBuilder()
-//                                .setAuthor(event.getUser())
-//                                .addField("Enhancing roll...", rollVal + " → " + (rollVal + toAdd));
-//                        new MessageBuilder()
-//                                .setEmbed(embedBuilder)
-//                                .send(event.getChannel());
-//                    });
-                    try {
-                        Message message = event.requestMessage().get();
-                        System.out.println("Checking value...");
-                        int rollVal = Integer.parseInt(message.getEmbeds().get(0).getFields().get(4).getValue());
-                        Emoji emoji = event.getReaction().get().getEmoji();
-                        int toAdd = 0;
-                        if (emoji.isCustomEmoji()){
-                            String tag = emoji.asKnownCustomEmoji().get().getMentionTag();
-                            String trimmedEmoji = tag.substring(2, tag.length() - 1);
-                            toAdd = pHelper.getOneToTwelveEmojiMap().get(trimmedEmoji);
-                        }
-                        else {
-                            String unicodeEmoji = emoji.asUnicodeEmoji().get();
-                            toAdd = pHelper.getOneToTwelveEmojiMap().get(unicodeEmoji);
-                        }
-
-                        EmbedBuilder embedBuilder = new EmbedBuilder()
-                                .setAuthor(event.getUser())
-                                .addField("Enhancing roll...", rollVal + " → " + (rollVal + toAdd));
-                        new MessageBuilder()
-                                .setEmbed(embedBuilder)
-                                .send(event.getChannel());
-                    } catch (InterruptedException | ExecutionException e) {
-                        e.printStackTrace();
-                    }
-                });
             })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
