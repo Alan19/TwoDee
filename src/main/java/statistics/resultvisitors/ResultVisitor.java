@@ -1,6 +1,6 @@
-package logic.statisticstates.resultvisitors;
+package statistics.resultvisitors;
 
-import logic.DiceResult;
+import statistics.DiceResult;
 import logic.EmbedField;
 
 import java.text.DecimalFormat;

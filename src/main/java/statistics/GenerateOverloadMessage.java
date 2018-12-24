@@ -1,13 +1,13 @@
-package logic.statisticstates;
+package statistics;
 
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
-public class GenerateNoDiceMessage implements StatisticsState {
+public class GenerateOverloadMessage implements StatisticsState {
     @Override
     public void process(StatisticsContext context) {
         context.setEmbedBuilder(
                 new EmbedBuilder()
-                        .setDescription("I can't generate statistics when there are no dice!")
+                    .setDescription("That's way too many dice for me to handle. Try using less dice.")
         );
     }
 }

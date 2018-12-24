@@ -1,4 +1,4 @@
-package logic.statisticstates;
+package statistics;
 
 import logic.DiceParameterHandler;
 

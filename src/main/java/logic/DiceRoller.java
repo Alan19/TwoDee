@@ -1,6 +1,7 @@
 package logic;
 
 import discord.TwoDee;
+import doom.DoomWriter;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;

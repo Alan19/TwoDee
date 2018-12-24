@@ -1,4 +1,4 @@
-package logic;
+package doom;
 
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 

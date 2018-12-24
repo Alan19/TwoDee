@@ -1,4 +1,4 @@
-package logic.statisticstates;
+package statistics;
 
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 

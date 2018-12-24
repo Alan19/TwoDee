@@ -1,11 +1,10 @@
-package logic.statisticstates;
+package statistics;
 
-import logic.DiceResult;
 import logic.EmbedField;
-import logic.statisticstates.resultvisitors.DifficultyVisitor;
-import logic.statisticstates.resultvisitors.DoomVisitor;
-import logic.statisticstates.resultvisitors.ResultVisitor;
-import logic.statisticstates.resultvisitors.SumVisitor;
+import statistics.resultvisitors.DifficultyVisitor;
+import statistics.resultvisitors.DoomVisitor;
+import statistics.resultvisitors.ResultVisitor;
+import statistics.resultvisitors.SumVisitor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import java.util.ArrayList;

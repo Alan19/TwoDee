@@ -1,10 +1,7 @@
-
-/.gradle/
 /.idea/
 /build/
 /tokens/
 /gradlew
-/build.gradle
 /target/
 /out/
 /settings.gradle

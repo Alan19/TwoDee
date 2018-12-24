@@ -2,12 +2,12 @@ plugins {
     id 'application'
 }
 
-
+apply plugin: 'distribution'
 apply plugin: 'java'
 apply plugin: 'maven'
 
 group = 'main'
-version = '4.0.1'
+version = '4.2'
 
 description = "A bot for the Facets tabletop RPG"
 

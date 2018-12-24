@@ -3,6 +3,7 @@ package logic;
 import discord.TwoDee;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
+import statistics.DiceResult;
 
 import java.awt.*;
 import java.text.DecimalFormat;
