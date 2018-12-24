@@ -1,21 +1,20 @@
-import logic.StatisticsGenerator;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import statistics.StatisticsContext;
 
 public class StatisticsTest {
 
-    private StatisticsGenerator generator;
+    private StatisticsContext generator;
 
     @BeforeEach
     public void setUp(){
-        generator = new StatisticsGenerator("d10 2d12 pd10 pd12");
+        generator = new StatisticsContext("d10 2d12 pd10 pd12");
     }
 
     @Test
     public void correctLists(){
-        assertEquals(generator.getDiceList().size(), 3);
-        assertEquals(generator.getPlotDice().size(), 2);
+        EmbedBuilder embed = generator.execute();
+        System.out.println(embed);
     }
 }

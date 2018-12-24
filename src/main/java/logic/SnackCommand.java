@@ -3,6 +3,8 @@ package logic;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
+import java.awt.image.BufferedImage;
+
 public class SnackCommand {
 
     private MessageAuthor author;
@@ -17,6 +19,6 @@ public class SnackCommand {
                 .setAuthor(author)
                 .setTitle("A snack for " + author.getDisplayName())
                 .setDescription("Here is a cookie!")
-                .setImage("");
+                .setImage("https://upload.wikimedia.org/wikipedia/commons/5/5c/Choc-Chip-Cookie.png");
     }
 }

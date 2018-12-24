@@ -47,7 +47,7 @@ public class DiceRoller {
         //Sum up total
         int total = getTotal(topTwo, plotResult);
         //Build embed
-        return buildResultEmbed(author, diceResults, pdResults, random, topTwo, dropped, total);
+        return buildResultEmbed(author, diceResults, pdResults, topTwo, dropped, total);
     }
 
     private int getPlotResult(ArrayList<Integer> pdResults) {
@@ -60,7 +60,7 @@ public class DiceRoller {
         return plotResult;
     }
 
-    private EmbedBuilder buildResultEmbed(MessageAuthor author, ArrayList<Integer> diceResults, ArrayList<Integer> pdResults, Random random, ArrayList<Integer> topTwo, ArrayList<Integer> dropped, int total) {
+    private EmbedBuilder buildResultEmbed(MessageAuthor author, ArrayList<Integer> diceResults, ArrayList<Integer> pdResults, ArrayList<Integer> topTwo, ArrayList<Integer> dropped, int total) {
         return new EmbedBuilder()
                 .setTitle(TwoDee.getRollTitleMessage())
                 .setAuthor(author)
