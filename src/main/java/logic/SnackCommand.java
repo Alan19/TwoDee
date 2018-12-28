@@ -3,8 +3,6 @@ package logic;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
-import java.awt.image.BufferedImage;
-
 public class SnackCommand {
 
     private MessageAuthor author;

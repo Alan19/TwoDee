@@ -1,6 +1,7 @@
 package logic;
 
 import com.google.api.services.sheets.v4.model.ValueRange;
+import com.vdurmont.emoji.EmojiParser;
 import discord.TwoDee;
 import doom.DoomHandler;
 import doom.DoomWriter;
@@ -108,7 +109,7 @@ public class CommandHandler {
                             )
                             .send(channel)
                             .get();
-                    statsMessage.addReaction("❌");
+                    statsMessage.addReaction(EmojiParser.parseToUnicode(":x:"));
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
                 }

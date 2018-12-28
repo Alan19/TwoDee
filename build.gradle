@@ -7,7 +7,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 group = 'main'
-version = '4.2'
+version = '4.2.1'
 
 description = "A bot for the Facets tabletop RPG"
 
@@ -37,5 +37,15 @@ dependencies {
     compile group: 'com.vdurmont', name: 'emoji-java', version:'4.0.0'
     testCompile group: 'org.junit.jupiter', name: 'junit-jupiter-api', version:'5.0.3'
 }
+
+distZip {
+    into(project.name+"-"+project.version) {
+        from '.'
+        include 'tokens/*'
+        include 'resources/*'
+    }
+}
+
+
 
 mainClassName = 'discord.TwoDee'

@@ -1,5 +1,6 @@
 package listeners;
 
+import com.vdurmont.emoji.EmojiParser;
 import org.javacord.api.DiscordApi;
 
 public class DeleteStatsListener implements EventListener{
@@ -11,7 +12,7 @@ public class DeleteStatsListener implements EventListener{
         this.api = api;
     }
 
-    //Listen for a user reacting to the ❌ react that the bot reacts with on certain posts. If a user uses the reaction, delete the post.
+    //Listen for a user reacting to the :x: react that the bot reacts with on certain posts. If a user uses the reaction, delete the post.
     @Override
     public void startListening() {
         api.addReactionAddListener(event -> {
@@ -19,7 +20,7 @@ public class DeleteStatsListener implements EventListener{
                 return;
             }
             event.requestMessage().thenAcceptAsync(message -> event.getReaction().ifPresent(reaction -> {
-                if (reaction.getEmoji().equalsEmoji("❌") && reaction.containsYou()){
+                if (reaction.getEmoji().equalsEmoji(EmojiParser.parseToUnicode(":x:")) && reaction.containsYou()){
                     message.delete();
                 }
             }));
