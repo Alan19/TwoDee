@@ -7,7 +7,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 group = 'main'
-version = '4.2.1'
+version = '4.2.2'
 
 description = "A bot for the Facets tabletop RPG"
 
@@ -49,3 +49,8 @@ distZip {
 
 
 mainClassName = 'discord.TwoDee'
+
+compileJava {
+    options.encoding = "UTF-8"
+}
+
