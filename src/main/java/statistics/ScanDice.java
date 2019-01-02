@@ -1,6 +1,6 @@
 package statistics;
 
-import logic.DiceParameterHandler;
+import dicerolling.DiceParameterHandler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,8 +22,9 @@ public class ScanDice implements StatisticsState {
         ArrayList<Integer> regularDice = new ArrayList<>();
         ArrayList<Integer> plotDice = new ArrayList<>();
         ArrayList<Integer> flat = new ArrayList<>();
+        ArrayList<Integer> kept = new ArrayList<>();
         ArrayList<String> args = new ArrayList<>(Arrays.asList(message.split(" ")));
-        DiceParameterHandler diceParameterHandler = new DiceParameterHandler(args, regularDice, plotDice, flat);
+        DiceParameterHandler diceParameterHandler = new DiceParameterHandler(args, regularDice, plotDice, flat, kept);
         diceParameterHandler.addDiceToPools();
 
         if (regularDice.isEmpty() && plotDice.isEmpty()){

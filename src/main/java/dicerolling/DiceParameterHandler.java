@@ -1,18 +1,21 @@
-package logic;
+package dicerolling;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class DiceParameterHandler {
     private ArrayList<Integer> plotDice;
     private ArrayList<Integer> regDice;
     private ArrayList<String> args;
     private ArrayList<Integer> flat;
+    private ArrayList<Integer> keptDice;
 
-    public DiceParameterHandler(ArrayList<String> args, ArrayList<Integer> regDice, ArrayList<Integer> plotDice, ArrayList<Integer> flat) {
+    public DiceParameterHandler(ArrayList<String> args, ArrayList<Integer> regDice, ArrayList<Integer> plotDice, ArrayList<Integer> flat, ArrayList<Integer> keptDice) {
         this.args = args;
         this.regDice = regDice;
         this.plotDice = plotDice;
         this.flat = flat;
+        this.keptDice = keptDice;
     }
 
     //Loop through command parameters and check for dice and add them to the appropriate dice type list
@@ -29,12 +32,14 @@ public class DiceParameterHandler {
             //Check for dice type
             if (argCopy.contains("pd")) {
                 addToPool(argCopy, numDice, plotDice);
+            } else if (argCopy.contains("kd")) {
+                addToPool(argCopy, numDice, keptDice);
             } else if (argCopy.contains("d")) {
                 addToPool(argCopy, numDice, regDice);
-            }
-            else if (argCopy.contains("+")){
+            } else if (argCopy.contains("+")) {
                 addToPool(argCopy, "1", flat);
             }
+
         }
     }
 

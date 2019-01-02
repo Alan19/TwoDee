@@ -2,6 +2,7 @@ package logic;
 
 import com.google.api.services.sheets.v4.model.ValueRange;
 import com.vdurmont.emoji.EmojiParser;
+import dicerolling.DiceRoller;
 import discord.TwoDee;
 import doom.DoomHandler;
 import doom.DoomWriter;
