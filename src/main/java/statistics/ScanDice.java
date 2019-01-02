@@ -21,8 +21,9 @@ public class ScanDice implements StatisticsState {
         //Add all of the dice to the ArrayLists based on dice type
         ArrayList<Integer> regularDice = new ArrayList<>();
         ArrayList<Integer> plotDice = new ArrayList<>();
+        ArrayList<Integer> flat = new ArrayList<>();
         ArrayList<String> args = new ArrayList<>(Arrays.asList(message.split(" ")));
-        DiceParameterHandler diceParameterHandler = new DiceParameterHandler(args, regularDice, plotDice);
+        DiceParameterHandler diceParameterHandler = new DiceParameterHandler(args, regularDice, plotDice, flat);
         diceParameterHandler.addDiceToPools();
 
         if (regularDice.isEmpty() && plotDice.isEmpty()){

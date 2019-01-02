@@ -6,11 +6,13 @@ public class DiceParameterHandler {
     private ArrayList<Integer> plotDice;
     private ArrayList<Integer> regDice;
     private ArrayList<String> args;
+    private ArrayList<Integer> flat;
 
-    public DiceParameterHandler(ArrayList<String> args, ArrayList<Integer> regDice, ArrayList<Integer> plotDice) {
+    public DiceParameterHandler(ArrayList<String> args, ArrayList<Integer> regDice, ArrayList<Integer> plotDice, ArrayList<Integer> flat) {
         this.args = args;
         this.regDice = regDice;
         this.plotDice = plotDice;
+        this.flat = flat;
     }
 
     //Loop through command parameters and check for dice and add them to the appropriate dice type list
@@ -30,6 +32,9 @@ public class DiceParameterHandler {
             } else if (argCopy.contains("d")) {
                 addToPool(argCopy, numDice, regDice);
             }
+            else if (argCopy.contains("+")){
+                addToPool(argCopy, "1", flat);
+            }
         }
     }
 
@@ -39,7 +44,7 @@ public class DiceParameterHandler {
         int diceVal = Integer.parseInt(argCopy.replaceAll("[a-zA-Z]", ""));
 
         //If there are multiple dice being rolled, add all of them to the pool. Otherwise, only add one.
-        if (numDice.equals("")) {
+        if ("".equals(numDice)) {
             pool.add(diceVal);
         } else {
             for (int i = 0; i < Integer.parseInt(numDice); i++) {

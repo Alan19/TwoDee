@@ -122,6 +122,7 @@ public class CommandHandler {
                 try {
                     Properties prop = new Properties();
                     prop.load(new FileInputStream("resources/bot.properties"));
+                    //Subtract doom points if GM is rolling
                     if (author.getIdAsString().equals(prop.getProperty("gameMaster"))) {
                         if (commandContainsPlotDice(message)) {
                             DoomWriter writer = new DoomWriter();
