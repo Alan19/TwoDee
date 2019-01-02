@@ -1,7 +1,6 @@
 package dicerolling;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class DiceParameterHandler {
     private ArrayList<Integer> plotDice;
