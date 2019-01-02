@@ -5,14 +5,20 @@ import java.util.Random;
 
 public class RandomColor {
 
-    private static RandomColor singleton = new RandomColor( );
-    private static Random random;
-
     private RandomColor(){
-        random = new Random();
+
+    }
+
+    private static class RandomColorHolder{
+        private static final RandomColor INSTANCE = new RandomColor();
     }
 
     public static Color getRandomColor(){
+        return RandomColorHolder.INSTANCE.generateRandomColor();
+    }
+
+    private Color generateRandomColor() {
+        Random random = new Random();
         return new Color(random.nextFloat(), random.nextFloat(), random.nextFloat());
     }
 }
