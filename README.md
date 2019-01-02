@@ -21,7 +21,7 @@ IntelliJ, Maven, Java 8
 ## Built With
 
 * [JavaCord](https://github.com/Javacord/Javacord) - An easy to use multithreaded library for creating Discord bots in Java.
-* [Maven](https://maven.apache.org/) - Dependency Management
+* [Gradle](https://gradle.org/) - Dependency Management
 
 ## License
 
