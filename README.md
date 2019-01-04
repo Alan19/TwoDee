@@ -1,5 +1,5 @@
 # TwoDee
-Discord bot that generates probability odds to help players make better decisions.
+Discord bot that generates probability odds to help players make better decisions. It also helps with automating game features, such as dice rolls and plot point management.
 
 ## Getting Started
 
@@ -9,19 +9,21 @@ https://discordapp.com/developers/applications/
 
 ### Prerequisites
 
-IntelliJ, Maven, Java 8
+IntelliJ, Java 8, Gradle
 
 ### Installing
 
 1. Open IntelliJ
 2. Clone this repository with git clone
-3. Open the bot.properties file and paste the bot token after the "token="
-4. Run TwoDee
+3. Open the bot.properties file and fill in fields with appropriate information
+4. Add resource files
+4. Run TwoDee to generate Google API token
+5. To get a distribution, use ./gradle distzip
 
 ## Built With
 
 * [JavaCord](https://github.com/Javacord/Javacord) - An easy to use multithreaded library for creating Discord bots in Java.
-* [Maven](https://maven.apache.org/) - Dependency Management
+* [Gradle](https://gradle.org/) - Dependency Management
 
 ## License
 
