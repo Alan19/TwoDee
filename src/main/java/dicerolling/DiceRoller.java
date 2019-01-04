@@ -1,6 +1,5 @@
 package dicerolling;
 
-import dicerolling.DiceParameterHandler;
 import discord.TwoDee;
 import doom.DoomWriter;
 import logic.PlotPointHandler;
@@ -170,13 +169,7 @@ public class DiceRoller {
     //Roll all of the dice. Plot dice have a minimum value of its maximum roll/2
     private void rollDice(ArrayList<Integer> diceResults, ArrayList<Integer> pdResults, ArrayList<Integer> keptResults, Random random) {
         //Roll dice
-        for (Integer normalDice : regDice) {
-            int diceVal = random.nextInt(normalDice) + 1;
-            diceResults.add(diceVal);
-            if (diceVal == 1) {
-                doom++;
-            }
-        }
+        rollDie(diceResults, random, regDice);
         //A plot die's minimum value is its number of faces / 2
         for (Integer pDice : plotDice) {
             int pValue = random.nextInt(pDice) + 1;
@@ -187,9 +180,16 @@ public class DiceRoller {
         }
 
         //All kept dice are kept with no minimum value
+        rollDie(keptResults, random, keptDice);
+    }
+
+    private void rollDie(ArrayList<Integer> keptResults, Random random, ArrayList<Integer> keptDice) {
         for (Integer kDice : keptDice){
             int keptVal = random.nextInt(kDice) + 1;
             keptResults.add(keptVal);
+            if (keptVal == 1) {
+                doom++;
+            }
         }
     }
 
