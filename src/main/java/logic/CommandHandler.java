@@ -142,7 +142,7 @@ public class CommandHandler {
                                 .send(channel)
                                 .get();
                         if (diceRoller.getDoom() >= 1) {
-                            rollMessage.addReaction("✴");
+                            rollMessage.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
                         }
                         EmbedBuilder doomEmbed = diceRoller.addPlotPoints(author, api);
                         if (doomEmbed != null) {

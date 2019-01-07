@@ -36,7 +36,7 @@ public class PlotPointEnhancementListener implements EventListener {
                             removeEnhancementEmojis(message);
                         } else {
                             //Get user roll value and add to that based on reaction. Then deduct plot points.
-                            int rollVal = Integer.parseInt(message.getEmbeds().get(0).getFields().get(4).getValue());
+                            int rollVal = Integer.parseInt(message.getEmbeds().get(0).getFields().get(6).getValue());
                             Emoji emoji = reaction.getEmoji();
                             int toAdd = getAddAmount(emoji);
                             PPManager manager = new PPManager();
