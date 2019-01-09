@@ -1,7 +1,6 @@
 package logic;
 
 import commands.HelpCommand;
-import doom.DoomCommand;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.MessageAuthor;
@@ -27,15 +26,6 @@ public class CommandHandler {
         message = message.replaceAll("\\s+", " ");
         String prefix = message.split(" ")[0];
         switch (prefix) {
-            //Kill the bot!
-            case "~stop":
-                new MessageBuilder()
-                        .setContent("TwoDee shutting down...")
-                        .send(channel);
-                api.disconnect();
-                System.exit(1);
-                break;
-
             //Add, subtract, and set plot points
             case "~p":
             case "~pp":
@@ -44,21 +34,6 @@ public class CommandHandler {
                 PlotPointHandler plotPointHandler = new PlotPointHandler(message, author, api);
                 new MessageBuilder()
                         .setEmbed(plotPointHandler.processCommandType())
-                        .send(channel);
-                break;
-
-            //Help command
-            case "~h":
-            case "~help":
-                HelpCommand helpCommand;
-                if (message.split(" ").length == 2) {
-                    helpCommand = new HelpCommand(message.split(" ")[1], author);
-                } else {
-                    helpCommand = new HelpCommand(author);
-                }
-
-                new MessageBuilder()
-                        .setEmbed(helpCommand.getHelp())
                         .send(channel);
                 break;
 

@@ -1,7 +1,6 @@
 package discord;
 
-import commands.RollCommand;
-import commands.TestRollCommand;
+import commands.*;
 import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.DeleteStatsListener;
 import listeners.PlotPointEnhancementListener;
@@ -9,7 +8,6 @@ import logic.CommandHandler;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.util.logging.ExceptionLogger;
-import commands.StatisticsCommand;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -48,6 +46,9 @@ public class TwoDee {
                 cmdHandler.registerCommand(new StatisticsCommand());
                 cmdHandler.registerCommand(new RollCommand());
                 cmdHandler.registerCommand(new TestRollCommand());
+                cmdHandler.registerCommand(new DoomCommand());
+                cmdHandler.registerCommand(new StopCommand());
+                cmdHandler.registerCommand(new HelpCommand(cmdHandler));
 
                 PlotPointEnhancementListener enhancementListener = new PlotPointEnhancementListener(api);
                 enhancementListener.startListening();

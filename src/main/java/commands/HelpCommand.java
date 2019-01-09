@@ -1,69 +1,44 @@
 package commands;
 
-import org.javacord.api.DiscordApi;
-import org.javacord.api.entity.message.MessageAuthor;
-import org.javacord.api.entity.message.embed.EmbedBuilder;
+import de.btobastian.sdcf4j.Command;
+import de.btobastian.sdcf4j.CommandExecutor;
+import de.btobastian.sdcf4j.CommandHandler;
+import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.message.MessageBuilder;
 
-public class HelpCommand {
-    private String message;
-    private MessageAuthor author;
+public class HelpCommand implements CommandExecutor {
+    private final CommandHandler commandHandler;
 
-    public HelpCommand(String prefix, MessageAuthor author) {
-        this.message = prefix;
-        this.author = author;
+    public HelpCommand(CommandHandler commandHandler) {
+        this.commandHandler = commandHandler;
     }
 
-    public HelpCommand(MessageAuthor author) {
-        this.author = author;
-        this.message = "";
-    }
-
-    public EmbedBuilder getHelp() {
-        EmbedBuilder helpEmbed = new EmbedBuilder();
-        helpEmbed.setAuthor(author);
-        switch (message){
-            case "p":
-            case "pp":
-            case "plot":
-            case "plotpoints":
-                helpEmbed.setTitle("Plot points")
-                        .setDescription("~p <name> [add|sub|addall|set] [number]");
-                break;
-
-            case "d":
-            case "doom":
-                helpEmbed.setTitle("Doom points")
-                        .setDescription("~d <[add|sub|addall|set]> [number]");
-                break;
-
-            case "s":
-            case "stat":
-            case "stats":
-            case "statistics":
-                helpEmbed.setTitle("Dice statistics")
-                        .setDescription("~s <d*number*> <pd*number>\n6 dice max");
-                break;
-
-            case "r":
-            case "roll":
-                helpEmbed.setTitle("Roll")
-                        .setDescription("~r <d*number*> <pd*number>");
-                break;
-
-            case "~t":
-            case "~test":
-                helpEmbed.setTitle("Test roll")
-                        .setDescription("~t <d*number*> <pd*number>");
-                break;
-
-            default:
-                helpEmbed.setTitle("All commands")
-                        .addField("Plot points", "~p <name> [add|sub|addall|set] [number]")
-                        .addField("Doom points", "~d <[add|sub|addall|set]> [number]")
-                        .addField("Dice statisitcs", "~s <d*number*> <pd*number>\n6 dice max")
-                        .addField("Roll dice", "~r <d*number*> <pd*number>")
-                        .addField("Test roll", "~t <d*number*> <pd*number>");
+    @Command(aliases = {"~help", "~commands", "~h"}, description = "Shows this page")
+    public void onHelpCommand(TextChannel channel) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("```xml"); // a xml code block looks fancy
+        for (CommandHandler.SimpleCommand simpleCommand : commandHandler.getCommands()) {
+            if (!simpleCommand.getCommandAnnotation().showInHelpPage()) {
+                continue; // skip command
+            }
+            builder.append("\n");
+            if (!simpleCommand.getCommandAnnotation().requiresMention()) {
+                // the default prefix only works if the command does not require a mention
+                builder.append(commandHandler.getDefaultPrefix());
+            }
+            String usage = simpleCommand.getCommandAnnotation().usage();
+            if (usage.isEmpty()) { // no usage provided, using the first alias
+                usage = simpleCommand.getCommandAnnotation().aliases()[0];
+            }
+            builder.append(usage);
+            String description = simpleCommand.getCommandAnnotation().description();
+            if (!description.equals("none")) {
+                builder.append(" | ").append(description);
+            }
         }
-        return helpEmbed;
+        builder.append("\n```"); // end of xml code block
+        new MessageBuilder()
+                .setContent(builder.toString())
+                .send(channel);
     }
 }
