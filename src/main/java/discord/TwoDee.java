@@ -1,11 +1,13 @@
 package discord;
 
+import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.DeleteStatsListener;
 import listeners.PlotPointEnhancementListener;
 import logic.CommandHandler;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.util.logging.ExceptionLogger;
+import commands.StatisticsCommand;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -39,6 +41,9 @@ public class TwoDee {
                             }
                         }
                 );
+
+                de.btobastian.sdcf4j.CommandHandler cmdHandler = new JavacordHandler(api);
+                cmdHandler.registerCommand(new StatisticsCommand());
                 PlotPointEnhancementListener enhancementListener = new PlotPointEnhancementListener(api);
                 enhancementListener.startListening();
                 DeleteStatsListener deleteStatsListener = new DeleteStatsListener(api);
