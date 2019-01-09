@@ -26,7 +26,8 @@ public class CommandProcessor {
     }//Checks to see if any parameters are words to find appropriate replacements in the Google doc
 
     public String handleCommand(String command) {
-        String convertedCommand = getConvertedCommand(command);
+        String trimmedCommand = command.replaceAll("\\s+", " ");
+        String convertedCommand = getConvertedCommand(trimmedCommand);
         if (convertedCommand == null) return null;
         System.out.println(convertedCommand);
         return convertedCommand;

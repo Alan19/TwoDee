@@ -1,4 +1,4 @@
-package logic;
+package commands;
 
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.message.MessageAuthor;

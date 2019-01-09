@@ -1,5 +1,7 @@
 package discord;
 
+import commands.RollCommand;
+import commands.TestRollCommand;
 import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.DeleteStatsListener;
 import listeners.PlotPointEnhancementListener;
@@ -44,6 +46,9 @@ public class TwoDee {
 
                 de.btobastian.sdcf4j.CommandHandler cmdHandler = new JavacordHandler(api);
                 cmdHandler.registerCommand(new StatisticsCommand());
+                cmdHandler.registerCommand(new RollCommand());
+                cmdHandler.registerCommand(new TestRollCommand());
+
                 PlotPointEnhancementListener enhancementListener = new PlotPointEnhancementListener(api);
                 enhancementListener.startListening();
                 DeleteStatsListener deleteStatsListener = new DeleteStatsListener(api);
