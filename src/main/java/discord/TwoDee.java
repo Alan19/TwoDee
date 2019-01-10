@@ -17,8 +17,6 @@ import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
 
-import static java.lang.System.out;
-
 public class TwoDee {
 
     public static void main(String[] args) {
@@ -32,7 +30,7 @@ public class TwoDee {
                         .setContent(getStartupMessage())
                         .send(api.getTextChannelById("484544303247523840").get());
                 // Print the invite url of your bot
-                out.println("You can invite the bot by using the following url: " + api.createBotInvite());
+                System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
 
                 //Create command handler
                 CommandHandler cmdHandler = new JavacordHandler(api);

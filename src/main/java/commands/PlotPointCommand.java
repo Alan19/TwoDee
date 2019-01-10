@@ -2,6 +2,7 @@ package commands;
 
 import de.btobastian.sdcf4j.Command;
 import de.btobastian.sdcf4j.CommandExecutor;
+import logic.RandomColor;
 import logic.UserInfo;
 import org.codehaus.plexus.util.StringUtils;
 import org.javacord.api.DiscordApi;
@@ -74,10 +75,10 @@ public class PlotPointCommand implements CommandExecutor {
     private EmbedBuilder executeCommand(CommandType commandType, String target, int number, MessageAuthor author) {
         switch (commandType) {
             case ADD:
-                return addPlotPoints(target, number, author);
+                return addPlotPoints(target, number);
 
             case SUB:
-                return addPlotPoints(target, number * -1, author);
+                return addPlotPoints(target, number * -1);
 
             case ADDALL:
                 return addPlotPointsToAll(number);
@@ -91,8 +92,9 @@ public class PlotPointCommand implements CommandExecutor {
     }
 
     private EmbedBuilder setPlotPoints(String target, int number, MessageAuthor author) {
-        ppManager.setPlotPoints(target, number);
-        return getPlotPoints(target, author);
+        int oldPP = ppManager.getPlotPoints(target);
+        int newPP = ppManager.setPlotPoints(target, number);
+        return generateEmbed(oldPP, newPP, target);
     }
 
     /**
@@ -125,9 +127,23 @@ public class PlotPointCommand implements CommandExecutor {
         return api.getServerVoiceChannelById(MAIN_CHANNEL_ID).get().isConnected(api.getUserById(id).get());
     }
 
-    private EmbedBuilder addPlotPoints(String target, int number, MessageAuthor author) {
-        ppManager.setPlotPoints(target, ppManager.getPlotPoints(target) + number);
-        return getPlotPoints(target, author);
+    private EmbedBuilder addPlotPoints(String target, int number) {
+        int oldPP = ppManager.getPlotPoints(target);
+        int newPP = ppManager.setPlotPoints(target, ppManager.getPlotPoints(target) + number);
+        return generateEmbed(oldPP, newPP, target);
+    }
+
+    private EmbedBuilder generateEmbed(int oldPP, int newPP, String target) {
+        try {
+            return new EmbedBuilder()
+                    .setAuthor(api.getUserById(target).get())
+                    .setTitle("Plot points")
+                    .setDescription(oldPP + " → " + newPP)
+                    .setColor(RandomColor.getRandomColor());
+        } catch (InterruptedException | ExecutionException e) {
+            return new EmbedBuilder()
+                    .setTitle("User not found!");
+        }
     }
 
     private EmbedBuilder getPlotPoints(String target, MessageAuthor messageAuthor) {
