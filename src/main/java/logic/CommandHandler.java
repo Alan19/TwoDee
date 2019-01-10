@@ -1,6 +1,5 @@
 package logic;
 
-import commands.HelpCommand;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.MessageAuthor;
@@ -26,18 +25,7 @@ public class CommandHandler {
         message = message.replaceAll("\\s+", " ");
         String prefix = message.split(" ")[0];
         switch (prefix) {
-            //Add, subtract, and set plot points
-            case "~p":
-            case "~pp":
-            case "~plot":
-            case "~plotpoints":
-                PlotPointHandler plotPointHandler = new PlotPointHandler(message, author, api);
-                new MessageBuilder()
-                        .setEmbed(plotPointHandler.processCommandType())
-                        .send(channel);
-                break;
-
-            case "~snack":
+             case "~snack":
                 SnackCommand snackCommand = new SnackCommand(author);
                 new MessageBuilder()
                         .setEmbed(snackCommand.dispenseSnack())

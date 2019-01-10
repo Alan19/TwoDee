@@ -49,6 +49,7 @@ public class TwoDee {
                 cmdHandler.registerCommand(new DoomCommand());
                 cmdHandler.registerCommand(new StopCommand());
                 cmdHandler.registerCommand(new HelpCommand(cmdHandler));
+                cmdHandler.registerCommand(new PlotPointCommand(api));
 
                 PlotPointEnhancementListener enhancementListener = new PlotPointEnhancementListener(api);
                 enhancementListener.startListening();

@@ -1,9 +1,12 @@
 package listeners;
 
 import logic.PlotPointEnhancementHelper;
+import logic.RandomColor;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.emoji.Emoji;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.MessageBuilder;
+import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import sheets.PPManager;
@@ -43,12 +46,15 @@ public class PlotPointEnhancementListener implements EventListener {
                             User user = event.getUser();
                             int oldPP = manager.getPlotPoints(user.getIdAsString());
                             int newPP = manager.setPlotPoints(user.getIdAsString(), oldPP - toAdd);
-                            EmbedBuilder embedBuilder = message.getEmbeds()
-                                    .get(0)
-                                    .toBuilder()
-                                    .addInlineField("Enhancing roll...", rollVal + " → " + (rollVal + toAdd))
-                                    .addInlineField("Plot points", oldPP + " → " + newPP);
-                            message.edit(embedBuilder);
+                            new MessageBuilder()
+                                    .setEmbed(
+                                            new EmbedBuilder()
+                                                    .setAuthor(event.getUser())
+                                                    .addField("Enhanced Total", Integer.toString(rollVal + toAdd))
+                                                    .addField("Plot Points", oldPP + " → " + newPP)
+                                                    .setColor(RandomColor.getRandomColor())
+                                    )
+                                    .send(event.getChannel());
                             //Wipe reactions and then add star emoji to show that it was enhanced with plot points
                             removeEnhancementEmojis(message);
                             message.addReaction("\uD83C\uDF1F");
@@ -56,7 +62,6 @@ public class PlotPointEnhancementListener implements EventListener {
                     });
                 }
             });
-
         });
     }
 

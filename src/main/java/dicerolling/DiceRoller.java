@@ -2,11 +2,12 @@ package dicerolling;
 
 import discord.TwoDee;
 import doom.DoomWriter;
-import logic.PlotPointHandler;
+import commands.PlotPointCommand;
 import logic.RandomColor;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
+import sheets.PPManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,7 +59,7 @@ public class DiceRoller {
 
     private int getKeptResult(ArrayList<Integer> keptResults) {
         int sum = 0;
-        if (!keptResults.isEmpty()){
+        if (!keptResults.isEmpty()) {
             for (int keptVal : keptResults) {
                 sum += keptVal;
             }
@@ -68,7 +69,7 @@ public class DiceRoller {
 
     private int getFlatResults(ArrayList<Integer> flat) {
         int sum = 0;
-        if (!flat.isEmpty()){
+        if (!flat.isEmpty()) {
             for (Integer bonus : flat) {
                 sum += bonus;
             }
@@ -130,10 +131,15 @@ public class DiceRoller {
     }
 
     // Username is stored as <@!140973544891744256>
-    public EmbedBuilder addPlotPoints(MessageAuthor author, DiscordApi api) {
-        PlotPointHandler handler = new PlotPointHandler("~p <@!" + author.getIdAsString() + "> add 1", author, api);
+    public EmbedBuilder addPlotPoints(MessageAuthor author) {
         if (doom != 0) {
-            return handler.processCommandType();
+            PPManager manager = new PPManager();
+            String userID = author.getIdAsString();
+            int oldPP = manager.getPlotPoints(userID);
+            int newPP = manager.setPlotPoints(userID, oldPP + doom);
+            return new EmbedBuilder()
+                    .setAuthor(author)
+                    .setDescription(oldPP + " → " + newPP);
         } else {
             return null;
         }
@@ -184,7 +190,7 @@ public class DiceRoller {
     }
 
     private void rollDie(ArrayList<Integer> keptResults, Random random, ArrayList<Integer> keptDice) {
-        for (Integer kDice : keptDice){
+        for (Integer kDice : keptDice) {
             int keptVal = random.nextInt(kDice) + 1;
             keptResults.add(keptVal);
             if (keptVal == 1) {

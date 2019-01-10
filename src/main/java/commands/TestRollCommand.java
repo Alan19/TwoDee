@@ -11,7 +11,7 @@ import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;
 
 public class TestRollCommand implements CommandExecutor {
-    @Command(aliases = {"~t", "~test"}, description = "A command that allows you to roll dice without automatically subtracting plot points or doom points.", privateMessages = false, usage = "~t die|skill [die|skill ...]\n\tdie: A string representing a die. Some die examples are d4, pd12, 3d12, kd12, +3.")
+    @Command(aliases = {"~t", "~test"}, description = "A command that allows you to roll dice without automatically subtracting plot points or doom points.\n\tdie: A string representing a die. Some die examples are d4, pd12, 3d12, kd12, +3.", privateMessages = false, usage = "~t die|skill [die|skill ...]")
     public void onCommand(Message message, MessageAuthor author, TextChannel channel){
         String messageContent = message.getContent();
         String processedMessage = new CommandProcessor(author, channel).handleCommand(messageContent);

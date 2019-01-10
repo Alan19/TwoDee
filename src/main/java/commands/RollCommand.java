@@ -8,7 +8,6 @@ import doom.DoomWriter;
 import logic.CommandProcessor;
 import logic.PlotPointEnhancementHelper;
 import logic.RandomColor;
-import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
@@ -21,8 +20,8 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class RollCommand implements CommandExecutor {
-    @Command(aliases = {"~r", "~roll"}, description = "A command that allows you to roll dice", privateMessages = false, usage = "~r die|skill [die|skill ...]\n\tdie: A string representing a die. Some die examples are d4, pd12, 3d12, kd12, +3.")
-    public void onCommand(MessageAuthor author, Message message, TextChannel channel, DiscordApi api) {
+    @Command(aliases = {"~r", "~roll"}, description = "A command that allows you to roll dice\n\tdie: A string representing a die. Some die examples are d4, pd12, 3d12, kd12, +3.", privateMessages = false, usage = "~r die|skill [die|skill ...]")
+    public void onCommand(MessageAuthor author, Message message, TextChannel channel) {
         String messageContent = message.getContent();
         //Special case for GM
         try {
@@ -48,7 +47,7 @@ public class RollCommand implements CommandExecutor {
                             if (diceRoller.getDoom() >= 1) {
                                 sentMessage.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
                             }
-                            EmbedBuilder doomEmbed = diceRoller.addPlotPoints(author, api);
+                            EmbedBuilder doomEmbed = diceRoller.addPlotPoints(author);
                             if (doomEmbed != null) {
                                 new MessageBuilder()
                                         .setEmbed(doomEmbed)
