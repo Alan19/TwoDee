@@ -5,9 +5,7 @@ import de.btobastian.sdcf4j.CommandExecutor;
 import logic.UserInfo;
 import org.codehaus.plexus.util.StringUtils;
 import org.javacord.api.DiscordApi;
-import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.TextChannel;
-import org.javacord.api.entity.channel.VoiceChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -36,7 +34,7 @@ public class PlotPointCommand implements CommandExecutor {
         this.api = api;
     }
 
-    @Command(aliases = {"~p", "~pp", "~plot", "~plotpoints"}, description = "Modifies the plot points of a user", privateMessages = false, usage = "~p [user_mention] add|sub|set|addall [number]")
+    @Command(aliases = {"~p", "~pp", "~plot", "~plotpoints"}, description = "Modifies the plot points of a user", privateMessages = false, usage = "~p [user_mention ...] add|sub|set|addall [number]")
     public void processCommandType(String[] params, DiscordApi api, MessageAuthor author, Message message, TextChannel channel) {
         List<String> targets = new ArrayList<>();
         CommandType command = CommandType.GET;
