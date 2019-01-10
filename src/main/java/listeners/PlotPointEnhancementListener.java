@@ -50,7 +50,7 @@ public class PlotPointEnhancementListener implements EventListener {
                                     .setEmbed(
                                             new EmbedBuilder()
                                                     .setAuthor(event.getUser())
-                                                    .addField("Enhanced Total", Integer.toString(rollVal + toAdd))
+                                                    .addField("Enhanced Total", rollVal + " → " + Integer.toString(rollVal + toAdd))
                                                     .addField("Plot Points", oldPP + " → " + newPP)
                                                     .setColor(RandomColor.getRandomColor())
                                     )
