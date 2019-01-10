@@ -1,10 +1,10 @@
 package discord;
 
 import commands.*;
+import de.btobastian.sdcf4j.CommandHandler;
 import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.DeleteStatsListener;
 import listeners.PlotPointEnhancementListener;
-import logic.CommandHandler;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.util.logging.ExceptionLogger;
@@ -34,15 +34,8 @@ public class TwoDee {
                 // Print the invite url of your bot
                 out.println("You can invite the bot by using the following url: " + api.createBotInvite());
 
-                //Listen for commands
-                api.addMessageCreateListener(event -> {
-                            if (event.getMessage().getContent().startsWith("~")) {
-                                new CommandHandler(event.getMessage().getContent(), event.getMessage().getAuthor(), event.getChannel(), api);
-                            }
-                        }
-                );
-
-                de.btobastian.sdcf4j.CommandHandler cmdHandler = new JavacordHandler(api);
+                //Create command handler
+                CommandHandler cmdHandler = new JavacordHandler(api);
                 cmdHandler.registerCommand(new StatisticsCommand());
                 cmdHandler.registerCommand(new RollCommand());
                 cmdHandler.registerCommand(new TestRollCommand());
@@ -51,6 +44,7 @@ public class TwoDee {
                 cmdHandler.registerCommand(new HelpCommand(cmdHandler));
                 cmdHandler.registerCommand(new PlotPointCommand(api));
 
+                //Create listeners
                 PlotPointEnhancementListener enhancementListener = new PlotPointEnhancementListener(api);
                 enhancementListener.startListening();
                 DeleteStatsListener deleteStatsListener = new DeleteStatsListener(api);
