@@ -14,6 +14,7 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import logic.UserInfo;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -111,9 +112,9 @@ public class SheetsQuickstart {
     }
 
     private String generateRangeCommand(String id) throws IOException {
-        Properties prop = new Properties();
-        prop.load(new FileInputStream("resources/players.properties"));
-        String[] range = prop.getProperty(id).split(",");
+        UserInfo userInfo = new UserInfo();
+        String cols = userInfo.getCol(id);
+        String[] range = cols.split(",");
         return "Data!" + range[0] + "1:" + range[1] + "270";
     }
 

@@ -43,4 +43,19 @@ public class UserInfo {
         return userIDs;
     }
 
+    /**
+     * Returns the columns that the user skills are listed in. If the user cannot be found, return null
+     * @param userID The user id
+     * @return The two colums that contain the user's skills and the skil level
+     */
+    public String getCol(String userID){
+        if (getUsers().contains(userID)) {
+            for (User user : userList.getUsers()) {
+                if (user.getUserid().toString().equals(userID)){
+                    return user.getCol();
+                }
+            }
+        }
+        return null;
+    }
 }

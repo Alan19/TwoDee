@@ -2,9 +2,7 @@ package dicerolling;
 
 import discord.TwoDee;
 import doom.DoomWriter;
-import commands.PlotPointCommand;
 import logic.RandomColor;
-import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import sheets.PPManager;
