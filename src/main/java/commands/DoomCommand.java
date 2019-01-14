@@ -46,7 +46,9 @@ public class DoomCommand implements CommandExecutor {
                             .send(channel);
                     break;
                 default:
-                    break;
+                    new MessageBuilder()
+                    .setEmbed(doomWriter.generateDoomEmbed())
+                    .send(channel);
             }
         }
     }
