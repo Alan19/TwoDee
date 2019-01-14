@@ -6,7 +6,6 @@ import de.btobastian.sdcf4j.CommandExecutor;
 import logic.RandomColor;
 import logic.UserInfo;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.codehaus.plexus.util.StringUtils;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
@@ -18,8 +17,11 @@ import org.javacord.api.entity.user.User;
 import sheets.PPManager;
 
 import java.awt.*;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
@@ -29,7 +31,18 @@ import java.util.concurrent.ExecutionException;
  */
 public class PlotPointCommand implements CommandExecutor {
 
-    private static final String MAIN_CHANNEL_ID = "468046159781429254";
+    private static String main_channel_id;
+
+    static {
+        try {
+            Properties prop = new Properties();
+            prop.load(new FileInputStream("resources/bot.properties"));
+            main_channel_id = prop.getProperty("main_channel_id");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private PPManager ppManager = new PPManager();
     private UserInfo userInfo = new UserInfo();
     private DiscordApi api;
@@ -158,7 +171,7 @@ public class PlotPointCommand implements CommandExecutor {
     }
 
     private boolean isConnected(String id) throws InterruptedException, ExecutionException {
-        return api.getServerVoiceChannelById(MAIN_CHANNEL_ID).get().isConnected(api.getUserById(id).get());
+        return api.getServerVoiceChannelById(main_channel_id).get().isConnected(api.getUserById(id).get());
     }
 
     private EmbedBuilder addPlotPoints(String target, int number) {
