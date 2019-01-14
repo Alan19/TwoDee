@@ -10,7 +10,6 @@ import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.entity.message.embed.EmbedBuilder;
 import statistics.StatisticsContext;
 
 import java.util.concurrent.ExecutionException;
@@ -24,10 +23,11 @@ public class StatisticsCommand implements CommandExecutor {
         api.getUserById(author.getIdAsString()).thenAcceptAsync(user -> user.sendMessage("Here are the statistics for **" + message.getContent() + "**",context.getEmbedBuilder().setColor(RandomColor.getRandomColor())).thenAcceptAsync(sentMessage -> sentMessage.addReaction(EmojiParser.parseToUnicode(":x:"))));
         try {
             new MessageBuilder()
-                    .setContent("Sent you a PM with your statistics " + api.getUserById(author.getIdAsString()).get().getMentionTag())
+                    .setContent("Sent you a PM with your statistics for **" + message.getContent() + "** " + api.getUserById(author.getIdAsString()).get().getMentionTag())
                     .send(channel);
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
+        message.delete();
     }
 }
