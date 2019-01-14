@@ -1,9 +1,11 @@
 package commands;
 
+import com.vdurmont.emoji.EmojiParser;
 import de.btobastian.sdcf4j.Command;
 import de.btobastian.sdcf4j.CommandExecutor;
 import logic.RandomColor;
 import logic.UserInfo;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.codehaus.plexus.util.StringUtils;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
@@ -35,7 +37,7 @@ public class PlotPointCommand implements CommandExecutor {
         this.api = api;
     }
 
-    @Command(aliases = {"~p", "~pp", "~plot", "~plotpoints"}, description = "Modifies the plot points of a user", privateMessages = false, usage = "~p [user_mention ...] add|sub|set|addall [number]")
+    @Command(aliases = {"~p", "~pp", "~plot", "~plotpoints"}, description = "Modifies the plot points of a user", privateMessages = false, usage = "~p [user_mention ...] add|sub|set|addall|addhere [number]")
     public void processCommandType(String[] params, DiscordApi api, MessageAuthor author, Message message, TextChannel channel) {
         List<String> targets = new ArrayList<>();
         CommandType command = CommandType.GET;
@@ -50,9 +52,8 @@ public class PlotPointCommand implements CommandExecutor {
             if (arg.equals("add")) {
                 command = CommandType.ADD;
             }
-            if (arg.equals("addall")) {
-                command = CommandType.ADDALL;
-
+            if (arg.equals("addhere")) {
+                command = CommandType.ADDHERE;
             }
             if (arg.equals("sub")) {
                 command = CommandType.SUB;
@@ -60,7 +61,10 @@ public class PlotPointCommand implements CommandExecutor {
             if (arg.equals("set")) {
                 command = CommandType.SET;
             }
-            if (StringUtils.isNumeric(arg)) {
+            if (arg.equals("addall")) {
+                command = CommandType.ADDALL;
+            }
+            if (NumberUtils.isParsable(arg)) {
                 amount = Integer.parseInt(arg);
             }
         }
@@ -80,18 +84,39 @@ public class PlotPointCommand implements CommandExecutor {
             case SUB:
                 return addPlotPoints(target, number * -1);
 
-            case ADDALL:
-                return addPlotPointsToAll(number);
+            case ADDHERE:
+                return addPlotPointsToPresentUsers(number);
 
             case SET:
-                return setPlotPoints(target, number, author);
+                return setPlotPoints(target, number);
+
+            case ADDALL:
+                return addPlotPointsToAll(number);
 
             default:
                 return getPlotPoints(target, author);
         }
     }
 
-    private EmbedBuilder setPlotPoints(String target, int number, MessageAuthor author) {
+    private EmbedBuilder addPlotPointsToAll(int number) {
+        EmbedBuilder allPlayerEmbed = new EmbedBuilder()
+                .setTitle("Everyone's plot points!");
+        for (String ID : userInfo.getUsers()) {
+            String message = "";
+            try {
+                allPlayerEmbed.addField(api.getUserById(ID).get().getName(), ppManager.getPlotPoints(ID) + " → " +
+                        ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number));
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+            allPlayerEmbed.setDescription(message);
+            Random random = new Random();
+            allPlayerEmbed.setColor(new Color(random.nextFloat(), random.nextFloat(), random.nextFloat()));
+        }
+        return allPlayerEmbed;
+    }
+
+    private EmbedBuilder setPlotPoints(String target, int number) {
         int oldPP = ppManager.getPlotPoints(target);
         int newPP = ppManager.setPlotPoints(target, number);
         return generateEmbed(oldPP, newPP, target);
@@ -103,23 +128,29 @@ public class PlotPointCommand implements CommandExecutor {
      * @param number The number of plot points to add to all players in the channel
      * @return An embed with the change in plot points for each player (Alan: 21 => 25)
      */
-    private EmbedBuilder addPlotPointsToAll(int number) {
+    private EmbedBuilder addPlotPointsToPresentUsers(int number) {
         EmbedBuilder allPlayerEmbed = new EmbedBuilder()
-                .setTitle("Everyone's plot points!");
-        for (String ID : userInfo.getUsers()) {
-            String message = "";
-            try {
+                .setTitle("Session replenishment!");
+        boolean userPresent = false;
+        try {
+
+            for (String ID : userInfo.getUsers()) {
                 if (isConnected(ID)) {
+                    userPresent = true;
                     allPlayerEmbed.addField(api.getUserById(ID).get().getName(), ppManager.getPlotPoints(ID) + " → " +
                             ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number));
                 }
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+                Random random = new Random();
+                allPlayerEmbed.setColor(new Color(random.nextFloat(), random.nextFloat(), random.nextFloat()));
+                if (!userPresent) {
+                    allPlayerEmbed.setDescription("It looks like no one's here " + EmojiParser.parseToUnicode(":pensive:"));
+                }
             }
-            allPlayerEmbed.setDescription(message);
-            Random random = new Random();
-            allPlayerEmbed.setColor(new Color(random.nextFloat(), random.nextFloat(), random.nextFloat()));
+
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
         }
+
         return allPlayerEmbed;
     }
 
@@ -161,7 +192,7 @@ public class PlotPointCommand implements CommandExecutor {
     }
 
     public enum CommandType {
-        ADD, SUB, SET, ADDALL, GET
+        ADD, SUB, SET, ADDHERE, GET, ADDALL
     }
 
 }
