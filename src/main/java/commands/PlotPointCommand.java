@@ -13,6 +13,7 @@ import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
+import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 import sheets.PPManager;
 
@@ -32,6 +33,7 @@ public class PlotPointCommand implements CommandExecutor {
     private PPManager ppManager = new PPManager();
     private UserInfo userInfo = new UserInfo();
     private DiscordApi api;
+    private Server server;
 
     public PlotPointCommand(DiscordApi api) {
         this.api = api;
@@ -40,6 +42,7 @@ public class PlotPointCommand implements CommandExecutor {
     @Command(aliases = {"~p", "~pp", "~plot", "~plotpoints"}, description = "Modifies the plot points of a user", privateMessages = false, usage = "~p [user_mention ...] add|sub|set|addall|addhere [number]")
     public void processCommandType(String[] params, DiscordApi api, MessageAuthor author, Message message, TextChannel channel) {
         List<String> targets = new ArrayList<>();
+        server = message.getServer().get();
         CommandType command = CommandType.GET;
         int amount = 1;
         for (User user : message.getMentionedUsers()) {
@@ -104,7 +107,7 @@ public class PlotPointCommand implements CommandExecutor {
         for (String ID : userInfo.getUsers()) {
             String message = "";
             try {
-                allPlayerEmbed.addField(api.getUserById(ID).get().getName(), ppManager.getPlotPoints(ID) + " → " +
+                allPlayerEmbed.addField(api.getUserById(ID).get().getDisplayName(server), ppManager.getPlotPoints(ID) + " → " +
                         ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number));
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
@@ -137,7 +140,7 @@ public class PlotPointCommand implements CommandExecutor {
             for (String ID : userInfo.getUsers()) {
                 if (isConnected(ID)) {
                     userPresent = true;
-                    allPlayerEmbed.addField(api.getUserById(ID).get().getName(), ppManager.getPlotPoints(ID) + " → " +
+                    allPlayerEmbed.addField(api.getUserById(ID).get().getDisplayName(server), ppManager.getPlotPoints(ID) + " → " +
                             ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number));
                 }
                 Random random = new Random();
@@ -166,8 +169,9 @@ public class PlotPointCommand implements CommandExecutor {
 
     private EmbedBuilder generateEmbed(int oldPP, int newPP, String target) {
         try {
+            User user = api.getUserById(target).get();
             return new EmbedBuilder()
-                    .setAuthor(api.getUserById(target).get())
+                    .setAuthor(user.getDisplayName(server), "", user.getAvatar())
                     .setTitle("Plot points")
                     .setDescription(oldPP + " → " + newPP)
                     .setColor(RandomColor.getRandomColor());
@@ -179,8 +183,9 @@ public class PlotPointCommand implements CommandExecutor {
 
     private EmbedBuilder getPlotPoints(String target, MessageAuthor messageAuthor) {
         try {
+            User user = api.getUserById(target).get();
             return new EmbedBuilder()
-                    .setAuthor(api.getUserById(target).get())
+                    .setAuthor(user.getDisplayName(server), "", user.getAvatar())
                     .setTitle("Plot points")
                     .setDescription(String.valueOf(ppManager.getPlotPoints(target)));
         } catch (InterruptedException | ExecutionException e) {
