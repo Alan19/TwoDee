@@ -44,11 +44,11 @@ distZip {
         include 'tokens/*'
         include 'resources/*'
     }
-    into(project.name+"-"+project.version+"/bin") {
-        from '.'
-        include 'tokens/*'
-        include 'resources/*'
-    }
+//    into(project.name+"-"+project.version+"/bin") {
+//        from '.'
+//        include 'tokens/*'
+//        include 'resources/*'
+//    }
 }
 
 

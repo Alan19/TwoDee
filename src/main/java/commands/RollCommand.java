@@ -16,6 +16,7 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import sheets.PPManager;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -29,6 +30,10 @@ public class RollCommand implements CommandExecutor {
             prop.load(new FileInputStream("resources/bot.properties"));
             //Subtract doom points if GM is rolling
             if (author.getIdAsString().equals(prop.getProperty("gameMaster"))) {
+                DiceRoller diceRoller = new DiceRoller(messageContent);
+                new MessageBuilder()
+                        .setEmbed(diceRoller.generateResults(message.getAuthor()))
+                        .send(channel);
                 if (commandContainsPlotDice(messageContent)) {
                     DoomWriter writer = new DoomWriter();
                     writer.addDoom(getPlotPointsSpent(messageContent) * -1);
