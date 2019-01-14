@@ -46,10 +46,6 @@ public class DoomCommand implements CommandExecutor {
                             .send(channel);
                     break;
                 default:
-                    new MessageBuilder()
-                            .setEmbed(new EmbedBuilder()
-                                    .setTitle("Invalid command!"))
-                            .send(channel);
                     break;
             }
         }

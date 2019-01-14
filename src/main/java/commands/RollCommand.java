@@ -16,7 +16,6 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import sheets.PPManager;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
