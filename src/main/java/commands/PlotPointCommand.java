@@ -31,13 +31,13 @@ import java.util.concurrent.ExecutionException;
  */
 public class PlotPointCommand implements CommandExecutor {
 
-    private static String main_channel_id;
+    private static String mainChannelID;
 
     static {
         try {
             Properties prop = new Properties();
             prop.load(new FileInputStream("resources/bot.properties"));
-            main_channel_id = prop.getProperty("main_channel_id");
+            mainChannelID = prop.getProperty("main_channel_id");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -67,20 +67,15 @@ public class PlotPointCommand implements CommandExecutor {
         for (String arg : params) {
             if (arg.equals("add")) {
                 command = CommandType.ADD;
-            }
-            if (arg.equals("addhere")) {
+            } else if (arg.equals("addhere")) {
                 command = CommandType.ADDHERE;
-            }
-            if (arg.equals("sub")) {
+            } else if (arg.equals("sub")) {
                 command = CommandType.SUB;
-            }
-            if (arg.equals("set")) {
+            } else if (arg.equals("set")) {
                 command = CommandType.SET;
-            }
-            if (arg.equals("addall")) {
+            } else if (arg.equals("addall")) {
                 command = CommandType.ADDALL;
-            }
-            if (NumberUtils.isParsable(arg)) {
+            } else if (NumberUtils.isParsable(arg)) {
                 amount = Integer.parseInt(arg);
             }
         }
@@ -171,7 +166,7 @@ public class PlotPointCommand implements CommandExecutor {
     }
 
     private boolean isConnected(String id) throws InterruptedException, ExecutionException {
-        return api.getServerVoiceChannelById(main_channel_id).get().isConnected(api.getUserById(id).get());
+        return api.getServerVoiceChannelById(mainChannelID).get().isConnected(api.getUserById(id).get());
     }
 
     private EmbedBuilder addPlotPoints(String target, int number) {
