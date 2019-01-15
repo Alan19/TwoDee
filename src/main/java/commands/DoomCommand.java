@@ -49,6 +49,7 @@ public class DoomCommand implements CommandExecutor {
                     new MessageBuilder()
                     .setEmbed(doomWriter.generateDoomEmbed())
                     .send(channel);
+                    break;
             }
         }
     }

@@ -24,7 +24,6 @@ import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 
 public class SheetsQuickstart {
     private static final String RANGE = "B12:C12";
@@ -73,26 +72,6 @@ public class SheetsQuickstart {
         return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
     }
 
-    /**
-     * Gets the amount of points in a skill from a skill database:
-     * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
-     */
-    public static void main(String... args) throws IOException, GeneralSecurityException {
-        Properties prop = new Properties();
-        prop.load(new FileInputStream("resources/bot.properties"));
-        String token = prop.getProperty("token");
-        // Build a new authorized API client service.
-        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-        final String spreadsheetId = "18McJSYbBDRr40ZHK7oG4gXqzORoz3B5nrJ0o9zF0F-8";
-        final String range = "Data!A1:B270";
-        Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
-                .setApplicationName(APPLICATION_NAME)
-                .build();
-        ValueRange result = service.spreadsheets().values().get(spreadsheetId, range).execute();
-        int numRows = result.getValues() != null ? result.getValues().size() : 0;
-        System.out.printf("%d rows retrieved.", numRows);
-    }
-
     public static ValueRange getPlotPointCell(String docID) throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -111,7 +90,7 @@ public class SheetsQuickstart {
         return result;
     }
 
-    private String generateRangeCommand(String id) throws IOException {
+    private String generateRangeCommand(String id) {
         UserInfo userInfo = new UserInfo();
         String cols = userInfo.getCol(id);
         String[] range = cols.split(",");

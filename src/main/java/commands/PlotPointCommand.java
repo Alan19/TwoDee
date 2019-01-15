@@ -65,15 +65,15 @@ public class PlotPointCommand implements CommandExecutor {
             targets.add(author.getIdAsString());
         }
         for (String arg : params) {
-            if (arg.equals("add")) {
+            if ("add".equals(arg)) {
                 command = CommandType.ADD;
-            } else if (arg.equals("addhere")) {
+            } else if ("addhere".equals(arg)) {
                 command = CommandType.ADDHERE;
-            } else if (arg.equals("sub")) {
+            } else if ("sub".equals(arg)) {
                 command = CommandType.SUB;
-            } else if (arg.equals("set")) {
+            } else if ("set".equals(arg)) {
                 command = CommandType.SET;
-            } else if (arg.equals("addall")) {
+            } else if ("addall".equals(arg)) {
                 command = CommandType.ADDALL;
             } else if (NumberUtils.isParsable(arg)) {
                 amount = Integer.parseInt(arg);
