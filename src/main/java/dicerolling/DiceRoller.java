@@ -134,7 +134,7 @@ public class DiceRoller {
             PPManager manager = new PPManager();
             String userID = author.getIdAsString();
             int oldPP = manager.getPlotPoints(userID);
-            int newPP = manager.setPlotPoints(userID, oldPP + doom);
+            int newPP = manager.setPlotPoints(userID, oldPP + 1);
             return new EmbedBuilder()
                     .setAuthor(author)
                     .setDescription(oldPP + " → " + newPP);
