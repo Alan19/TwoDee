@@ -8,15 +8,21 @@ public class DiceResult {
 
     private ArrayList<Integer> dice;
     private ArrayList<Integer> plotDice;
+    private ArrayList<Integer> keptDice;
+    private ArrayList<Integer> flatBonus;
 
     public DiceResult(){
         dice = new ArrayList<>();
         plotDice = new ArrayList<>();
+        keptDice = new ArrayList<>();
+        flatBonus = new ArrayList<>();
     }
 
-    private DiceResult(ArrayList<Integer> diceList, ArrayList<Integer> pdList){
+    private DiceResult(ArrayList<Integer> diceList, ArrayList<Integer> pdList, ArrayList<Integer> keptList, ArrayList<Integer> flatList) {
         dice = diceList;
         plotDice = pdList;
+        keptDice = keptList;
+        flatBonus = flatList;
     }
 
     public void addDiceToResult(int num){
@@ -39,6 +45,12 @@ public class DiceResult {
         for (int pd : plotDice) {
             sum += pd;
         }
+        for (int kd : keptDice) {
+            sum += kd;
+        }
+        for (int f : flatBonus) {
+            sum += f;
+        }
         return sum;
     }
 
@@ -47,7 +59,15 @@ public class DiceResult {
     }
 
     public DiceResult copy(){
-        return new DiceResult(new ArrayList<>(dice), new ArrayList<>(plotDice));
+        return new DiceResult(new ArrayList<>(dice), new ArrayList<>(plotDice), new ArrayList<>(keptDice), new ArrayList<>(flatBonus));
+    }
+
+    public void addKeptDice(int kd) {
+        keptDice.add(kd);
+    }
+
+    public void addFlatBonues(int flat) {
+        flatBonus.add(flat);
     }
 
     public int getDoom(){

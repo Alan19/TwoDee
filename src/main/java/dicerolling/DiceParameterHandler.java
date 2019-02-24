@@ -2,6 +2,10 @@ package dicerolling;
 
 import java.util.ArrayList;
 
+/**
+ * Class that processes a collection of strings and adds them to a pool
+ * e.g. d8, pd6, -8, +3, kd4
+ */
 public class DiceParameterHandler {
     private ArrayList<Integer> plotDice;
     private ArrayList<Integer> regDice;
@@ -36,6 +40,8 @@ public class DiceParameterHandler {
             } else if (argCopy.contains("d")) {
                 addToPool(argCopy, numDice, regDice);
             } else if (argCopy.contains("+")) {
+                addToPool(argCopy, "1", flat);
+            } else if (argCopy.contains("-")) {
                 addToPool(argCopy, "1", flat);
             }
 

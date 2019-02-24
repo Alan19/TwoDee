@@ -34,7 +34,7 @@ public class ScanDice implements StatisticsState {
             context.setState(new GenerateOverloadMessage());
         }
         else {
-            context.setState(new GenerateStatistics(regularDice, plotDice));
+            context.setState(new GenerateStatistics(regularDice, plotDice, flat, kept));
         }
     }
 

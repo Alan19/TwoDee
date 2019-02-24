@@ -1,11 +1,11 @@
 package statistics;
 
 import logic.EmbedField;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 import statistics.resultvisitors.DifficultyVisitor;
 import statistics.resultvisitors.DoomVisitor;
 import statistics.resultvisitors.ResultVisitor;
 import statistics.resultvisitors.SumVisitor;
-import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,16 +13,20 @@ import java.util.List;
 public class GenerateStatistics implements StatisticsState {
     private ArrayList<Integer> regularDice;
     private ArrayList<Integer> plotDice;
+    private ArrayList<Integer> flatBonus;
+    private ArrayList<Integer> keptDice;
     private List<DiceResult> resultList = new ArrayList<>();
 
-    public GenerateStatistics(ArrayList<Integer> regularDice, ArrayList<Integer> plotDice) {
+    public GenerateStatistics(ArrayList<Integer> regularDice, ArrayList<Integer> plotDice, ArrayList<Integer> flatBonus, ArrayList<Integer> keptDice) {
         this.regularDice = regularDice;
         this.plotDice = plotDice;
+        this.flatBonus = flatBonus;
+        this.keptDice = keptDice;
     }
 
     @Override
     public void process(StatisticsContext context) {
-        generateResults(regularDice, plotDice);
+        generateResults(regularDice, plotDice, keptDice, flatBonus);
         ArrayList<ResultVisitor> resultVisitors = new ArrayList<>();
         resultVisitors.add(new SumVisitor());
         resultVisitors.add(new DifficultyVisitor());
@@ -34,7 +38,7 @@ public class GenerateStatistics implements StatisticsState {
         }
         EmbedBuilder statsEmbed = new EmbedBuilder();
         for (ResultVisitor visitor : resultVisitors) {
-            for (EmbedField field: visitor.getEmbedField()) {
+            for (EmbedField field : visitor.getEmbedField()) {
                 statsEmbed.addInlineField(field.getTitle(), field.getContent());
             }
         }
@@ -42,45 +46,70 @@ public class GenerateStatistics implements StatisticsState {
     }
 
     //Prep method for generateResults to copy the dice list to prevent it from being modified
-    private void generateResults(ArrayList<Integer> diceList, ArrayList<Integer> plotDice){
-        if (!diceList.isEmpty()){
+    private void generateResults(ArrayList<Integer> diceList, ArrayList<Integer> plotDice, ArrayList<Integer> keptDice, ArrayList<Integer> flatBonus) {
+        if (!diceList.isEmpty()) {
             ArrayList<Integer> diceListCopy = new ArrayList<>(diceList);
-            generateResults(diceListCopy, plotDice, new DiceResult());
-        }
-        else {
-            generatePDResults(plotDice, new DiceResult());
+            generateResults(diceListCopy, plotDice, keptDice, flatBonus, new DiceResult());
+        } else {
+            generatePDResults(plotDice, keptDice, flatBonus, new DiceResult());
         }
     }
 
     //Recursive method to generate an ArrayList of results
-    private void generateResults(ArrayList<Integer> diceList, ArrayList<Integer> plotDice, DiceResult result){
-        if (diceList.isEmpty()){
-            generatePDResults(plotDice, result);
-        }
-        else {
+    private void generateResults(ArrayList<Integer> diceList, ArrayList<Integer> plotDice, ArrayList<Integer> keptDice, ArrayList<Integer> flatBonus, DiceResult result) {
+        if (diceList.isEmpty()) {
+            generatePDResults(plotDice, keptDice, flatBonus, result);
+        } else {
             ArrayList<Integer> diceListCopy = new ArrayList<>(diceList);
             int diceNum = diceListCopy.remove(0);
-            for (int i = 1; i <= diceNum; i++){
+            for (int i = 1; i <= diceNum; i++) {
                 DiceResult resultCopy = result.copy();
                 resultCopy.addDiceToResult(i);
-                generateResults(diceListCopy, plotDice, resultCopy);
+                generateResults(diceListCopy, plotDice, keptDice, flatBonus, resultCopy);
             }
         }
     }
 
     //Recursive method for handling plot dice
-    private void generatePDResults(ArrayList<Integer> plotDice, DiceResult result){
-        if (plotDice.isEmpty()){
-            resultList.add(result);
-        }
-        else {
+    private void generatePDResults(ArrayList<Integer> plotDice, ArrayList<Integer> keptDice, ArrayList<Integer> flatBonus, DiceResult result) {
+        if (plotDice.isEmpty()) {
+            generateKDResults(keptDice, flatBonus, result);
+        } else {
             ArrayList<Integer> diceListCopy = new ArrayList<>(plotDice);
             int diceNum = diceListCopy.remove(0);
-            for (int i = diceNum / 2; i <= diceNum; i++){
+            for (int i = diceNum / 2; i <= diceNum; i++) {
                 DiceResult resultCopy = result.copy();
                 resultCopy.addPlotDice(i);
-                generatePDResults(diceListCopy, resultCopy);
+                generatePDResults(diceListCopy, keptDice, flatBonus, resultCopy);
             }
+        }
+    }
+
+    //Recursive method for handling kept dice
+    private void generateKDResults(ArrayList<Integer> keptDice, ArrayList<Integer> flatBonus, DiceResult result) {
+        if (keptDice.isEmpty()) {
+            generateFlatResults(flatBonus, result);
+        } else {
+            ArrayList<Integer> diceListCopy = new ArrayList<>(keptDice);
+            int diceNum = diceListCopy.remove(0);
+            for (int i = 1; i <= diceNum; i++) {
+                DiceResult resultCopy = result.copy();
+                resultCopy.addKeptDice(i);
+                generateKDResults(diceListCopy, flatBonus, resultCopy);
+            }
+        }
+    }
+
+    //Recursive method for handling flat bonuses
+    private void generateFlatResults(ArrayList<Integer> flatBonus, DiceResult result) {
+        if (flatBonus.isEmpty()) {
+            resultList.add(result);
+        } else {
+            ArrayList<Integer> diceListCopy = new ArrayList<>(flatBonus);
+            int diceNum = diceListCopy.remove(0);
+            DiceResult resultCopy = result.copy();
+            resultCopy.addFlatBonues(diceNum);
+            generateFlatResults(diceListCopy, resultCopy);
         }
     }
 }
