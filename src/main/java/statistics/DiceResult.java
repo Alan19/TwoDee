@@ -77,6 +77,11 @@ public class DiceResult {
                 doomCount += 1;
             }
         }
+        for (int roll : keptDice) {
+            if (roll == 1) {
+                doomCount += 1;
+            }
+        }
         return doomCount;
     }
 }
