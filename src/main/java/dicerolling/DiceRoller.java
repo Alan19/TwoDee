@@ -6,11 +6,9 @@ import logic.RandomColor;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import sheets.PPManager;
+import statistics.resultvisitors.DifficultyVisitor;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Random;
+import java.util.*;
 
 public class DiceRoller {
 
@@ -97,35 +95,60 @@ public class DiceRoller {
                 .addField("Plot dice", replaceBrackets(pdResults.toString()), true)
                 .addField("Kept dice", replaceBrackets(keptResult.toString()), true)
                 .addField("Flat bonuses", Integer.toString(flatResult), true)
-                .addField("Total", String.valueOf(total), true);
+                .addField("Total", String.valueOf(total), true)
+                .addField("Tier Hit", tiersHit(total));
+    }
+
+    private String tiersHit(int total) {
+        DifficultyVisitor difficultyVisitor = new DifficultyVisitor();
+        if (total < 3) {
+            return "None";
+        }
+        StringBuilder output = new StringBuilder();
+        for (Map.Entry<Integer, String> diffEntry : difficultyVisitor.getDifficultyMap().entrySet()) {
+            if (difficultyVisitor.generateStageDifficulty(diffEntry.getKey() + 1) > total) {
+                output.append(diffEntry.getValue());
+                break;
+            }
+        }
+        if (total < 10) {
+            return String.valueOf(output);
+        }
+        for (Map.Entry<Integer, String> diffEntry : difficultyVisitor.getDifficultyMap().entrySet()) {
+            if (difficultyVisitor.generateStageExtraordinaryDifficulty(diffEntry.getKey() + 1) > total) {
+                output.append(", Extraordinary ").append(diffEntry.getValue());
+                break;
+            }
+        }
+        return String.valueOf(output);
     }
 
     //Bold 1s to show total doom generated. Runs doom increasing method afterwards.
     private String formatResults(ArrayList<Integer> s) {
-        String resultString = "";
+        StringBuilder resultString = new StringBuilder();
         if (s.size() > 1) {
             for (int i = 0; i < s.size() - 1; i++) {
                 if (s.get(i) == 1) {
-                    resultString += "**1**, ";
+                    resultString.append("**1**, ");
                 } else {
-                    resultString += s.get(i) + ", ";
+                    resultString.append(s.get(i)).append(", ");
                 }
             }
             if (s.get(s.size() - 1) == 1) {
-                resultString += "**1**";
+                resultString.append("**1**");
             } else {
-                resultString += s.get(s.size() - 1);
+                resultString.append(s.get(s.size() - 1));
             }
         } else if (s.size() == 1) {
             if (s.get(0) == 1) {
-                resultString += "**1**";
+                resultString.append("**1**");
             } else {
-                resultString += s.get(0);
+                resultString.append(s.get(0));
             }
         } else {
             return "*none*";
         }
-        return resultString;
+        return resultString.toString();
     }
 
     // Username is stored as <@!140973544891744256>
@@ -199,7 +222,7 @@ public class DiceRoller {
 
     //Replaces brackets in the string. If the string is blank, returns "none" in italics
     private String replaceBrackets(String s) {
-        String newStr = s.replaceAll("\\[", "").replaceAll("\\]", "");
+        String newStr = s.replaceAll("\\[", "").replaceAll("]", "");
         if (newStr.equals("")) {
             return "*none*";
         }
