@@ -1,6 +1,8 @@
 package logic;
 
 import com.vdurmont.emoji.EmojiParser;
+import org.javacord.api.entity.emoji.Emoji;
+import org.javacord.api.entity.emoji.KnownCustomEmoji;
 import org.javacord.api.entity.message.Message;
 
 import java.util.SortedMap;
@@ -35,6 +37,21 @@ public class PlotPointEnhancementHelper {
             rollMessage.addReaction(emoji);
         }
         rollMessage.addReaction("\uD83C\uDDFD");
+    }
+
+    public boolean isEmojiNumberEmoji(Emoji emoji) {
+        if (emoji.isUnicodeEmoji() && emoji.asUnicodeEmoji().isPresent()) {
+            return oneToTwelveEmojiMap.values().contains(emoji.asUnicodeEmoji().get());
+        } else if (emoji.isKnownCustomEmoji() && emoji.asKnownCustomEmoji().isPresent()) {
+            String trimmedEmoji = trimCustomEmoji(emoji.asKnownCustomEmoji().get());
+            return oneToTwelveEmojiMap.values().contains(trimmedEmoji);
+        }
+        return false;
+    }
+
+    public String trimCustomEmoji(KnownCustomEmoji emoji) {
+        String tag = emoji.asKnownCustomEmoji().get().getMentionTag();
+        return tag.substring(2, tag.length() - 1);
     }
 
     public String getCancelEmoji() {

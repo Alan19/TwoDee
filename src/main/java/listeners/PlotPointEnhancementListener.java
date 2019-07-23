@@ -43,7 +43,7 @@ public class PlotPointEnhancementListener implements EventListener {
                     event.requestMessage().thenAcceptAsync(message -> {
                         if (reaction.getEmoji().equalsEmoji("\uD83C\uDDFD")) {
                             removeEnhancementEmojis(message);
-                        } else {
+                        } else if (new PlotPointEnhancementHelper().isEmojiNumberEmoji(reaction.getEmoji())) {
                             enhanceRoll(event, reaction, message);
                             //Wipe reactions and then add star emoji to show that it was enhanced with plot points
                             removeEnhancementEmojis(message);
@@ -149,8 +149,7 @@ public class PlotPointEnhancementListener implements EventListener {
         int toAdd = 0;
         PlotPointEnhancementHelper helper = new PlotPointEnhancementHelper();
         if (emoji.isCustomEmoji()) {
-            String tag = emoji.asKnownCustomEmoji().get().getMentionTag();
-            String trimmedEmoji = tag.substring(2, tag.length() - 1);
+            String trimmedEmoji = helper.trimCustomEmoji(emoji.asKnownCustomEmoji().get());
             for (Map.Entry<Integer, String> emojiEntry : helper.getOneToTwelveEmojiMap().entrySet()) {
                 if (emojiEntry.getValue().equals(trimmedEmoji)) {
                     toAdd = emojiEntry.getKey();
