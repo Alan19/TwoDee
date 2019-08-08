@@ -42,8 +42,8 @@ public class CalendarCommand implements CommandExecutor {
         //Check if next session is next month
         int firstSessionDate = firstAndThird.get(0);
         int secondSessionDate = firstAndThird.get(1);
-        ZonedDateTime startTimeOfFirstSession = ZonedDateTime.of(currentTime.getYear(), currentTime.getMonthValue(), firstSessionDate, 19, 0, 0, 0, nyTimeZone);
-        ZonedDateTime startTimeOfLastSession = ZonedDateTime.of(currentTime.getYear(), currentTime.getMonth().getValue(), secondSessionDate, 19, 0, 0, 0, nyTimeZone);
+        ZonedDateTime startTimeOfFirstSession = ZonedDateTime.of(currentTime.getYear(), currentTime.getMonthValue(), firstSessionDate, 19, 30, 0, 0, nyTimeZone);
+        ZonedDateTime startTimeOfLastSession = ZonedDateTime.of(currentTime.getYear(), currentTime.getMonth().getValue(), secondSessionDate, 19, 30, 0, 0, nyTimeZone);
         ZonedDateTime startOfNextSession = calculateNextSessionTime(currentTime, startTimeOfFirstSession, startTimeOfLastSession);
         //Generate embed to next session information
         EmbedBuilder resultEmbed = new EmbedBuilder()
@@ -69,7 +69,7 @@ public class CalendarCommand implements CommandExecutor {
             ZonedDateTime firstDayOfNextMonth = ZonedDateTime.of(LocalDateTime.now().plusMonths(1).withDayOfMonth(1), nyTimeZone);
             //Get date of first session for next month
             int dateOfNextSession = getSessionDates(firstDayOfNextMonth.getYear(), firstDayOfNextMonth.getMonth()).get(0);
-            return ZonedDateTime.of(firstDayOfNextMonth.getYear(), firstDayOfNextMonth.getMonthValue(), dateOfNextSession, 19, 0, 0, 0, nyTimeZone);
+            return ZonedDateTime.of(firstDayOfNextMonth.getYear(), firstDayOfNextMonth.getMonthValue(), dateOfNextSession, 19, 30, 0, 0, nyTimeZone);
         }
         //Still more sessions this month
         else {
