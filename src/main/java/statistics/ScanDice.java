@@ -11,6 +11,7 @@ import java.util.Arrays;
  */
 public class ScanDice implements StatisticsState {
     private String message;
+    private int keptDice = 2;
 
     public ScanDice(String message) {
         this.message = message;
@@ -18,40 +19,40 @@ public class ScanDice implements StatisticsState {
 
     @Override
     public void process(StatisticsContext context) {
-        //Add all of the dice to the ArrayLists based on dice type
-        ArrayList<Integer> regularDice = new ArrayList<>();
-        ArrayList<Integer> plotDice = new ArrayList<>();
-        ArrayList<Integer> flat = new ArrayList<>();
-        ArrayList<Integer> kept = new ArrayList<>();
         ArrayList<String> args = new ArrayList<>(Arrays.asList(message.split(" ")));
-        DiceParameterHandler diceParameterHandler = new DiceParameterHandler(args, regularDice, plotDice, flat, kept);
+        PoolOptions poolOptions = new PoolOptions();
+        DiceParameterHandler diceParameterHandler = new DiceParameterHandler(args, poolOptions);
         diceParameterHandler.addDiceToPools();
 
-        if (regularDice.isEmpty() && plotDice.isEmpty()){
+        if (poolOptions.validPool()) {
             context.setState(new GenerateNoDiceMessage());
-        }
-        else if (getTotalCombos(regularDice, plotDice) > Math.pow(12, 6)){
+        } else if (getTotalCombos(poolOptions) > Math.pow(12, 6)) {
             context.setState(new GenerateOverloadMessage());
         }
         else {
-            context.setState(new GenerateStatistics(regularDice, plotDice, flat, kept));
+            context.setState(new GenerateStatistics(poolOptions));
         }
     }
 
     //Get the total number of combinations by finding the product of all of the number of faces in all of the dice
-    private int getTotalCombos(ArrayList<Integer> diceList, ArrayList<Integer> plotDice) {
+    private int getTotalCombos(PoolOptions poolOptions) {
         int totalCombos = 1;
-        for (int combo : diceList) {
+        for (int combo : poolOptions.getRegularDice()) {
             totalCombos *= combo;
         }
 
         /*Plot dice have a minimum value of the die size / 2
         //This means that you need to divide it by two and add one to get the number of combinations from it if the
         value is greater than 2 */
-        for (int pdCombo : plotDice) {
+        for (int pdCombo : poolOptions.getPlotDice()) {
             if (pdCombo > 2){
                 totalCombos *= pdCombo / 2 + 1 ;
             }
+        }
+
+        //Kept die is treated the same as normal dice
+        for (int combo : poolOptions.getKeptDice()) {
+            totalCombos *= combo;
         }
         return totalCombos;
     }

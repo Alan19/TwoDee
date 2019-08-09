@@ -79,11 +79,12 @@ public class CommandProcessor {
             }
         }
         return null;
-    }/*
+    }
+
+    /*
     If a dice is over d12 reduce dice to facets % 12 d12 dice and the remainder as a dice if the remainder is greater
     than 2. For example (d16 -> d12 d4, d14 -> d12, d100 -> 8d12 d4)
      */
-
     private String reduceDice(List<Object> skill, Integer skillVal) {
 
         if (skillVal > 12) {

@@ -13,12 +13,14 @@ public class GenerateStatistics implements StatisticsState {
     private ArrayList<Integer> flatBonus;
     private ArrayList<Integer> keptDice;
     private List<DiceResult> resultList = new ArrayList<>();
+    private PoolOptions poolOptions;
 
-    public GenerateStatistics(ArrayList<Integer> regularDice, ArrayList<Integer> plotDice, ArrayList<Integer> flatBonus, ArrayList<Integer> keptDice) {
-        this.regularDice = regularDice;
-        this.plotDice = plotDice;
-        this.flatBonus = flatBonus;
-        this.keptDice = keptDice;
+    public GenerateStatistics(PoolOptions poolOptions) {
+        this.poolOptions = poolOptions;
+        this.regularDice = poolOptions.getRegularDice();
+        this.plotDice = poolOptions.getPlotDice();
+        this.flatBonus = poolOptions.getFlatBonus();
+        this.keptDice = poolOptions.getKeptDice();
     }
 
     @Override
