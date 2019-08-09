@@ -10,19 +10,22 @@ public class DiceResult {
     private ArrayList<Integer> plotDice;
     private ArrayList<Integer> keptDice;
     private ArrayList<Integer> flatBonus;
+    private int keepHowMany;
 
-    public DiceResult(){
+    public DiceResult(int keep) {
         dice = new ArrayList<>();
         plotDice = new ArrayList<>();
         keptDice = new ArrayList<>();
         flatBonus = new ArrayList<>();
+        keepHowMany = keep;
     }
 
-    private DiceResult(ArrayList<Integer> diceList, ArrayList<Integer> pdList, ArrayList<Integer> keptList, ArrayList<Integer> flatList) {
+    private DiceResult(ArrayList<Integer> diceList, ArrayList<Integer> pdList, ArrayList<Integer> keptList, ArrayList<Integer> flatList, int keep) {
         dice = diceList;
         plotDice = pdList;
         keptDice = keptList;
         flatBonus = flatList;
+        keepHowMany = keep;
     }
 
     public void addDiceToResult(int num){
@@ -30,17 +33,12 @@ public class DiceResult {
     }
 
     public int getResult(){
+        //Sorts dice and reverse to get descending order
         int sum = 0;
-        if (dice.size() == 1){
-            sum += dice.get(0);
-        }
-        else {
-            //Sorts dice and reverse to get descending order
-            dice.sort(Comparator.naturalOrder());
-            Collections.reverse(dice);
-            for (int i = 0; i < dice.size() && i < 2; i++){
-                sum += dice.get(i);
-            }
+        dice.sort(Comparator.naturalOrder());
+        Collections.reverse(dice);
+        for (int i = 0; i < Math.min(dice.size(), keepHowMany); i++) {
+            sum += dice.get(i);
         }
         for (int pd : plotDice) {
             sum += pd;
@@ -59,7 +57,7 @@ public class DiceResult {
     }
 
     public DiceResult copy(){
-        return new DiceResult(new ArrayList<>(dice), new ArrayList<>(plotDice), new ArrayList<>(keptDice), new ArrayList<>(flatBonus));
+        return new DiceResult(new ArrayList<>(dice), new ArrayList<>(plotDice), new ArrayList<>(keptDice), new ArrayList<>(flatBonus), keepHowMany);
     }
 
     public void addKeptDice(int kd) {

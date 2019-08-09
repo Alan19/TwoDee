@@ -39,7 +39,7 @@ public class DiceParameterHandler {
                 addToPool(argCopy, "1", PoolType.FLAT_BONUS);
             } else if (argCopy.contains("-")) {
                 addToPool(argCopy, "1", PoolType.FLAT_BONUS);
-            } else if (argCopy.contains("**")) {
+            } else if (argCopy.contains("**t")) {
                 addToPool(argCopy, "1", PoolType.NUMBER_KEPT);
             }
         }
@@ -48,7 +48,7 @@ public class DiceParameterHandler {
     //Check if a parameter contains multiple dice and if there is, add multiple dice to the list
     private void addToPool(String argCopy, String numDice, PoolType pool) {
         //Remove all letters so only numbers remain to get the dice value
-        int diceVal = Integer.parseInt(argCopy.replaceAll("[a-zA-Z]", ""));
+        int diceVal = Integer.parseInt(argCopy.replaceAll("[^0-9]", ""));
         int intNumDice = numDice.equals("") ? 1 : Integer.parseInt(numDice);
         //If there are multiple dice being rolled, add all of them to the pool. Otherwise, only add one.
         for (int i = 0; i < intNumDice; i++) {

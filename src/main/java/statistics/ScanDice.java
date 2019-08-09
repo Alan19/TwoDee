@@ -24,7 +24,7 @@ public class ScanDice implements StatisticsState {
         DiceParameterHandler diceParameterHandler = new DiceParameterHandler(args, poolOptions);
         diceParameterHandler.addDiceToPools();
 
-        if (poolOptions.validPool()) {
+        if (!poolOptions.validPool()) {
             context.setState(new GenerateNoDiceMessage());
         } else if (getTotalCombos(poolOptions) > Math.pow(12, 6)) {
             context.setState(new GenerateOverloadMessage());

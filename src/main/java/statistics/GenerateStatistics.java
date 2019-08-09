@@ -49,9 +49,9 @@ public class GenerateStatistics implements StatisticsState {
     private void generateResults(ArrayList<Integer> diceList, ArrayList<Integer> plotDice, ArrayList<Integer> keptDice, ArrayList<Integer> flatBonus) {
         if (!diceList.isEmpty()) {
             ArrayList<Integer> diceListCopy = new ArrayList<>(diceList);
-            generateResults(diceListCopy, plotDice, keptDice, flatBonus, new DiceResult());
+            generateResults(diceListCopy, plotDice, keptDice, flatBonus, new DiceResult(poolOptions.getTop()));
         } else {
-            generatePDResults(plotDice, keptDice, flatBonus, new DiceResult());
+            generatePDResults(plotDice, keptDice, flatBonus, new DiceResult(poolOptions.getTop()));
         }
     }
 
