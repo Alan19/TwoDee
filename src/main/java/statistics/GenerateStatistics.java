@@ -5,15 +5,14 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import statistics.resultvisitors.*;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class GenerateStatistics implements StatisticsState {
     private ArrayList<Integer> regularDice;
     private ArrayList<Integer> plotDice;
     private ArrayList<Integer> flatBonus;
     private ArrayList<Integer> keptDice;
-    private List<DiceResult> resultList = new ArrayList<>();
     private PoolOptions poolOptions;
+    private ArrayList<ResultVisitor> resultVisitors;
 
     public GenerateStatistics(PoolOptions poolOptions) {
         this.poolOptions = poolOptions;
@@ -21,21 +20,18 @@ public class GenerateStatistics implements StatisticsState {
         this.plotDice = poolOptions.getPlotDice();
         this.flatBonus = poolOptions.getFlatBonus();
         this.keptDice = poolOptions.getKeptDice();
+
+        resultVisitors = new ArrayList<>();
+        resultVisitors.add(new SumVisitor());
+        resultVisitors.add(new DifficultyVisitor());
+        resultVisitors.add(new DoomVisitor());
+        resultVisitors.add(new StatisticsVisitor());
     }
 
     @Override
     public void process(StatisticsContext context) {
         generateResults(regularDice, plotDice, keptDice, flatBonus);
-        ArrayList<ResultVisitor> resultVisitors = new ArrayList<>();
-        resultVisitors.add(new SumVisitor());
-        resultVisitors.add(new DifficultyVisitor());
-        resultVisitors.add(new DoomVisitor());
-        resultVisitors.add(new StatisticsVisitor());
-        for (DiceResult result : resultList) {
-            for (ResultVisitor visitor : resultVisitors) {
-                visitor.visit(result);
-            }
-        }
+
         EmbedBuilder statsEmbed = new EmbedBuilder();
         for (ResultVisitor visitor : resultVisitors) {
             for (EmbedField field : visitor.getEmbedField()) {
@@ -103,7 +99,9 @@ public class GenerateStatistics implements StatisticsState {
     //Recursive method for handling flat bonuses
     private void generateFlatResults(ArrayList<Integer> flatBonus, DiceResult result) {
         if (flatBonus.isEmpty()) {
-            resultList.add(result);
+            for (ResultVisitor visitor : resultVisitors) {
+                visitor.visit(result);
+            }
         } else {
             ArrayList<Integer> diceListCopy = new ArrayList<>(flatBonus);
             int diceNum = diceListCopy.remove(0);
