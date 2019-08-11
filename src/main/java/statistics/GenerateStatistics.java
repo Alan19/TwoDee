@@ -45,21 +45,21 @@ public class GenerateStatistics implements StatisticsState {
     private void generateResults(ArrayList<Integer> diceList, ArrayList<Integer> plotDice, ArrayList<Integer> keptDice, ArrayList<Integer> flatBonus) {
         if (!diceList.isEmpty()) {
             ArrayList<Integer> diceListCopy = new ArrayList<>(diceList);
-            generateResults(diceListCopy, plotDice, keptDice, flatBonus, new DiceResult(poolOptions.getTop()));
+            generateResults(diceListCopy, plotDice, keptDice, flatBonus, new RollResult(poolOptions.getTop()));
         } else {
-            generatePDResults(plotDice, keptDice, flatBonus, new DiceResult(poolOptions.getTop()));
+            generatePDResults(plotDice, keptDice, flatBonus, new RollResult(poolOptions.getTop()));
         }
     }
 
     //Recursive method to generate an ArrayList of results
-    private void generateResults(ArrayList<Integer> diceList, ArrayList<Integer> plotDice, ArrayList<Integer> keptDice, ArrayList<Integer> flatBonus, DiceResult result) {
+    private void generateResults(ArrayList<Integer> diceList, ArrayList<Integer> plotDice, ArrayList<Integer> keptDice, ArrayList<Integer> flatBonus, RollResult result) {
         if (diceList.isEmpty()) {
             generatePDResults(plotDice, keptDice, flatBonus, result);
         } else {
             ArrayList<Integer> diceListCopy = new ArrayList<>(diceList);
             int diceNum = diceListCopy.remove(0);
             for (int i = 1; i <= diceNum; i++) {
-                DiceResult resultCopy = result.copy();
+                RollResult resultCopy = result.copy();
                 resultCopy.addDiceToResult(i);
                 generateResults(diceListCopy, plotDice, keptDice, flatBonus, resultCopy);
             }
@@ -67,14 +67,14 @@ public class GenerateStatistics implements StatisticsState {
     }
 
     //Recursive method for handling plot dice
-    private void generatePDResults(ArrayList<Integer> plotDice, ArrayList<Integer> keptDice, ArrayList<Integer> flatBonus, DiceResult result) {
+    private void generatePDResults(ArrayList<Integer> plotDice, ArrayList<Integer> keptDice, ArrayList<Integer> flatBonus, RollResult result) {
         if (plotDice.isEmpty()) {
             generateKDResults(keptDice, flatBonus, result);
         } else {
             ArrayList<Integer> diceListCopy = new ArrayList<>(plotDice);
             int diceNum = diceListCopy.remove(0);
             for (int i = diceNum / 2; i <= diceNum; i++) {
-                DiceResult resultCopy = result.copy();
+                RollResult resultCopy = result.copy();
                 resultCopy.addPlotDice(i);
                 generatePDResults(diceListCopy, keptDice, flatBonus, resultCopy);
             }
@@ -82,14 +82,14 @@ public class GenerateStatistics implements StatisticsState {
     }
 
     //Recursive method for handling kept dice
-    private void generateKDResults(ArrayList<Integer> keptDice, ArrayList<Integer> flatBonus, DiceResult result) {
+    private void generateKDResults(ArrayList<Integer> keptDice, ArrayList<Integer> flatBonus, RollResult result) {
         if (keptDice.isEmpty()) {
             generateFlatResults(flatBonus, result);
         } else {
             ArrayList<Integer> diceListCopy = new ArrayList<>(keptDice);
             int diceNum = diceListCopy.remove(0);
             for (int i = 1; i <= diceNum; i++) {
-                DiceResult resultCopy = result.copy();
+                RollResult resultCopy = result.copy();
                 resultCopy.addKeptDice(i);
                 generateKDResults(diceListCopy, flatBonus, resultCopy);
             }
@@ -97,7 +97,7 @@ public class GenerateStatistics implements StatisticsState {
     }
 
     //Recursive method for handling flat bonuses
-    private void generateFlatResults(ArrayList<Integer> flatBonus, DiceResult result) {
+    private void generateFlatResults(ArrayList<Integer> flatBonus, RollResult result) {
         if (flatBonus.isEmpty()) {
             for (ResultVisitor visitor : resultVisitors) {
                 visitor.visit(result);
@@ -105,8 +105,8 @@ public class GenerateStatistics implements StatisticsState {
         } else {
             ArrayList<Integer> diceListCopy = new ArrayList<>(flatBonus);
             int diceNum = diceListCopy.remove(0);
-            DiceResult resultCopy = result.copy();
-            resultCopy.addFlatBonues(diceNum);
+            RollResult resultCopy = result.copy();
+            resultCopy.addFlatBonuses(diceNum);
             generateFlatResults(diceListCopy, resultCopy);
         }
     }

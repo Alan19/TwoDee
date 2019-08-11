@@ -2,7 +2,7 @@ package statistics.resultvisitors;
 
 import logic.EmbedField;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import statistics.DiceResult;
+import statistics.RollResult;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ public class StatisticsVisitor implements ResultVisitor {
     }
 
     @Override
-    public void visit(DiceResult result) {
+    public void visit(RollResult result) {
         summary.addValue(result.getResult());
     }
 

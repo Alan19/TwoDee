@@ -1,7 +1,7 @@
 package statistics.resultvisitors;
 
 import logic.EmbedField;
-import statistics.DiceResult;
+import statistics.RollResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,7 +60,7 @@ public class DifficultyVisitor implements ResultVisitor {
     }
 
     @Override
-    public void visit(DiceResult result) {
+    public void visit(RollResult result) {
         int resultVal = result.getResult();
         for (Integer level : difficultyMap.keySet()) {
             if (resultVal >= generateStageDifficulty(level)){

@@ -1,7 +1,7 @@
 package statistics.resultvisitors;
 
-import statistics.DiceResult;
 import logic.EmbedField;
+import statistics.RollResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ public class DoomVisitor implements ResultVisitor{
     private TreeMap<Integer, Integer> doomMap = new TreeMap<>();
 
     @Override
-    public void visit(DiceResult result) {
+    public void visit(RollResult result) {
         int doom = result.getDoom();
         if (doomMap.containsKey(doom)){
             doomMap.put(doom, doomMap.get(doom) + 1);
