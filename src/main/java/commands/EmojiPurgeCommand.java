@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class EmojiPurgeCommand implements CommandExecutor {
-    @Command(async = true, aliases = {"~emojipurge", "~killeverylastoneofthem", "~scorchedearth", "~removeemojis", "~p"}, description = "Removes all plot point enhancement emojis from this channel", usage = "~removeemojis [all]")
+    @Command(async = true, aliases = {"~emojipurge", "~killeverylastoneofthem", "~scorchedearth", "~removeemojis", "~purge"}, description = "Removes all plot point enhancement emojis from this channel", usage = "~removeemojis [all]")
     public void purgeEmojis(String[] params, DiscordApi api, MessageAuthor author, Message message, TextChannel channel, Server server) {
         boolean removeFromAllChannels = params.length == 1 && params[0].equals("all") || message.getContent().equals("~killeverylastoneofthem") || message.getContent().equals("~scorchedearth");
         AtomicInteger totalMessages = new AtomicInteger();
