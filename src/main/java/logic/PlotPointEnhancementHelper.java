@@ -49,6 +49,14 @@ public class PlotPointEnhancementHelper {
         return false;
     }
 
+    public boolean isEmojiCancelEmoji(Emoji emoji) {
+        return emoji.equalsEmoji(":regional_indicator_x:");
+    }
+
+    public boolean isEmojiEnhancementEmoji(Emoji emoji) {
+        return isEmojiCancelEmoji(emoji) || isEmojiNumberEmoji(emoji);
+    }
+
     public String trimCustomEmoji(KnownCustomEmoji emoji) {
         String tag = emoji.asKnownCustomEmoji().get().getMentionTag();
         return tag.substring(2, tag.length() - 1);

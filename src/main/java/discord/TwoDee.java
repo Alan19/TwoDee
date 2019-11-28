@@ -42,6 +42,7 @@ public class TwoDee {
                 cmdHandler.registerCommand(new HelpCommand(cmdHandler));
                 cmdHandler.registerCommand(new PlotPointCommand(api));
                 cmdHandler.registerCommand(new CalendarCommand());
+                cmdHandler.registerCommand(new EmojiPurgeCommand());
 
                 //Create listeners
                 PlotPointEnhancementListener enhancementListener = new PlotPointEnhancementListener(api);
@@ -90,5 +91,35 @@ public class TwoDee {
         return "I'm out of witty lines!";
     }
 
+    //Returns a random emoji removal roll line
+    public static String getEmojiRemovalMessage() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("resources/emojiRemovalLines.txt"))) {
+            ArrayList<String> rollLines = new ArrayList<>();
+            String line = reader.readLine();
+            while (line != null) {
+                rollLines.add(line);
+                line = reader.readLine();
+            }
+            return rollLines.get(new Random().nextInt(rollLines.size()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "I'm out of witty lines!";
+    }
 
+    //Returns a random serverwide emoji removal roll line
+    public static String getServerwideEmojiRemovalMessage() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("resources/serverWideEmojiRemovalLines.txt"))) {
+            ArrayList<String> rollLines = new ArrayList<>();
+            String line = reader.readLine();
+            while (line != null) {
+                rollLines.add(line);
+                line = reader.readLine();
+            }
+            return rollLines.get(new Random().nextInt(rollLines.size()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "I'm out of witty lines!";
+    }
 }
