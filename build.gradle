@@ -7,7 +7,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 group = 'main'
-version = '5.3.4'
+version = '5.3.5'
 
 description = "A bot for the Facets tabletop RPG"
 
@@ -25,7 +25,7 @@ repositories {
 dependencies {
     compile group: 'org.codehaus.mojo', name: 'exec-maven-plugin', version:'1.6.0'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.9.6'
-    compile group: 'org.javacord', name: 'javacord', version:'3.0.0'
+    compile group: 'org.javacord', name: 'javacord', version:'3.0.5'
     compile group: 'com.google.api-client', name: 'google-api-client', version:'1.23.0'
     compile group: 'com.google.oauth-client', name: 'google-oauth-client-jetty', version:'1.23.0'
     compile group: 'com.google.apis', name: 'google-api-services-sheets', version:'v4-rev539-1.23.0'

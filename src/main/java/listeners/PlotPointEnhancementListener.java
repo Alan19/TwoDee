@@ -42,11 +42,11 @@ public class PlotPointEnhancementListener implements EventListener {
                 if (reaction.containsYou()) {
                     event.requestMessage().thenAcceptAsync(message -> {
                         if (reaction.getEmoji().equalsEmoji("\uD83C\uDDFD")) {
-                            removeEnhancementEmojis(message);
+                            PlotPointEnhancementHelper.removeEnhancementEmojis(message);
                         } else if (new PlotPointEnhancementHelper().isEmojiNumberEmoji(reaction.getEmoji())) {
                             enhanceRoll(event, reaction, message);
                             //Wipe reactions and then add star emoji to show that it was enhanced with plot points
-                            removeEnhancementEmojis(message);
+                            PlotPointEnhancementHelper.removeEnhancementEmojis(message);
                             message.addReaction("\uD83C\uDF1F");
 
                         }
@@ -123,25 +123,6 @@ public class PlotPointEnhancementListener implements EventListener {
                                 .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))
                                 .addField("Doom Points", oldDoom + " → " + newDoom))
                 .send(channel);
-    }
-
-    /**
-     * Helper method to remove the enhancement (number) emojis from a message
-     *
-     * @param message The message object whose emojis will be removed
-     */
-    public static void removeEnhancementEmojis(Message message) {
-        PlotPointEnhancementHelper helper = new PlotPointEnhancementHelper();
-        //Remove 1 to 10
-        for (String emoji : helper.getOneToTwelveEmojiMap().values()) {
-            message.removeReactionsByEmoji(emoji).join();
-        }
-
-        //Remove 11 and 12
-        message.getServer().ifPresent(server -> message.removeReactionsByEmoji(server.getCustomEmojiById("525867366303793182").get(), server.getCustomEmojiById("525867383890509864").get()).join());
-
-        //Remove Cancel Emoji
-        message.removeReactionsByEmoji("\uD83C\uDDFD").join();
     }
 
     /**
