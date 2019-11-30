@@ -10,9 +10,10 @@ import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;
+import org.javacord.api.entity.message.MessageDecoration;
 import statistics.StatisticsContext;
 
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CompletableFuture;
 
 
 public class StatisticsCommand implements CommandExecutor {
@@ -27,17 +28,15 @@ public class StatisticsCommand implements CommandExecutor {
         if (processedCommand.contains("*here")) {
             channel.sendMessage("Here are the statistics for **" + message.getContent() + "**", context.getEmbedBuilder().setColor(RandomColor.getRandomColor())).thenAcceptAsync(StatisticsCommand::addCancelReactToMessage);
         } else {
-            api.getUserById(author.getIdAsString()).thenAcceptAsync(user -> user.sendMessage("Here are the statistics for **" + message.getContent() + "**", context.getEmbedBuilder().setColor(RandomColor.getRandomColor())).thenAcceptAsync(StatisticsCommand::addCancelReactToMessage));
-            try {
-                new MessageBuilder()
-                        .setContent("Sent you a PM with your statistics for **" + message.getContent() + "** " + api.getUserById(author.getIdAsString()).get().getMentionTag())
+            api.getUserById(author.getIdAsString()).thenAcceptAsync(user -> {
+                user.sendMessage("Here are the statistics for **" + message.getContent() + "**", context.getEmbedBuilder().setColor(RandomColor.getRandomColor())).thenAcceptAsync(StatisticsCommand::addCancelReactToMessage);
+                CompletableFuture<Message> statisticsPM = new MessageBuilder()
+                        .setContent("Sent you a PM with your statistics for ")
+                        .append(message.getContent(), MessageDecoration.BOLD)
+                        .append(" " + user.getMentionTag())
                         .send(channel);
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
-            message.delete();
+                statisticsPM.thenAcceptAsync(sentPM -> message.delete());
+            });
         }
-
-
     }
 }

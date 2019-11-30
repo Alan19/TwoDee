@@ -7,6 +7,7 @@ import logic.PlotPointEnhancementHelper;
 import logic.RandomColor;
 import org.apache.commons.math3.util.Pair;
 import org.javacord.api.DiscordApi;
+import org.javacord.api.entity.channel.ServerTextChannel;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
@@ -23,28 +24,31 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class EmojiPurgeCommand implements CommandExecutor {
+
     @Command(async = true, aliases = {"~emojipurge", "~killeverylastoneofthem", "~scorchedearth", "~removeemojis", "~purge"}, description = "Removes all plot point enhancement emojis from this channel", usage = "~removeemojis [all]")
     public void purgeEmojis(String[] params, DiscordApi api, MessageAuthor author, Message message, TextChannel channel, Server server) {
         boolean removeFromAllChannels = params.length == 1 && params[0].equals("all") || message.getContent().equals("~killeverylastoneofthem") || message.getContent().equals("~scorchedearth");
         AtomicInteger totalMessages = new AtomicInteger();
         AtomicInteger totalEmojis = new AtomicInteger();
         if (removeFromAllChannels) {
-            //Remove all of the emojis and then map the TextChannels to a stream
-            server.getTextChannels().stream().map(this::removeAllPlotPointEmojisFromChannel).forEach(emojiInfoPair -> {
+            //Remove all of the emojis and then send an embed to the channel the command was used in
+            for (ServerTextChannel serverTextChannel : server.getTextChannels()) {
+                String textChannelName = serverTextChannel.getName();
+                Pair<Integer, Integer> emojiInfoPair = removeAllPlotPointEmojisFromChannel(serverTextChannel);
                 totalMessages.addAndGet(emojiInfoPair.getKey());
                 totalEmojis.addAndGet(emojiInfoPair.getValue());
-                CompletableFuture<Message> sentEmbed = new MessageBuilder()
-                        .setEmbed(new EmbedBuilder()
-                                .setColor(RandomColor.getRandomColor())
-                                .setAuthor(author)
-                                .setTitle(TwoDee.getServerwideEmojiRemovalMessage())
-                                .addField("Messages with Emojis", String.valueOf(totalMessages))
-                                .addField("Emojis Removed", String.valueOf(totalEmojis))
-                                .setDescription("I removed all roll enhancement emojis in all channels."))
-                        .send(channel);
-                sentEmbed.thenAcceptAsync(StatisticsCommand::addCancelReactToMessage);
-
-            });
+                EmbedBuilder emojiEmbedBuilder = (new EmbedBuilder()
+                        .setColor(RandomColor.getRandomColor())
+                        .setAuthor(author)
+                        .setTitle(TwoDee.getServerwideEmojiRemovalMessage())
+                        .setDescription("I removed all roll enhancement emojis in all channels."));
+                if (!(emojiInfoPair.getKey() == 0 || emojiInfoPair.getValue() == 0)) {
+                    emojiEmbedBuilder
+                            .addField(textChannelName, "Removed " + emojiInfoPair.getValue() + " reactions from " + emojiInfoPair.getKey() + " messages");
+                }
+                CompletableFuture<Message> emojiRemovalMessage = new MessageBuilder().setEmbed(emojiEmbedBuilder).send(channel);
+                emojiRemovalMessage.thenAcceptAsync(StatisticsCommand::addCancelReactToMessage);
+            }
         } else {
             removeAllPlotPointEmojisFromChannel(channel);
         }
@@ -60,18 +64,19 @@ public class EmojiPurgeCommand implements CommandExecutor {
         ArrayList<Message> enhancementEmojiMessageList = getMessagesWithEnhancementEmojis(channel);
         int messagesToClear = enhancementEmojiMessageList.size();
         int emojis = getNumberOfEmojisToRemove(enhancementEmojiMessageList);
-            Message progressMessage = new MessageBuilder().setContent("Removing " + emojis + " emojis from " + messagesToClear + " messages!").send(channel).join();
-            AtomicInteger current = new AtomicInteger();
-            DecimalFormat df = new DecimalFormat("0.##");
-            enhancementEmojiMessageList.forEach(message -> {
-                PlotPointEnhancementHelper.removeEnhancementEmojis(message);
-                current.getAndIncrement();
-                System.out.println(current + "/" + messagesToClear + " (" + ((double) current.get() / messagesToClear * 100) + "%)");
-                progressMessage.edit("Removing " + emojis + " emojis from " + messagesToClear + " messages! " + current + "/" + messagesToClear + " (" + df.format((double) current.get() / messagesToClear * 100) + "%)");
+        if (!(messagesToClear == 0 || emojis == 0)) {
+            new MessageBuilder().setContent("Removing " + emojis + " emojis from " + messagesToClear + " messages!").send(channel).thenAcceptAsync(progressMessage -> {
+                AtomicInteger current = new AtomicInteger();
+                DecimalFormat df = new DecimalFormat("0.##");
+                enhancementEmojiMessageList.forEach(message -> PlotPointEnhancementHelper.removeEnhancementEmojis(message).thenAcceptAsync(aVoid -> {
+                    current.getAndIncrement();
+                    progressMessage.edit("Removing " + emojis + " emojis from " + messagesToClear + " messages! " + current + "/" + messagesToClear + " (" + df.format((double) current.get() / messagesToClear * 100) + "%)");
+                }));
+                //Add delete emoji when done
+                progressMessage.edit(progressMessage.getContent() + "\nDone!");
+                StatisticsCommand.addCancelReactToMessage(progressMessage);
             });
-        //Add delete emoji when done
-        progressMessage.edit(progressMessage.getContent() + "\nDone!");
-        StatisticsCommand.addCancelReactToMessage(progressMessage);
+        }
         return new Pair<>(messagesToClear, emojis);
     }
 
