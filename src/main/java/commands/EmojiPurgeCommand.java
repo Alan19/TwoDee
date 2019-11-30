@@ -80,7 +80,8 @@ public class EmojiPurgeCommand implements CommandExecutor {
      * @param messagesToClear             The number of messages to clear reacts from
      * @param emojis                      The number of reacts that will be cleared
      * @param progressMessage             The message to be edited to show progress
-     * @return A CompletableFuture<Void> that will be fulfilled when all reacts from the channel have been cleared
+     * @return A CompletableFuture<Pair<Integer, Integer>> that will be fulfilled when the all enhancement reactions from a channel gets cleared that
+     * contains a pair with the number of messages and the number of reactions removed
      */
     private CompletableFuture<Pair<Integer, Integer>> clearReactionsFromChannel(ArrayList<Message> enhancementEmojiMessageList, int messagesToClear, int emojis, Message progressMessage) {
         AtomicInteger current = new AtomicInteger();
