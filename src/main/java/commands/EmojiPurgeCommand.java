@@ -94,8 +94,8 @@ public class EmojiPurgeCommand implements CommandExecutor {
             }));
         });
         return CompletableFuture.allOf(completedRemovalFutures.toArray(new CompletableFuture[0])).thenCompose(aVoid ->
-                //Add delete emoji when done
-                progressMessage.edit(progressMessage.getContent() + "\nDone!").thenCompose(aVoid1 -> StatisticsCommand.addCancelReactToMessage(progressMessage).thenApply(aVoid2 -> new Pair<>(messagesToClear, emojis))));
+                //Hack to get display to work correctly
+                progressMessage.edit("Removing " + emojis + " emojis from " + messagesToClear + " messages! " + messagesToClear + "/" + messagesToClear + " (" + df.format((double) messagesToClear / messagesToClear * 100) + "%)" + "\nDone!").thenCompose(aVoid1 -> StatisticsCommand.addCancelReactToMessage(progressMessage).thenApply(aVoid2 -> new Pair<>(messagesToClear, emojis))));
     }
 
     /**
