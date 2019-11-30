@@ -17,8 +17,8 @@ import java.util.concurrent.CompletableFuture;
 
 
 public class StatisticsCommand implements CommandExecutor {
-    public static void addCancelReactToMessage(Message sentMessage) {
-        sentMessage.addReaction(EmojiParser.parseToUnicode(":x:"));
+    public static CompletableFuture<Void> addCancelReactToMessage(Message sentMessage) {
+        return sentMessage.addReaction(EmojiParser.parseToUnicode(":x:"));
     }
 
     @Command(aliases = {"~s", "~stats", "~stat", "~statistics"}, description = "Generates an embed of roll probabilities based on dice input!\n\tdie: A string representing a die. Some die examples are d4, pd12, 3d12.\n The program will only support dice combinations where the product of all the die sizes are less than 12 to the 6th power.", async = true, privateMessages = false, usage = "~s die|skill [die|skill ...] [*here]")

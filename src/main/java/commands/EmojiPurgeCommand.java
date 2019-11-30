@@ -32,23 +32,23 @@ public class EmojiPurgeCommand implements CommandExecutor {
         AtomicInteger totalEmojis = new AtomicInteger();
         if (removeFromAllChannels) {
             //Remove all of the emojis and then send an embed to the channel the command was used in
+            EmbedBuilder emojiEmbedBuilder = (new EmbedBuilder()
+                    .setColor(RandomColor.getRandomColor())
+                    .setAuthor(author)
+                    .setTitle(TwoDee.getServerwideEmojiRemovalMessage()));
             for (ServerTextChannel serverTextChannel : server.getTextChannels()) {
                 String textChannelName = serverTextChannel.getName();
-                Pair<Integer, Integer> emojiInfoPair = removeAllPlotPointEmojisFromChannel(serverTextChannel);
-                totalMessages.addAndGet(emojiInfoPair.getKey());
-                totalEmojis.addAndGet(emojiInfoPair.getValue());
-                EmbedBuilder emojiEmbedBuilder = (new EmbedBuilder()
-                        .setColor(RandomColor.getRandomColor())
-                        .setAuthor(author)
-                        .setTitle(TwoDee.getServerwideEmojiRemovalMessage())
-                        .setDescription("I removed all roll enhancement emojis in all channels."));
-                if (!(emojiInfoPair.getKey() == 0 || emojiInfoPair.getValue() == 0)) {
-                    emojiEmbedBuilder
-                            .addField(textChannelName, "Removed " + emojiInfoPair.getValue() + " reactions from " + emojiInfoPair.getKey() + " messages");
-                }
-                CompletableFuture<Message> emojiRemovalMessage = new MessageBuilder().setEmbed(emojiEmbedBuilder).send(channel);
-                emojiRemovalMessage.thenAcceptAsync(StatisticsCommand::addCancelReactToMessage);
+                removeAllPlotPointEmojisFromChannel(serverTextChannel).thenAccept(emojiInfoPair -> {
+                    totalMessages.addAndGet(emojiInfoPair.getKey());
+                    totalEmojis.addAndGet(emojiInfoPair.getValue());
+                    if (!(emojiInfoPair.getKey() == 0 || emojiInfoPair.getValue() == 0)) {
+                        emojiEmbedBuilder
+                                .addField(textChannelName, "Removed " + emojiInfoPair.getValue() + " reactions from " + emojiInfoPair.getKey() + " messages");
+                    }
+                });
             }
+            CompletableFuture<Message> emojiRemovalMessage = new MessageBuilder().setEmbed(emojiEmbedBuilder).send(channel);
+            emojiRemovalMessage.thenAccept(StatisticsCommand::addCancelReactToMessage);
         } else {
             removeAllPlotPointEmojisFromChannel(channel);
         }
@@ -58,26 +58,44 @@ public class EmojiPurgeCommand implements CommandExecutor {
      * Removes all enhancement emojis in a channel
      *
      * @param channel The channel to remove emojis from
-     * @return A pair with the left side as the number of messages and the right side as the number of emojis
+     * @return A pair with the left side as the number of messages and the right side as the number of emojis that is completed when all of the emojis have been removed
      */
-    private Pair<Integer, Integer> removeAllPlotPointEmojisFromChannel(TextChannel channel) {
+    private CompletableFuture<Pair<Integer, Integer>> removeAllPlotPointEmojisFromChannel(TextChannel channel) {
         ArrayList<Message> enhancementEmojiMessageList = getMessagesWithEnhancementEmojis(channel);
         int messagesToClear = enhancementEmojiMessageList.size();
         int emojis = getNumberOfEmojisToRemove(enhancementEmojiMessageList);
         if (!(messagesToClear == 0 || emojis == 0)) {
-            new MessageBuilder().setContent("Removing " + emojis + " emojis from " + messagesToClear + " messages!").send(channel).thenAcceptAsync(progressMessage -> {
-                AtomicInteger current = new AtomicInteger();
-                DecimalFormat df = new DecimalFormat("0.##");
-                enhancementEmojiMessageList.forEach(message -> PlotPointEnhancementHelper.removeEnhancementEmojis(message).thenAcceptAsync(aVoid -> {
-                    current.getAndIncrement();
-                    progressMessage.edit("Removing " + emojis + " emojis from " + messagesToClear + " messages! " + current + "/" + messagesToClear + " (" + df.format((double) current.get() / messagesToClear * 100) + "%)");
-                }));
-                //Add delete emoji when done
-                progressMessage.edit(progressMessage.getContent() + "\nDone!");
-                StatisticsCommand.addCancelReactToMessage(progressMessage);
-            });
+            CompletableFuture<Message> messageCompletableFuture = new MessageBuilder()
+                    .setContent("Removing " + emojis + " emojis from " + messagesToClear + " messages!")
+                    .send(channel);
+            return messageCompletableFuture.thenCompose(message -> clearReactionsFromChannel(enhancementEmojiMessageList, messagesToClear, emojis, message));
         }
-        return new Pair<>(messagesToClear, emojis);
+        return CompletableFuture.completedFuture(new Pair<>(messagesToClear, emojis));
+    }
+
+    /**
+     * Helper function to clear all of the roll enhancement reacts given the channel
+     *
+     * @param enhancementEmojiMessageList The list of messages to clear reacts from
+     * @param messagesToClear             The number of messages to clear reacts from
+     * @param emojis                      The number of reacts that will be cleared
+     * @param progressMessage             The message to be edited to show progress
+     * @return A CompletableFuture<Void> that will be fulfilled when all reacts from the channel have been cleared
+     */
+    private CompletableFuture<Pair<Integer, Integer>> clearReactionsFromChannel(ArrayList<Message> enhancementEmojiMessageList, int messagesToClear, int emojis, Message progressMessage) {
+        AtomicInteger current = new AtomicInteger();
+        DecimalFormat df = new DecimalFormat("0.##");
+        ArrayList<CompletableFuture<Void>> completedRemovalFutures = new ArrayList<>();
+        enhancementEmojiMessageList.forEach(message -> {
+            CompletableFuture<Void> voidCompletableFuture = PlotPointEnhancementHelper.removeEnhancementEmojis(message);
+            completedRemovalFutures.add(voidCompletableFuture.thenAccept(aVoid -> {
+                current.getAndIncrement();
+                completedRemovalFutures.add(progressMessage.edit("Removing " + emojis + " emojis from " + messagesToClear + " messages! " + current + "/" + messagesToClear + " (" + df.format((double) current.get() / messagesToClear * 100) + "%)"));
+            }));
+        });
+        return CompletableFuture.allOf(completedRemovalFutures.toArray(new CompletableFuture[0])).thenCompose(aVoid ->
+                //Add delete emoji when done
+                progressMessage.edit(progressMessage.getContent() + "\nDone!").thenCompose(aVoid1 -> StatisticsCommand.addCancelReactToMessage(progressMessage).thenApply(aVoid2 -> new Pair<>(messagesToClear, emojis))));
     }
 
     /**
