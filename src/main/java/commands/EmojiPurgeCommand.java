@@ -85,18 +85,33 @@ public class EmojiPurgeCommand implements CommandExecutor {
      */
     private CompletableFuture<Pair<Integer, Integer>> clearReactionsFromChannel(ArrayList<Message> enhancementEmojiMessageList, int messagesToClear, int emojis, Message progressMessage) {
         AtomicInteger current = new AtomicInteger();
-        DecimalFormat df = new DecimalFormat("0.##");
         ArrayList<CompletableFuture<Void>> completedRemovalFutures = new ArrayList<>();
         enhancementEmojiMessageList.forEach(message -> {
             CompletableFuture<Void> voidCompletableFuture = PlotPointEnhancementHelper.removeEnhancementEmojis(message);
             completedRemovalFutures.add(voidCompletableFuture.thenAccept(aVoid -> {
                 current.getAndIncrement();
-                completedRemovalFutures.add(progressMessage.edit("Removing " + emojis + " emojis from " + messagesToClear + " messages! " + current + "/" + messagesToClear + " (" + df.format((double) current.get() / messagesToClear * 100) + "%)"));
+                completedRemovalFutures.add(progressMessage.edit(generateProgressMessage(messagesToClear, emojis, current.get())));
             }));
         });
+        /*When all reacts are removed, add a :X: react to allow it to be deleted and then return a Pair as a
+        CompletedFuture*/
         return CompletableFuture.allOf(completedRemovalFutures.toArray(new CompletableFuture[0])).thenCompose(aVoid ->
-                //Hack to get display to work correctly
-                progressMessage.edit("Removing " + emojis + " emojis from " + messagesToClear + " messages! " + messagesToClear + "/" + messagesToClear + " (" + df.format((double) messagesToClear / messagesToClear * 100) + "%)" + "\nDone!").thenCompose(aVoid1 -> StatisticsCommand.addCancelReactToMessage(progressMessage).thenApply(aVoid2 -> new Pair<>(messagesToClear, emojis))));
+                progressMessage
+                        .edit(generateProgressMessage(messagesToClear, emojis, current.get()))
+                        .thenCompose(aVoid1 -> StatisticsCommand.addCancelReactToMessage(progressMessage).thenApply(aVoid2 -> new Pair<>(messagesToClear, emojis))));
+    }
+
+    /**
+     * Helper function to generate the string for the reaction removal progress message
+     *
+     * @param messagesToClear The number of messages that have reactions that still need to be clear
+     * @param emojis          The numebr of reactions that will be cleared
+     * @param current         The number of messages whose plot point enhancement reactions have been cleared
+     * @return A string for the progress message
+     */
+    private String generateProgressMessage(int messagesToClear, int emojis, int current) {
+        DecimalFormat df = new DecimalFormat("0.##");
+        return "Removing " + emojis + " emojis from " + messagesToClear + " messages! " + current + "/" + messagesToClear + " (" + df.format((double) messagesToClear / messagesToClear * 100) + "%)" + (current == messagesToClear ? "\nDone!" : "");
     }
 
     /**
