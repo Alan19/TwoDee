@@ -20,7 +20,7 @@ public class PPManager implements IPlotPointMethods{
      */
     @Override
     public int setPlotPoints(String target, int number) {
-        SheetsQuickstart.writePlotPoints(number, new UserInfo().getDocID(target));
+        SheetsManager.writePlotPoints(number, new UserInfo().getDocID(target));
         return number;
     }
 
@@ -28,7 +28,7 @@ public class PPManager implements IPlotPointMethods{
     @Override
     public int getPlotPoints(String target) {
         try {
-            ValueRange range = SheetsQuickstart.getPlotPointCell(new UserInfo().getDocID(target));
+            ValueRange range = SheetsManager.getPlotPointCell(new UserInfo().getDocID(target));
             List<List<Object>> values = range.getValues();
             List<Object> valueList = values.get(0);
             return Integer.parseInt(String.valueOf(valueList.get(0)));

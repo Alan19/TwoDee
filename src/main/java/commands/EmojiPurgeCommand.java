@@ -76,26 +76,25 @@ public class EmojiPurgeCommand implements CommandExecutor {
     /**
      * Helper function to clear all of the roll enhancement reacts given the channel
      *
-     * @param enhancementEmojiMessageList The list of messages to clear reacts from
-     * @param messagesToClear             The number of messages to clear reacts from
-     * @param emojis                      The number of reacts that will be cleared
-     * @param progressMessage             The message to be edited to show progress
+     * @param messagesWithEnhancementReacts The list of messages to clear reacts from
+     * @param messagesToClear               The number of messages to clear reacts from
+     * @param emojis                        The number of reacts that will be cleared
+     * @param progressMessage               The message to be edited to show progress
      * @return A CompletableFuture<Pair<Integer, Integer>> that will be fulfilled when the all enhancement reactions from a channel gets cleared that
      * contains a pair with the number of messages and the number of reactions removed
      */
-    private CompletableFuture<Pair<Integer, Integer>> clearReactionsFromChannel(ArrayList<Message> enhancementEmojiMessageList, int messagesToClear, int emojis, Message progressMessage) {
+    private CompletableFuture<Pair<Integer, Integer>> clearReactionsFromChannel(ArrayList<Message> messagesWithEnhancementReacts, int messagesToClear, int emojis, Message progressMessage) {
         AtomicInteger current = new AtomicInteger();
-        ArrayList<CompletableFuture<Void>> completedRemovalFutures = new ArrayList<>();
-        enhancementEmojiMessageList.forEach(message -> {
-            CompletableFuture<Void> voidCompletableFuture = PlotPointEnhancementHelper.removeEnhancementEmojis(message);
-            completedRemovalFutures.add(voidCompletableFuture.thenAccept(aVoid -> {
-                current.getAndIncrement();
-                completedRemovalFutures.add(progressMessage.edit(generateProgressMessage(messagesToClear, emojis, current.get())));
-            }));
-        });
+        ArrayList<CompletableFuture<Void>> removalFutures = new ArrayList<>();
+        /* Remove enhancement reactions from all messages with them, then attach an edit event to all of the promises
+        when they are fulfilled and add them to the promise ArrayList */
+        messagesWithEnhancementReacts
+                .stream()
+                .map(PlotPointEnhancementHelper::removeEnhancementEmojis)
+                .forEach(reactionsRemovedFuture -> removalFutures.add(reactionsRemovedFuture.thenAccept(aVoid -> removalFutures.add(progressMessage.edit(generateProgressMessage(messagesToClear, emojis, current.getAndIncrement()))))));
         /*When all reacts are removed, add a :X: react to allow it to be deleted and then return a Pair as a
         CompletedFuture*/
-        return CompletableFuture.allOf(completedRemovalFutures.toArray(new CompletableFuture[0])).thenCompose(aVoid ->
+        return CompletableFuture.allOf(removalFutures.toArray(new CompletableFuture[0])).thenCompose(aVoid ->
                 progressMessage
                         .edit(generateProgressMessage(messagesToClear, emojis, current.get()))
                         .thenCompose(aVoid1 -> StatisticsCommand.addCancelReactToMessage(progressMessage).thenApply(aVoid2 -> new Pair<>(messagesToClear, emojis))));

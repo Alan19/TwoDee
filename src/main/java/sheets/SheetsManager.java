@@ -21,11 +21,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class SheetsQuickstart {
+public class SheetsManager {
     private static final String RANGE = "B12:C12";
     private static final String APPLICATION_NAME = "Summary Stat Fetcher";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
@@ -36,17 +35,34 @@ public class SheetsQuickstart {
      */
     private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS);
     private static final String CREDENTIALS_FILE_PATH = "resources/credentials.json";
+    private static NetHttpTransport httpTransport;
+    private static Sheets service;
+
+    static {
+        try {
+            httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        } catch (GeneralSecurityException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    static {
+        try {
+            service = new Sheets.Builder(httpTransport, JSON_FACTORY, getCredentials(httpTransport))
+                    .setApplicationName(APPLICATION_NAME)
+                    .build();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private ValueRange result;
 
     //Builds a new sheet object that contain information about the user's character
-    public SheetsQuickstart (String id) throws IOException, GeneralSecurityException {
+    public SheetsManager(String id) throws IOException {
         // Build a new authorized API client service.
-        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-        final String spreadsheetId = "18McJSYbBDRr40ZHK7oG4gXqzORoz3B5nrJ0o9zF0F-8";
         final String range = generateRangeCommand(id);
-        Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
-                .setApplicationName(APPLICATION_NAME)
-                .build();
+        String spreadsheetId = "18McJSYbBDRr40ZHK7oG4gXqzORoz3B5nrJ0o9zF0F-8";
         result = service.spreadsheets().values().get(spreadsheetId, range).execute();
         int numRows = result.getValues() != null ? result.getValues().size() : 0;
         System.out.printf("%d rows retrieved.", numRows);
@@ -54,6 +70,7 @@ public class SheetsQuickstart {
 
     /**
      * Creates an authorized Credential object.
+     *
      * @param HTTP_TRANSPORT The network HTTP Transport.
      * @return An authorized Credential object.
      * @throws IOException If the credentials.json file cannot be found.
@@ -83,21 +100,10 @@ public class SheetsQuickstart {
                 .execute();
     }
 
-    public ValueRange getResult() {
-        return result;
-    }
-
-    private String generateRangeCommand(String id) {
-        UserInfo userInfo = new UserInfo();
-        String cols = userInfo.getCol(id);
-        String[] range = cols.split(",");
-        return "Data!" + range[0] + "1:" + range[1] + "270";
-    }
-
     //Writes a value to the plot point field of a spreadsheet
     public static void writePlotPoints(int plotPoints, String docID) {
-        List<List<Object>> values = Arrays.asList(
-                Arrays.asList(plotPoints)
+        List<List<Object>> values = Collections.singletonList(
+                Collections.singletonList(plotPoints)
         );
         try {
             NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
@@ -116,6 +122,16 @@ public class SheetsQuickstart {
         }
     }
 
+    public ValueRange getResult() {
+        return result;
+    }
+
+    private String generateRangeCommand(String id) {
+        UserInfo userInfo = new UserInfo();
+        String cols = userInfo.getCol(id);
+        String[] range = cols.split(",");
+        return "Data!" + range[0] + "1:" + range[1] + "270";
+    }
 
 
 }

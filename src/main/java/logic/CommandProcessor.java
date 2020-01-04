@@ -5,10 +5,9 @@ import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
-import sheets.SheetsQuickstart;
+import sheets.SheetsManager;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.List;
 
 public class CommandProcessor {
@@ -46,7 +45,7 @@ public class CommandProcessor {
 
     private boolean skillExists(String[] paramArray, int i) {
         try {
-            SheetsQuickstart characterInfo = new SheetsQuickstart(author.getIdAsString());
+            SheetsManager characterInfo = new SheetsManager(author.getIdAsString());
             String change = retrieveDice(paramArray[i].toLowerCase(), characterInfo.getResult());
             //If skill is not found, kill function immediately
             if (change == null) {
@@ -60,7 +59,7 @@ public class CommandProcessor {
             }
             paramArray[i] = change;
 
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException e) {
             new MessageBuilder()
                     .setContent("Cannot retrieve spreadsheet!")
                     .send(channel);
