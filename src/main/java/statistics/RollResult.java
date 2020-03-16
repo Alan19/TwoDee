@@ -72,22 +72,14 @@ public class RollResult {
 
     public int getResult(){
         //Sorts dice and reverse to get descending order
-        int sum = 0;
+        int sum;
         ArrayList<Integer> sortedResults = new ArrayList<>(dice);
         sortedResults.sort(Comparator.naturalOrder());
         Collections.reverse(sortedResults);
-        for (int i = 0; i < Math.min(sortedResults.size(), keepHowMany); i++) {
-            sum += sortedResults.get(i);
-        }
-        for (int pd : plotDice) {
-            sum += pd;
-        }
-        for (int kd : keptDice) {
-            sum += kd;
-        }
-        for (int f : flatBonus) {
-            sum += f;
-        }
+        sum = sortedResults.stream().limit(keepHowMany).mapToInt(sortedResult -> sortedResult).sum();
+        sum += plotDice.stream().mapToInt(pd -> pd).sum();
+        sum += keptDice.stream().mapToInt(kd -> kd).sum();
+        sum += flatBonus.stream().mapToInt(f -> f).sum();
         return sum;
     }
 

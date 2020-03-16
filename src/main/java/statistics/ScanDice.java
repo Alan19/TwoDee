@@ -26,9 +26,10 @@ public class ScanDice implements StatisticsState {
 
         if (!poolOptions.validPool()) {
             context.setState(new GenerateNoDiceMessage());
-        } else if (getTotalCombos(poolOptions) > Math.pow(12, 6)) {
-            context.setState(new GenerateOverloadMessage());
         }
+//        else if (getTotalCombos(poolOptions) > Math.pow(12, 6)) {
+//            context.setState(new GenerateOverloadMessage());
+//        }
         else {
             context.setState(new GenerateStatistics(poolOptions));
         }
@@ -37,7 +38,9 @@ public class ScanDice implements StatisticsState {
     //Get the total number of combinations by finding the product of all of the number of faces in all of the dice
     private int getTotalCombos(PoolOptions poolOptions) {
         int totalCombos = 1;
-        for (int combo : poolOptions.getRegularDice()) {
+        ArrayList<Integer> regularDice = poolOptions.getRegularDice();
+        for (int i = 0; i < Math.min(regularDice.size(), poolOptions.getTop()); i++) {
+            int combo = regularDice.get(i);
             totalCombos *= combo;
         }
 
@@ -45,8 +48,8 @@ public class ScanDice implements StatisticsState {
         //This means that you need to divide it by two and add one to get the number of combinations from it if the
         value is greater than 2 */
         for (int pdCombo : poolOptions.getPlotDice()) {
-            if (pdCombo > 2){
-                totalCombos *= pdCombo / 2 + 1 ;
+            if (pdCombo > 2) {
+                totalCombos *= pdCombo / 2 + 1;
             }
         }
 
