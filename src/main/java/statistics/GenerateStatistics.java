@@ -2,10 +2,7 @@ package statistics;
 
 import logic.EmbedField;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
-import statistics.resultvisitors.DifficultyVisitor;
-import statistics.resultvisitors.DoomVisitor;
-import statistics.resultvisitors.ResultVisitor;
-import statistics.resultvisitors.SumVisitor;
+import statistics.resultvisitors.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,12 +61,12 @@ public class GenerateStatistics implements StatisticsState {
         ResultVisitor difficultyVisitor = new DifficultyVisitor();
         difficultyVisitor.visit(rollToOccurrences);
         resultVisitors.add(difficultyVisitor);
-//        ResultVisitor statisticsVisitor = new StatisticsVisitor();
-//        statisticsVisitor.visit(rollToOccurrences);
-//        resultVisitors.add(statisticsVisitor);
         ResultVisitor doomVisitor = new DoomVisitor();
         doomVisitor.visit(rollToOpportunities);
         resultVisitors.add(doomVisitor);
+        ResultVisitor statisticsVisitor = new StatisticsVisitor();
+        statisticsVisitor.visit(rollToOccurrences);
+        resultVisitors.add(statisticsVisitor);
         for (ResultVisitor visitor : resultVisitors) {
             for (EmbedField field : visitor.getEmbedField()) {
                 statsEmbed.addInlineField(field.getTitle(), field.getContent());
