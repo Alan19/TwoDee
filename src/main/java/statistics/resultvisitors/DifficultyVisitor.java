@@ -1,7 +1,6 @@
 package statistics.resultvisitors;
 
 import logic.EmbedField;
-import statistics.RollResultBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +16,7 @@ public class DifficultyVisitor implements ResultVisitor {
     private Map<Integer, String> difficultyMap = new HashMap<>();
     private Map<Integer, Long> hitSuccess = new HashMap<>();
     private Map<Integer, Long> hitExtraordinarySuccess = new HashMap<>();
-    private int totalCombinations = 0;
+    private long totalCombinations = 0;
 
     public DifficultyVisitor() {
         difficultyMap.put(1, "Easy");
@@ -60,17 +59,15 @@ public class DifficultyVisitor implements ResultVisitor {
     }
 
     @Override
-    public void visit(RollResultBuilder result, Long occurrences) {
-        int resultVal = result.getResult();
-        for (Integer level : difficultyMap.keySet()) {
-            if (resultVal >= generateStageDifficulty(level)) {
-                hitSuccess.put(level, hitSuccess.get(level) + occurrences);
-            }
-            if (resultVal >= generateStageExtraordinaryDifficulty(level)) {
-                hitExtraordinarySuccess.put(level, hitExtraordinarySuccess.get(level) + occurrences);
-            }
+    public void visit(Map<Integer, Long> hashMap) {
+        for (Integer difficulty : difficultyMap.keySet()) {
+            hitSuccess.put(difficulty, hashMap.entrySet().stream().filter(integerLongEntry -> integerLongEntry.getKey() >= generateStageDifficulty(difficulty)).mapToLong(Map.Entry::getValue).sum());
         }
-        totalCombinations += occurrences;
+        for (Integer difficulty : difficultyMap.keySet()) {
+            hitExtraordinarySuccess.put(difficulty, hashMap.entrySet().stream().filter(integerLongEntry -> integerLongEntry.getKey() >= generateStageExtraordinaryDifficulty(difficulty)).mapToLong(Map.Entry::getValue).sum());
+        }
+
+        totalCombinations = hashMap.values().stream().mapToLong(aLong -> aLong).sum();
     }
 
     @Override

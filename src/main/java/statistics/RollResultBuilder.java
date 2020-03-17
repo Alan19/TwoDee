@@ -88,12 +88,13 @@ public class RollResultBuilder {
         if (o == null || getClass() != o.getClass())
             return false;
         RollResultBuilder that = (RollResultBuilder) o;
-        return doom == that.doom &&
-                keepHowMany == that.keepHowMany &&
-                Objects.equals(dice, that.dice) &&
-                Objects.equals(plotDice, that.plotDice) &&
-                Objects.equals(keptDice, that.keptDice) &&
-                Objects.equals(flatBonus, that.flatBonus);
+        return
+                doom == that.doom &&
+                        keepHowMany == that.keepHowMany &&
+                        Objects.equals(dice, that.dice) &&
+                        Objects.equals(plotDice, that.plotDice) &&
+                        Objects.equals(keptDice, that.keptDice) &&
+                        Objects.equals(flatBonus, that.flatBonus);
     }
 
     @Override

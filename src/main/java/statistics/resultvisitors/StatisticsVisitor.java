@@ -2,11 +2,11 @@ package statistics.resultvisitors;
 
 import logic.EmbedField;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import statistics.RollResultBuilder;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.LongStream;
 
 public class StatisticsVisitor implements ResultVisitor {
@@ -17,9 +17,14 @@ public class StatisticsVisitor implements ResultVisitor {
         summary = new SummaryStatistics();
     }
 
+    /**
+     * Populates the SummaryStatistics object
+     *
+     * @param hashMap A Roll Result to Number of Occurrences HashMap
+     */
     @Override
-    public void visit(RollResultBuilder result, Long occurrences) {
-        LongStream.range(0, occurrences).forEach(i -> summary.addValue(result.getResult()));
+    public void visit(Map<Integer, Long> hashMap) {
+        hashMap.forEach((integer, aLong) -> LongStream.range(0, aLong).forEach(i -> summary.addValue(integer)));
     }
 
     @Override

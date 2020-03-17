@@ -1,7 +1,6 @@
 package statistics.resultvisitors;
 
 import logic.EmbedField;
-import statistics.RollResultBuilder;
 
 import java.text.DecimalFormat;
 import java.util.List;
@@ -12,19 +11,15 @@ import java.util.Map;
  */
 public interface ResultVisitor {
 
-    void visit(RollResultBuilder result, Long occurrences);
+    void visit(Map<Integer, Long> hashMap);
 
     List<EmbedField> getEmbedField();
 
-    default int getNumberOfResults(Map<Integer, Long> resultMap) {
-        int sum = 0;
-        for (Long result : resultMap.values()) {
-            sum += result;
-        }
-        return sum;
+    default long getNumberOfResults(Map<Integer, Long> resultMap) {
+        return resultMap.values().stream().mapToLong(result -> result).sum();
     }
 
-    default String generatePercentage(Long numberOfOccurrences, int numberOfResults) {
+    default String generatePercentage(Long numberOfOccurrences, long numberOfResults) {
         DecimalFormat df = new DecimalFormat("0.#####");
         return df.format((double) numberOfOccurrences / numberOfResults * 100) + "%";
     }

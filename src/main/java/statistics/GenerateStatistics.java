@@ -5,7 +5,10 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import statistics.resultvisitors.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class GenerateStatistics implements StatisticsState {
@@ -14,7 +17,6 @@ public class GenerateStatistics implements StatisticsState {
     private ArrayList<Integer> flatBonus;
     private ArrayList<Integer> keptDice;
     private PoolOptions poolOptions;
-    private ArrayList<ResultVisitor> resultVisitors;
 
     public GenerateStatistics(PoolOptions poolOptions) {
         this.poolOptions = poolOptions;
@@ -22,19 +24,52 @@ public class GenerateStatistics implements StatisticsState {
         this.plotDice = poolOptions.getPlotDice();
         this.flatBonus = poolOptions.getFlatBonus();
         this.keptDice = poolOptions.getKeptDice();
-
-        resultVisitors = new ArrayList<>();
-        resultVisitors.add(new SumVisitor());
-        resultVisitors.add(new DifficultyVisitor());
-        resultVisitors.add(new DoomVisitor());
-        resultVisitors.add(new StatisticsVisitor());
     }
 
     @Override
     public void process(StatisticsContext context) {
         HashMap<RollResultBuilder, Long> results = generateResultsHash();
-        results.forEach((key, value) -> resultVisitors.forEach(resultVisitor -> resultVisitor.visit(key, value)));
+        final int[] resultStream = results.keySet().stream().mapToInt(RollResultBuilder::getResult).toArray();
+        final int minRoll = Arrays.stream(resultStream).min().orElse(0);
+        final int maxRoll = Arrays.stream(resultStream).max().orElse(0);
+        final Map<Integer, Long> rollToOccurrences = IntStream.rangeClosed(minRoll, maxRoll)
+                .boxed()
+                .collect(Collectors.toMap(integer -> integer, integer -> results
+                        .entrySet()
+                        .stream()
+                        .filter(rollResultBuilderLongEntry -> rollResultBuilderLongEntry.getKey().getResult() == integer)
+                        .mapToLong(Map.Entry::getValue)
+                        .sum()));
+
+        final int[] opportunityArr = results.keySet().stream().mapToInt(RollResultBuilder::getDoom).toArray();
+        final int minOpportunities = Arrays.stream(opportunityArr).min().orElse(0);
+        final int maxOpportunities = Arrays.stream(opportunityArr).max().orElse(0);
+        final Map<Integer, Long> rollToOpportunities = IntStream.rangeClosed(minOpportunities, maxOpportunities)
+                .boxed()
+                .collect(Collectors.toMap(integer -> integer, integer -> results
+                        .entrySet()
+                        .stream()
+                        .filter(rollResultBuilderLongEntry -> rollResultBuilderLongEntry.getKey().getDoom() == integer)
+                        .mapToLong(Map.Entry::getValue)
+                        .sum()));
+
+        long totalPossibilities = results.values().stream().mapToLong(value -> value).sum();
+        final Map<Integer, Double> rollToProbability = rollToOccurrences.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> (double) entry.getValue() / totalPossibilities));
+
         EmbedBuilder statsEmbed = new EmbedBuilder();
+        ResultVisitor sumVisitor = new SumVisitor();
+        sumVisitor.visit(rollToOccurrences);
+        ResultVisitor difficultyVisitor = new DifficultyVisitor();
+        difficultyVisitor.visit(rollToOccurrences);
+        ResultVisitor doomVisitor = new DoomVisitor();
+        doomVisitor.visit(rollToOpportunities);
+        ResultVisitor statisticsVisitor = new StatisticsVisitor();
+        statisticsVisitor.visit(rollToOccurrences);
+        ArrayList<ResultVisitor> resultVisitors = new ArrayList<>();
+        resultVisitors.add(sumVisitor);
+        resultVisitors.add(difficultyVisitor);
+        resultVisitors.add(statisticsVisitor);
+        resultVisitors.add(doomVisitor);
         for (ResultVisitor visitor : resultVisitors) {
             for (EmbedField field : visitor.getEmbedField()) {
                 statsEmbed.addInlineField(field.getTitle(), field.getContent());

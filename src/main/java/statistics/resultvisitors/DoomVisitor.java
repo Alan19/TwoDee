@@ -1,7 +1,6 @@
 package statistics.resultvisitors;
 
 import logic.EmbedField;
-import statistics.RollResultBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,14 +9,18 @@ import java.util.TreeMap;
 
 public class DoomVisitor implements ResultVisitor {
 
-    private int sum = 0;
+    private long sum = 0;
     private TreeMap<Integer, Long> doomMap = new TreeMap<>();
 
+    /**
+     * Populate doomMap using a Opportunity to Occurrences HashMap
+     *
+     * @param hashMap An Opportunity to Occurrences HashMap
+     */
     @Override
-    public void visit(RollResultBuilder result, Long occurrences) {
-        int doom = result.getDoom();
-        doomMap.put(doom, doomMap.getOrDefault(doom, (long) 0) + occurrences);
-        sum += occurrences;
+    public void visit(Map<Integer, Long> hashMap) {
+        hashMap.forEach((integer, aLong) -> doomMap.put(integer, aLong));
+        sum = hashMap.values().stream().mapToLong(value -> value).sum();
     }
 
     @Override

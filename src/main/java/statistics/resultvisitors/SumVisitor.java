@@ -1,7 +1,6 @@
 package statistics.resultvisitors;
 
 import logic.EmbedField;
-import statistics.RollResultBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,9 +18,8 @@ public class SumVisitor implements ResultVisitor {
       Loops through TreeMap and increment a key based on the result
      */
     @Override
-    public void visit(RollResultBuilder result, Long occurrences) {
-        int rollResult = result.getResult();
-        diceOutcomes.put(rollResult, (diceOutcomes.getOrDefault(rollResult, (long) 0) + occurrences));
+    public void visit(Map<Integer, Long> hashMap) {
+        hashMap.forEach((key, value) -> diceOutcomes.put(key, value));
     }
 
     @Override
