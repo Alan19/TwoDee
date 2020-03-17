@@ -1,28 +1,23 @@
 package statistics.resultvisitors;
 
 import logic.EmbedField;
-import statistics.RollResult;
+import statistics.RollResultBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class DoomVisitor implements ResultVisitor{
+public class DoomVisitor implements ResultVisitor {
 
     private int sum = 0;
-    private TreeMap<Integer, Integer> doomMap = new TreeMap<>();
+    private TreeMap<Integer, Long> doomMap = new TreeMap<>();
 
     @Override
-    public void visit(RollResult result) {
+    public void visit(RollResultBuilder result, Long occurrences) {
         int doom = result.getDoom();
-        if (doomMap.containsKey(doom)){
-            doomMap.put(doom, doomMap.get(doom) + 1);
-        }
-        else {
-            doomMap.put(doom, 1);
-        }
-        sum++;
+        doomMap.put(doom, doomMap.getOrDefault(doom, (long) 0) + occurrences);
+        sum += occurrences;
     }
 
     @Override
@@ -30,7 +25,7 @@ public class DoomVisitor implements ResultVisitor{
         ArrayList<EmbedField> embedFields = new ArrayList<>();
         EmbedField doomField = new EmbedField();
         doomField.setTitle("Chance to generate doom");
-        for (Map.Entry<Integer, Integer> entry: doomMap.entrySet()){
+        for (Map.Entry<Integer, Long> entry : doomMap.entrySet()) {
             doomField.appendContent(entry.getKey() + ": " + generatePercentage(entry.getValue(), sum) + "\n");
         }
         embedFields.add(doomField);

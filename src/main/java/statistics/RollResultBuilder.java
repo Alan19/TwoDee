@@ -13,6 +13,7 @@ public class RollResultBuilder {
     private List<Integer> plotDice;
     private List<Integer> keptDice;
     private List<Integer> flatBonus;
+    private int doom;
     private int keepHowMany;
 
     public RollResultBuilder(int keep) {
@@ -20,22 +21,26 @@ public class RollResultBuilder {
         plotDice = new ArrayList<>();
         keptDice = new ArrayList<>();
         flatBonus = new ArrayList<>();
+        doom = 0;
         keepHowMany = keep;
     }
 
-    public RollResultBuilder(List<Integer> dice, List<Integer> plotDice, List<Integer> keptDice, List<Integer> flatBonus, int keepHowMany) {
+    public RollResultBuilder(List<Integer> dice, List<Integer> plotDice, List<Integer> keptDice, List<Integer> flatBonus, int keepHowMany, int doom) {
         this.dice = dice;
         this.plotDice = plotDice;
         this.keptDice = keptDice;
         this.flatBonus = flatBonus;
         this.keepHowMany = keepHowMany;
-
+        this.doom = doom;
     }
 
     public RollResultBuilder addResult(int result) {
         dice.add(result);
         dice.sort(Comparator.reverseOrder());
-        dice = new ArrayList<>(dice.subList(0, Math.min(keepHowMany, dice.size())));
+        dice = dice.subList(0, Math.min(keepHowMany, dice.size()));
+        if (result == 1) {
+            doom++;
+        }
         return this;
     }
 
@@ -48,12 +53,18 @@ public class RollResultBuilder {
     public RollResultBuilder addKeptResult(int i) {
         keptDice.add(i);
         keptDice.sort(Comparator.reverseOrder());
+        if (i == 1) {
+            doom++;
+        }
         return this;
     }
 
     public RollResultBuilder addFlatBonus(int i) {
         flatBonus.add(i);
         flatBonus.sort(Comparator.reverseOrder());
+        if (i == 1) {
+            doom++;
+        }
         return this;
     }
 
@@ -67,7 +78,7 @@ public class RollResultBuilder {
     }
 
     public RollResultBuilder copy() {
-        return new RollResultBuilder(new ArrayList<>(dice), new ArrayList<>(plotDice), new ArrayList<>(keptDice), new ArrayList<>(flatBonus), keepHowMany);
+        return new RollResultBuilder(new ArrayList<>(dice), new ArrayList<>(plotDice), new ArrayList<>(keptDice), new ArrayList<>(flatBonus), keepHowMany, doom);
     }
 
     @Override
@@ -87,5 +98,9 @@ public class RollResultBuilder {
     @Override
     public int hashCode() {
         return Objects.hash(dice, plotDice, keptDice, flatBonus, keepHowMany);
+    }
+
+    public int getDoom() {
+        return doom;
     }
 }

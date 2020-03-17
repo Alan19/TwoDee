@@ -1,7 +1,7 @@
 package statistics.resultvisitors;
 
 import logic.EmbedField;
-import statistics.RollResult;
+import statistics.RollResultBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,11 +15,11 @@ import java.util.Map;
 public class DifficultyVisitor implements ResultVisitor {
 
     private Map<Integer, String> difficultyMap = new HashMap<>();
-    private Map<Integer, Integer> hitSuccess = new HashMap<>();
-    private Map<Integer, Integer> hitExtraordinarySuccess = new HashMap<>();
+    private Map<Integer, Long> hitSuccess = new HashMap<>();
+    private Map<Integer, Long> hitExtraordinarySuccess = new HashMap<>();
     private int totalCombinations = 0;
 
-    public DifficultyVisitor(){
+    public DifficultyVisitor() {
         difficultyMap.put(1, "Easy");
         difficultyMap.put(2, "Average");
         difficultyMap.put(3, "Hard");
@@ -29,9 +29,9 @@ public class DifficultyVisitor implements ResultVisitor {
         difficultyMap.put(7, "Ridiculous");
         difficultyMap.put(8, "Impossible");
 
-        for (int i = 1; i <= 8; i++){
-            hitSuccess.put(i, 0);
-            hitExtraordinarySuccess.put(i, 0);
+        for (int i = 1; i <= 8; i++) {
+            hitSuccess.put(i, (long) 0);
+            hitExtraordinarySuccess.put(i, (long) 0);
         }
     }
 
@@ -60,17 +60,17 @@ public class DifficultyVisitor implements ResultVisitor {
     }
 
     @Override
-    public void visit(RollResult result) {
+    public void visit(RollResultBuilder result, Long occurrences) {
         int resultVal = result.getResult();
         for (Integer level : difficultyMap.keySet()) {
-            if (resultVal >= generateStageDifficulty(level)){
-                hitSuccess.put(level, hitSuccess.get(level) + 1);
+            if (resultVal >= generateStageDifficulty(level)) {
+                hitSuccess.put(level, hitSuccess.get(level) + occurrences);
             }
-            if (resultVal >= generateStageExtraordinaryDifficulty(level)){
-                hitExtraordinarySuccess.put(level, hitExtraordinarySuccess.get(level) + 1);
+            if (resultVal >= generateStageExtraordinaryDifficulty(level)) {
+                hitExtraordinarySuccess.put(level, hitExtraordinarySuccess.get(level) + occurrences);
             }
         }
-        totalCombinations++;
+        totalCombinations += occurrences;
     }
 
     @Override
@@ -79,14 +79,14 @@ public class DifficultyVisitor implements ResultVisitor {
         //Make field for normal success
         EmbedField regDifficultyField = new EmbedField();
         regDifficultyField.setTitle("Chance to hit");
-        for (Map.Entry<Integer, Integer> difficulty: hitSuccess.entrySet()) {
+        for (Map.Entry<Integer, Long> difficulty : hitSuccess.entrySet()) {
             regDifficultyField.appendContent(difficultyMap.get(difficulty.getKey()) + ": " + generatePercentage(difficulty.getValue(), totalCombinations) + "\n");
         }
         embedFields.add(regDifficultyField);
 
         EmbedField extraordinaryDifficultyField = new EmbedField();
         extraordinaryDifficultyField.setTitle("Chance to hit extraordinary");
-        for (Map.Entry<Integer, Integer> extraOrdinaryDifficulty: hitExtraordinarySuccess.entrySet()) {
+        for (Map.Entry<Integer, Long> extraOrdinaryDifficulty : hitExtraordinarySuccess.entrySet()) {
             extraordinaryDifficultyField.appendContent(difficultyMap.get(extraOrdinaryDifficulty.getKey()) + ": " + generatePercentage(extraOrdinaryDifficulty.getValue(), totalCombinations) + "\n");
         }
         embedFields.add(extraordinaryDifficultyField);
