@@ -2,7 +2,10 @@ package statistics;
 
 import logic.EmbedField;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
-import statistics.resultvisitors.*;
+import statistics.resultvisitors.DifficultyVisitor;
+import statistics.resultvisitors.DoomVisitor;
+import statistics.resultvisitors.ResultVisitor;
+import statistics.resultvisitors.SumVisitor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,22 +56,19 @@ public class GenerateStatistics implements StatisticsState {
                         .mapToLong(Map.Entry::getValue)
                         .sum()));
 
-        long totalPossibilities = results.values().stream().mapToLong(value -> value).sum();
-        final Map<Integer, Double> rollToProbability = rollToOccurrences.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> (double) entry.getValue() / totalPossibilities));
-
         EmbedBuilder statsEmbed = new EmbedBuilder();
+        ArrayList<ResultVisitor> resultVisitors = new ArrayList<>();
         ResultVisitor sumVisitor = new SumVisitor();
         sumVisitor.visit(rollToOccurrences);
+        resultVisitors.add(sumVisitor);
         ResultVisitor difficultyVisitor = new DifficultyVisitor();
         difficultyVisitor.visit(rollToOccurrences);
+        resultVisitors.add(difficultyVisitor);
+//        ResultVisitor statisticsVisitor = new StatisticsVisitor();
+//        statisticsVisitor.visit(rollToOccurrences);
+//        resultVisitors.add(statisticsVisitor);
         ResultVisitor doomVisitor = new DoomVisitor();
         doomVisitor.visit(rollToOpportunities);
-        ResultVisitor statisticsVisitor = new StatisticsVisitor();
-        statisticsVisitor.visit(rollToOccurrences);
-        ArrayList<ResultVisitor> resultVisitors = new ArrayList<>();
-        resultVisitors.add(sumVisitor);
-        resultVisitors.add(difficultyVisitor);
-        resultVisitors.add(statisticsVisitor);
         resultVisitors.add(doomVisitor);
         for (ResultVisitor visitor : resultVisitors) {
             for (EmbedField field : visitor.getEmbedField()) {
@@ -143,7 +143,7 @@ public class GenerateStatistics implements StatisticsState {
                 //Create n RollResult objects with each possible outcome of the dice
                 for (int i = 1; i <= dice; i++) {
                     RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop()).addPlotResult(Math.max(i, dice / 2));
-                    rollResultOccurrences.put(newResult, (long) 1);
+                    rollResultOccurrences.put(newResult, rollResultOccurrences.getOrDefault(newResult, (long) 0) + (long) 1);
                 }
             }
             else {
