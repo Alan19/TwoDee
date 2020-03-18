@@ -27,9 +27,9 @@ public class ScanDice implements StatisticsState {
         if (!poolOptions.validPool()) {
             context.setState(new GenerateNoDiceMessage());
         }
-//        else if (getTotalCombos(poolOptions) > Math.pow(12, 6)) {
-//            context.setState(new GenerateOverloadMessage());
-//        }
+        else if (getTotalCombos(poolOptions) > Math.pow(12, 17)) {
+            context.setState(new GenerateOverloadMessage());
+        }
         else {
             context.setState(new GenerateStatistics(poolOptions));
         }
@@ -39,8 +39,7 @@ public class ScanDice implements StatisticsState {
     private int getTotalCombos(PoolOptions poolOptions) {
         int totalCombos = 1;
         ArrayList<Integer> regularDice = poolOptions.getRegularDice();
-        for (int i = 0; i < Math.min(regularDice.size(), poolOptions.getTop()); i++) {
-            int combo = regularDice.get(i);
+        for (int combo : regularDice) {
             totalCombos *= combo;
         }
 

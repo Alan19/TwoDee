@@ -26,12 +26,20 @@ public class GenerateStatistics implements StatisticsState {
         this.keptDice = poolOptions.getKeptDice();
     }
 
+    /**
+     * Generates a HashMap for the number of occurrences of a result happens in the sample size of a pool
+     *
+     * @param context The StatisticsContext that an embed may be loaded into
+     */
     @Override
     public void process(StatisticsContext context) {
+        //Generate the roll result to occurrence HashMap
         HashMap<RollResultBuilder, Long> results = generateResultsHash();
         final int[] resultStream = results.keySet().stream().mapToInt(RollResultBuilder::getResult).toArray();
         final int minRoll = Arrays.stream(resultStream).min().orElse(0);
         final int maxRoll = Arrays.stream(resultStream).max().orElse(0);
+
+        //Generate the roll to occurrence HashMap
         final Map<Integer, Long> rollToOccurrences = IntStream.rangeClosed(minRoll, maxRoll)
                 .boxed()
                 .collect(Collectors.toMap(integer -> integer, integer -> results
@@ -41,6 +49,7 @@ public class GenerateStatistics implements StatisticsState {
                         .mapToLong(Map.Entry::getValue)
                         .sum()));
 
+        //Generate the opportunity to occurrence HashMap
         final int[] opportunityArr = results.keySet().stream().mapToInt(RollResultBuilder::getDoom).toArray();
         final int minOpportunities = Arrays.stream(opportunityArr).min().orElse(0);
         final int maxOpportunities = Arrays.stream(opportunityArr).max().orElse(0);
@@ -53,6 +62,18 @@ public class GenerateStatistics implements StatisticsState {
                         .mapToLong(Map.Entry::getValue)
                         .sum()));
 
+        EmbedBuilder statsEmbed = generateEmbed(rollToOccurrences, rollToOpportunities);
+        context.setEmbedBuilder(statsEmbed);
+    }
+
+    /**
+     * Creates an embed based on the statistics
+     *
+     * @param rollToOccurrences   The HashMap that represents the roll mapped to the number of occurrences of the total
+     * @param rollToOpportunities The HashMap that maps the number of opportunities to the number of occurrences
+     * @return The embed to be sent
+     */
+    private EmbedBuilder generateEmbed(Map<Integer, Long> rollToOccurrences, Map<Integer, Long> rollToOpportunities) {
         EmbedBuilder statsEmbed = new EmbedBuilder();
         ArrayList<ResultVisitor> resultVisitors = new ArrayList<>();
         ResultVisitor sumVisitor = new SumVisitor();
@@ -72,7 +93,7 @@ public class GenerateStatistics implements StatisticsState {
                 statsEmbed.addInlineField(field.getTitle(), field.getContent());
             }
         }
-        context.setEmbedBuilder(statsEmbed);
+        return statsEmbed;
     }
 
     /**
