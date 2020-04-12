@@ -20,7 +20,10 @@ public interface ResultVisitor {
     }
 
     default String generatePercentage(Long numberOfOccurrences, long numberOfResults) {
-        DecimalFormat df = new DecimalFormat("0.#####");
-        return df.format((double) numberOfOccurrences / numberOfResults * 100) + "%";
+        final double resultProbability = (double) numberOfOccurrences / numberOfResults;
+        final double resultPercentage = resultProbability * 100;
+        String formatString = "0.#####" + (resultPercentage < 0.00001 && resultPercentage > 0 ? "E00" : "") + "%";
+        DecimalFormat df = new DecimalFormat(formatString);
+        return df.format(resultProbability);
     }
 }

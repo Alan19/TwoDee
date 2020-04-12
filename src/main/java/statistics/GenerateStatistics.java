@@ -49,6 +49,7 @@ public class GenerateStatistics implements StatisticsState {
                         .mapToLong(Map.Entry::getValue)
                         .sum()));
 
+
         //Generate the opportunity to occurrence HashMap
         final int[] opportunityArr = results.keySet().stream().mapToInt(RollResultBuilder::getDoom).toArray();
         final int minOpportunities = Arrays.stream(opportunityArr).min().orElse(0);
@@ -62,6 +63,10 @@ public class GenerateStatistics implements StatisticsState {
                         .mapToLong(Map.Entry::getValue)
                         .sum()));
 
+        if (rollToOccurrences.values().stream().anyMatch(aLong -> aLong < 0) || rollToOpportunities.values().stream().anyMatch(aLong -> aLong < 0)) {
+            context.setState(new GenerateOverloadMessage());
+            return;
+        }
         EmbedBuilder statsEmbed = generateEmbed(rollToOccurrences, rollToOpportunities);
         context.setEmbedBuilder(statsEmbed);
     }

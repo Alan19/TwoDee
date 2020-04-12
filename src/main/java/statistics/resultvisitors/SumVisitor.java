@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class SumVisitor implements ResultVisitor {
-    private TreeMap<Integer, Long> diceOutcomes;
+    private final TreeMap<Integer, Long> diceOutcomes;
 
     public SumVisitor(){
         diceOutcomes = new TreeMap<>();
@@ -19,7 +19,7 @@ public class SumVisitor implements ResultVisitor {
      */
     @Override
     public void visit(Map<Integer, Long> hashMap) {
-        hashMap.forEach((key, value) -> diceOutcomes.put(key, value));
+        hashMap.forEach(diceOutcomes::put);
     }
 
     @Override
