@@ -25,7 +25,8 @@ public class DoomCommand implements CommandExecutor {
                     .setEmbed(new EmbedBuilder()
                             .setTitle("Invalid command!"))
                     .send(channel);
-        } else {
+        }
+        else {
             String commandType = args[1];
             int doomVal = Integer.parseInt(args[2]);
 
@@ -47,8 +48,8 @@ public class DoomCommand implements CommandExecutor {
                     break;
                 default:
                     new MessageBuilder()
-                    .setEmbed(doomWriter.generateDoomEmbed())
-                    .send(channel);
+                            .setEmbed(doomWriter.generateDoomEmbed())
+                            .send(channel);
                     break;
             }
         }

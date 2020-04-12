@@ -35,8 +35,7 @@ public class RollCommand implements CommandExecutor {
                         .send(channel);
                 if (commandContainsPlotDice(messageContent)) {
                     DoomWriter writer = new DoomWriter();
-                    writer.addDoom(getPlotPointsSpent(messageContent) * -1);
-                    EmbedBuilder doomEmbed = writer.generateDoomEmbed();
+                    EmbedBuilder doomEmbed = writer.addDoom(getPlotPointsSpent(messageContent) * -1);
                     channel.sendMessage(doomEmbed);
                 }
             } else {

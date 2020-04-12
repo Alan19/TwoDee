@@ -25,7 +25,7 @@ public class DoomWriter {
         int currentDoom = getDoom();
         int newDoomInt = currentDoom + doomVal;
         setDoom(newDoomInt);
-        return generateDoomEmbed();
+        return generateDoomEmbed(currentDoom);
     }
 
     public EmbedBuilder generateDoomEmbed() {
@@ -33,7 +33,15 @@ public class DoomWriter {
         return new EmbedBuilder()
                 .setTitle("Doom!")
                 .setDescription(String.valueOf(getDoom()))
-                .setColor(new Color(Integer.max(doomVal, 255)));
+                .setColor(new Color((int) (doomVal % 101 * (2.55))));
+    }
+
+    public EmbedBuilder generateDoomEmbed(int oldDoom) {
+        int doomVal = getDoom();
+        return new EmbedBuilder()
+                .setTitle("Doom!")
+                .setDescription(oldDoom + " → " + getDoom())
+                .setColor(new Color((int) (doomVal % 101 * (2.55))));
     }
 
     public int getDoom() {
@@ -46,6 +54,7 @@ public class DoomWriter {
      * @return The embed with a new doom value
      */
     public EmbedBuilder setDoom(int newDoom) {
+        int oldDoom = getDoom();
         if (newDoom < 0){
             return generateInvalidDoomEmbed();
         }
@@ -56,7 +65,7 @@ public class DoomWriter {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return generateDoomEmbed();
+            return generateDoomEmbed(oldDoom);
         }
     }
 
