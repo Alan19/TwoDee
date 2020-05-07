@@ -10,10 +10,12 @@ import java.util.List;
 /**
  * This class handles the getting and setting of the plot points from a player
  */
-public class PPManager implements IPlotPointMethods{
+public class PPManager implements IPlotPointMethods {
 
-    /**Sets the plot points of a player using Google's provided write method and the player's document ID. Returns the
+    /**
+     * Sets the plot points of a player using Google's provided write method and the player's document ID. Returns the
      * number of plot points the user has
+     *
      * @param target The Discord ID of the user
      * @param number The new number of plot points
      * @return The new number of plot points

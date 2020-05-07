@@ -6,7 +6,7 @@ public class StatisticsContext {
     private StatisticsState state;
     private EmbedBuilder embedBuilder;
 
-    public StatisticsContext(String message){
+    public StatisticsContext(String message) {
         state = new ScanDice(message);
         execute();
     }
@@ -15,16 +15,16 @@ public class StatisticsContext {
         return embedBuilder;
     }
 
-    public void setEmbedBuilder(EmbedBuilder embedBuilder){
+    public void setEmbedBuilder(EmbedBuilder embedBuilder) {
         this.embedBuilder = embedBuilder;
     }
 
-    public void setState(StatisticsState state){
+    public void setState(StatisticsState state) {
         this.state = state;
     }
 
-    public EmbedBuilder execute(){
-        while (embedBuilder == null){
+    public EmbedBuilder execute() {
+        while (embedBuilder == null) {
             state.process(this);
         }
         return embedBuilder;

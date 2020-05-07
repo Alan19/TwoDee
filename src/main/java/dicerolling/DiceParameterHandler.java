@@ -9,8 +9,8 @@ import java.util.List;
  * e.g. d8, pd6, -8, +3, kd4
  */
 public class DiceParameterHandler {
-    private PoolOptions holder;
-    private List<String> args;
+    private final PoolOptions holder;
+    private final List<String> args;
 
     public DiceParameterHandler(List<String> args, PoolOptions poolOptions) {
         this.args = args;
@@ -31,15 +31,20 @@ public class DiceParameterHandler {
             //Check for dice type
             if (argCopy.contains("pd")) {
                 addToPool(argCopy, numDice.toString(), PoolType.PLOT_DICE);
-            } else if (argCopy.contains("kd")) {
+            }
+            else if (argCopy.contains("kd")) {
                 addToPool(argCopy, numDice.toString(), PoolType.KEPT_DICE);
-            } else if (argCopy.contains("d")) {
+            }
+            else if (argCopy.contains("d")) {
                 addToPool(argCopy, numDice.toString(), PoolType.DICE);
-            } else if (argCopy.contains("+")) {
+            }
+            else if (argCopy.contains("+")) {
                 addToPool(argCopy, "1", PoolType.FLAT_BONUS);
-            } else if (argCopy.contains("-")) {
+            }
+            else if (argCopy.contains("-")) {
                 addToPool(argCopy, "1", PoolType.FLAT_BONUS);
-            } else if (argCopy.contains("**t")) {
+            }
+            else if (argCopy.contains("**t")) {
                 addToPool(argCopy, "1", PoolType.NUMBER_KEPT);
             }
         }
@@ -54,13 +59,17 @@ public class DiceParameterHandler {
         for (int i = 0; i < intNumDice; i++) {
             if (pool == PoolType.FLAT_BONUS) {
                 holder.addFlatBonus(diceVal);
-            } else if (pool == PoolType.DICE) {
+            }
+            else if (pool == PoolType.DICE) {
                 holder.addDice(diceVal);
-            } else if (pool == PoolType.KEPT_DICE) {
+            }
+            else if (pool == PoolType.KEPT_DICE) {
                 holder.addKeptDice(diceVal);
-            } else if (pool == PoolType.PLOT_DICE) {
+            }
+            else if (pool == PoolType.PLOT_DICE) {
                 holder.addPlotDice(diceVal);
-            } else if (pool == PoolType.NUMBER_KEPT) {
+            }
+            else if (pool == PoolType.NUMBER_KEPT) {
                 holder.setTop(diceVal);
             }
         }

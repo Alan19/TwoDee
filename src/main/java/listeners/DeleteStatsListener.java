@@ -3,12 +3,12 @@ package listeners;
 import com.vdurmont.emoji.EmojiParser;
 import org.javacord.api.DiscordApi;
 
-public class DeleteStatsListener implements EventListener{
+public class DeleteStatsListener implements EventListener {
 
 
-    private DiscordApi api;
+    private final DiscordApi api;
 
-    public DeleteStatsListener(DiscordApi api){
+    public DeleteStatsListener(DiscordApi api) {
         this.api = api;
     }
 
@@ -16,11 +16,11 @@ public class DeleteStatsListener implements EventListener{
     @Override
     public void startListening() {
         api.addReactionAddListener(event -> {
-            if (event.getUser().isYourself()){
+            if (event.getUser().isYourself()) {
                 return;
             }
             event.requestMessage().thenAcceptAsync(message -> event.getReaction().ifPresent(reaction -> {
-                if (reaction.getEmoji().equalsEmoji(EmojiParser.parseToUnicode(":x:")) && reaction.containsYou()){
+                if (reaction.getEmoji().equalsEmoji(EmojiParser.parseToUnicode(":x:")) && reaction.containsYou()) {
                     message.delete();
                 }
             }));

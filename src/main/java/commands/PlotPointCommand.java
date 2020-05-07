@@ -43,9 +43,9 @@ public class PlotPointCommand implements CommandExecutor {
         }
     }
 
-    private PPManager ppManager = new PPManager();
-    private UserInfo userInfo = new UserInfo();
-    private DiscordApi api;
+    private final PPManager ppManager = new PPManager();
+    private final UserInfo userInfo = new UserInfo();
+    private final DiscordApi api;
     private Server server;
 
     public PlotPointCommand(DiscordApi api) {
@@ -67,15 +67,20 @@ public class PlotPointCommand implements CommandExecutor {
         for (String arg : params) {
             if ("add".equals(arg)) {
                 command = CommandType.ADD;
-            } else if ("addhere".equals(arg)) {
+            }
+            else if ("addhere".equals(arg)) {
                 command = CommandType.ADDHERE;
-            } else if ("sub".equals(arg)) {
+            }
+            else if ("sub".equals(arg)) {
                 command = CommandType.SUB;
-            } else if ("set".equals(arg)) {
+            }
+            else if ("set".equals(arg)) {
                 command = CommandType.SET;
-            } else if ("addall".equals(arg)) {
+            }
+            else if ("addall".equals(arg)) {
                 command = CommandType.ADDALL;
-            } else if (NumberUtils.isParsable(arg)) {
+            }
+            else if (NumberUtils.isParsable(arg)) {
                 amount = Integer.parseInt(arg);
             }
         }

@@ -49,7 +49,8 @@ public class EmojiPurgeCommand implements CommandExecutor {
             }
             CompletableFuture<Message> emojiRemovalMessage = new MessageBuilder().setEmbed(emojiEmbedBuilder).send(channel);
             emojiRemovalMessage.thenAccept(StatisticsCommand::addCancelReactToMessage);
-        } else {
+        }
+        else {
             removeAllPlotPointEmojisFromChannel(channel);
         }
     }

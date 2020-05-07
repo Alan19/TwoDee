@@ -10,7 +10,7 @@ import java.util.Properties;
 
 public class DoomWriter {
 
-    private Properties prop;
+    private final Properties prop;
 
     public DoomWriter() {
         prop = new Properties();
@@ -50,12 +50,13 @@ public class DoomWriter {
 
     /**
      * Sets the doom on the properties file. If doom points would drop below 0, return an error.
+     *
      * @param newDoom
      * @return The embed with a new doom value
      */
     public EmbedBuilder setDoom(int newDoom) {
         int oldDoom = getDoom();
-        if (newDoom < 0){
+        if (newDoom < 0) {
             return generateInvalidDoomEmbed();
         }
         else {

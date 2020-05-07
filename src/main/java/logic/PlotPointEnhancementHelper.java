@@ -73,7 +73,8 @@ public class PlotPointEnhancementHelper {
     public boolean isEmojiNumberEmoji(Emoji emoji) {
         if (emoji.isUnicodeEmoji() && emoji.asUnicodeEmoji().isPresent()) {
             return oneToTwelveEmojiMap.values().contains(emoji.asUnicodeEmoji().get());
-        } else if (emoji.isKnownCustomEmoji() && emoji.asKnownCustomEmoji().isPresent()) {
+        }
+        else if (emoji.isKnownCustomEmoji() && emoji.asKnownCustomEmoji().isPresent()) {
             String trimmedEmoji = trimCustomEmoji(emoji.asKnownCustomEmoji().get());
             return oneToTwelveEmojiMap.values().contains(trimmedEmoji);
         }

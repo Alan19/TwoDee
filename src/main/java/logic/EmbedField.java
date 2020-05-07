@@ -12,7 +12,7 @@ public class EmbedField {
         content = "";
     }
 
-    public EmbedField(String title, String content){
+    public EmbedField(String title, String content) {
         this.title = title;
         this.content = content;
     }
@@ -33,7 +33,7 @@ public class EmbedField {
         this.content = content;
     }
 
-    public void appendContent(String content){
+    public void appendContent(String content) {
         this.content += content;
     }
 }

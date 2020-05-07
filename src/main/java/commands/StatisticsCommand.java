@@ -27,7 +27,8 @@ public class StatisticsCommand implements CommandExecutor {
         StatisticsContext context = new StatisticsContext(processedCommand);
         if (processedCommand.contains("*here")) {
             channel.sendMessage("Here are the statistics for **" + message.getContent() + "**", context.getEmbedBuilder().setColor(RandomColor.getRandomColor())).thenAcceptAsync(StatisticsCommand::addCancelReactToMessage);
-        } else {
+        }
+        else {
             api.getUserById(author.getIdAsString()).thenAcceptAsync(user -> {
                 user.sendMessage("Here are the statistics for **" + message.getContent() + "**", context.getEmbedBuilder().setColor(RandomColor.getRandomColor())).thenAcceptAsync(StatisticsCommand::addCancelReactToMessage);
                 CompletableFuture<Message> statisticsPM = new MessageBuilder()

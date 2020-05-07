@@ -10,7 +10,7 @@ import java.util.TreeMap;
 public class SumVisitor implements ResultVisitor {
     private final TreeMap<Integer, Long> diceOutcomes;
 
-    public SumVisitor(){
+    public SumVisitor() {
         diceOutcomes = new TreeMap<>();
     }
 

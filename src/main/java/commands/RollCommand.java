@@ -38,7 +38,8 @@ public class RollCommand implements CommandExecutor {
                     EmbedBuilder doomEmbed = writer.addDoom(getPlotPointsSpent(messageContent) * -1);
                     channel.sendMessage(doomEmbed);
                 }
-            } else {
+            }
+            else {
                 String convertedMessage = new CommandProcessor(author, channel).handleCommand(messageContent);
                 DiceRoller diceRoller = new DiceRoller(convertedMessage);
                 deductPlotPoints(messageContent, author, channel);
@@ -84,7 +85,8 @@ public class RollCommand implements CommandExecutor {
             if (args.contains("pd")) {
                 if (args.startsWith("pd")) {
                     ppUsage += Integer.parseInt(args.replaceAll("[^\\d.]", "")) / 2;
-                } else {
+                }
+                else {
                     int i = 0;
                     StringBuilder multiplier = new StringBuilder();
                     while (args.charAt(i) != 'p') {

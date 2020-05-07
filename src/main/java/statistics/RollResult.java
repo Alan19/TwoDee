@@ -66,11 +66,11 @@ public class RollResult {
         return keptDice;
     }
 
-    public void addDiceToResult(int num){
+    public void addDiceToResult(int num) {
         dice.add(num);
     }
 
-    public int getResult(){
+    public int getResult() {
         //Sorts dice and reverse to get descending order
         int sum;
         ArrayList<Integer> sortedResults = new ArrayList<>(dice);
@@ -83,7 +83,7 @@ public class RollResult {
         return sum;
     }
 
-    public void addPlotDice(int pd){
+    public void addPlotDice(int pd) {
         plotDice.add(pd);
     }
 
@@ -99,10 +99,10 @@ public class RollResult {
         flatBonus.add(flat);
     }
 
-    public int getDoom(){
+    public int getDoom() {
         int doomCount = 0;
         for (int roll : dice) {
-            if (roll == 1){
+            if (roll == 1) {
                 doomCount += 1;
             }
         }

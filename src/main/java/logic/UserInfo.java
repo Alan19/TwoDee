@@ -26,7 +26,7 @@ public class UserInfo {
     public String getDocID(String potentialUserID) {
         if (getUsers().contains(potentialUserID)) {
             for (User user : userList.getUsers()) {
-                if (user.getUserid().toString().equals(potentialUserID)){
+                if (user.getUserid().toString().equals(potentialUserID)) {
                     return user.getSid();
                 }
             }
@@ -45,13 +45,14 @@ public class UserInfo {
 
     /**
      * Returns the columns that the user skills are listed in. If the user cannot be found, return null
+     *
      * @param userID The user id
      * @return The two colums that contain the user's skills and the skil level
      */
-    public String getCol(String userID){
+    public String getCol(String userID) {
         if (getUsers().contains(userID)) {
             for (User user : userList.getUsers()) {
-                if (user.getUserid().toString().equals(userID)){
+                if (user.getUserid().toString().equals(userID)) {
                     return user.getCol();
                 }
             }

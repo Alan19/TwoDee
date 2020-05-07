@@ -11,8 +11,8 @@ import java.io.IOException;
 import java.util.List;
 
 public class CommandProcessor {
-    private MessageAuthor author;
-    private TextChannel channel;
+    private final MessageAuthor author;
+    private final TextChannel channel;
 
     public CommandProcessor(MessageAuthor author, TextChannel channel) {
         this.author = author;
@@ -27,7 +27,9 @@ public class CommandProcessor {
     public String handleCommand(String command) {
         String trimmedCommand = command.replaceAll("\\s+", " ");
         String convertedCommand = getConvertedCommand(trimmedCommand);
-        if (convertedCommand == null) return null;
+        if (convertedCommand == null) {
+            return null;
+        }
         System.out.println(convertedCommand);
         return convertedCommand;
     }
