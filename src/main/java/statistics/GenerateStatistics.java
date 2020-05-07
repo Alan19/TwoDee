@@ -35,7 +35,7 @@ public class GenerateStatistics implements StatisticsState {
     public void process(StatisticsContext context) {
         //Generate the roll result to occurrence HashMap
         HashMap<RollResultBuilder, Long> results = generateResultsHash();
-        final int[] resultStream = results.keySet().stream().mapToInt(RollResultBuilder::getResult).toArray();
+        final int[] resultStream = results.keySet().stream().mapToInt(RollResultBuilder::getTotal).toArray();
         final int minRoll = Arrays.stream(resultStream).min().orElse(0);
         final int maxRoll = Arrays.stream(resultStream).max().orElse(0);
 
@@ -45,7 +45,7 @@ public class GenerateStatistics implements StatisticsState {
                 .collect(Collectors.toMap(integer -> integer, integer -> results
                         .entrySet()
                         .stream()
-                        .filter(rollResultBuilderLongEntry -> rollResultBuilderLongEntry.getKey().getResult() == integer)
+                        .filter(rollResultBuilderLongEntry -> rollResultBuilderLongEntry.getKey().getTotal() == integer)
                         .mapToLong(Map.Entry::getValue)
                         .sum()));
 
@@ -120,7 +120,7 @@ public class GenerateStatistics implements StatisticsState {
         for (Integer bonus : flatBonus) {
             //Directly insert if HashMap is empty
             if (rollResultOccurrences.isEmpty()) {
-                RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop()).addKeptResult(bonus);
+                RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop(), true).addKeptResult(bonus);
                 rollResultOccurrences.put(newResult, (long) 1);
             }
             else {
@@ -143,7 +143,7 @@ public class GenerateStatistics implements StatisticsState {
             if (rollResultOccurrences.isEmpty()) {
                 //Create n RollResult objects with each possible outcome of the dice
                 for (int i = 1; i <= dice; i++) {
-                    RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop()).addKeptResult(i);
+                    RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop(), true).addKeptResult(i);
                     rollResultOccurrences.put(newResult, (long) 1);
                 }
             }
@@ -165,7 +165,7 @@ public class GenerateStatistics implements StatisticsState {
             if (rollResultOccurrences.isEmpty()) {
                 //Create n RollResult objects with each possible outcome of the dice
                 for (int i = 1; i <= dice; i++) {
-                    RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop()).addPlotResult(Math.max(i, dice / 2));
+                    RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop(), true).addPlotResult(Math.max(i, dice / 2));
                     rollResultOccurrences.put(newResult, rollResultOccurrences.getOrDefault(newResult, (long) 0) + (long) 1);
                 }
             }
@@ -187,7 +187,7 @@ public class GenerateStatistics implements StatisticsState {
             if (rollResultOccurrences.isEmpty()) {
                 //Create n RollResult objects with each possible outcome of the dice
                 for (int i = 1; i <= dice; i++) {
-                    RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop()).addResult(i);
+                    RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop(), true).addResult(i);
                     rollResultOccurrences.put(newResult, (long) 1);
                 }
             }

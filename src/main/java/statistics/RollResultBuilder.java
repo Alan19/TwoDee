@@ -15,29 +15,50 @@ public class RollResultBuilder {
     private List<Integer> flatBonus;
     private int doom;
     private int keepHowMany;
+    private boolean cleanUnnecessary;
 
-    public RollResultBuilder(int keep) {
+    public RollResultBuilder(int keep, boolean statisticsMode) {
         dice = new ArrayList<>();
         plotDice = new ArrayList<>();
         keptDice = new ArrayList<>();
         flatBonus = new ArrayList<>();
         doom = 0;
         keepHowMany = keep;
+        cleanUnnecessary = statisticsMode;
     }
 
-    public RollResultBuilder(List<Integer> dice, List<Integer> plotDice, List<Integer> keptDice, List<Integer> flatBonus, int keepHowMany, int doom) {
+    private RollResultBuilder(List<Integer> dice, List<Integer> plotDice, List<Integer> keptDice, List<Integer> flatBonus, int keepHowMany, int doom, boolean cleanUnnecessary) {
         this.dice = dice;
         this.plotDice = plotDice;
         this.keptDice = keptDice;
         this.flatBonus = flatBonus;
         this.keepHowMany = keepHowMany;
         this.doom = doom;
+        this.cleanUnnecessary = cleanUnnecessary;
+    }
+
+    public List<Integer> getDice() {
+        return dice;
+    }
+
+    public List<Integer> getPlotDice() {
+        return plotDice;
+    }
+
+    public List<Integer> getKeptDice() {
+        return keptDice;
+    }
+
+    public List<Integer> getFlatBonus() {
+        return flatBonus;
     }
 
     public RollResultBuilder addResult(int result) {
         dice.add(result);
-        dice.sort(Comparator.reverseOrder());
-        dice = dice.subList(0, Math.min(keepHowMany, dice.size()));
+        if (cleanUnnecessary) {
+            dice.sort(Comparator.reverseOrder());
+            dice = dice.subList(0, Math.min(keepHowMany, dice.size()));
+        }
         if (result == 1) {
             doom++;
         }
@@ -46,13 +67,17 @@ public class RollResultBuilder {
 
     public RollResultBuilder addPlotResult(int i) {
         plotDice.add(i);
-        plotDice.sort(Comparator.reverseOrder());
+        if (cleanUnnecessary) {
+            plotDice.sort(Comparator.reverseOrder());
+        }
         return this;
     }
 
     public RollResultBuilder addKeptResult(int i) {
         keptDice.add(i);
-        keptDice.sort(Comparator.reverseOrder());
+        if (cleanUnnecessary) {
+            keptDice.sort(Comparator.reverseOrder());
+        }
         if (i == 1) {
             doom++;
         }
@@ -68,7 +93,7 @@ public class RollResultBuilder {
         return this;
     }
 
-    public int getResult() {
+    public int getTotal() {
         int sum = 0;
         sum += dice.stream().limit(Math.min(keepHowMany, dice.size())).mapToInt(sortedResult -> sortedResult).sum();
         sum += plotDice.stream().mapToInt(value -> value).sum();
@@ -78,7 +103,7 @@ public class RollResultBuilder {
     }
 
     public RollResultBuilder copy() {
-        return new RollResultBuilder(new ArrayList<>(dice), new ArrayList<>(plotDice), new ArrayList<>(keptDice), new ArrayList<>(flatBonus), keepHowMany, doom);
+        return new RollResultBuilder(new ArrayList<>(dice), new ArrayList<>(plotDice), new ArrayList<>(keptDice), new ArrayList<>(flatBonus), keepHowMany, doom, true);
     }
 
     @Override
@@ -104,5 +129,11 @@ public class RollResultBuilder {
 
     public int getDoom() {
         return doom;
+    }
+
+    public List<Integer> getDropped() {
+        ArrayList<Integer> sortedResults = new ArrayList<>(dice);
+        sortedResults.sort(Comparator.reverseOrder());
+        return sortedResults.subList(keepHowMany, sortedResults.size());
     }
 }

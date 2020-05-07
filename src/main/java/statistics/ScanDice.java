@@ -37,25 +37,18 @@ public class ScanDice implements StatisticsState {
 
     //Get the total number of combinations by finding the product of all of the number of faces in all of the dice
     private long getTotalCombos(PoolOptions poolOptions) {
-        long totalCombos = 1;
         ArrayList<Integer> regularDice = poolOptions.getRegularDice();
-        for (int combo : regularDice) {
-            totalCombos *= combo;
-        }
+        long totalCombos = regularDice.stream().mapToInt(combo -> combo).asLongStream().reduce(1, (a, b) -> a * b);
 
-        /*Plot dice have a minimum value of the die size / 2
-        //This means that you need to divide it by two and add one to get the number of combinations from it if the
-        value is greater than 2 */
-        for (int pdCombo : poolOptions.getPlotDice()) {
-            if (pdCombo > 2) {
-                totalCombos *= pdCombo / 2 + 1;
-            }
-        }
+        /*
+            Plot dice have a minimum value of the die size / 2
+            This means that you need to divide it by two and add one to get the number of combinations from it if the
+            value is greater than 2
+         */
+        totalCombos *= poolOptions.getPlotDice().stream().mapToInt(pdCombo -> pdCombo).mapToLong(pdCombo -> pdCombo > 2 ? pdCombo / 2 + 1 : pdCombo).reduce(1, (a, b) -> a * b);
 
         //Kept die is treated the same as normal dice
-        for (int combo : poolOptions.getKeptDice()) {
-            totalCombos *= combo;
-        }
+        totalCombos *= poolOptions.getKeptDice().stream().mapToInt(combo -> combo).asLongStream().reduce(1, (a, b) -> a * b);
         return totalCombos;
     }
 }
