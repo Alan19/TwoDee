@@ -119,4 +119,8 @@ public class DicePool {
         this.minFacets = minFacets;
         return this;
     }
+
+    public int getPlotPointsSpent() {
+        return plotDice.stream().mapToInt(plotDie -> (int) Math.ceil((float) plotDie / 2)).sum();
+    }
 }

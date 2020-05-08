@@ -2,7 +2,7 @@ package commands;
 
 import de.btobastian.sdcf4j.Command;
 import de.btobastian.sdcf4j.CommandExecutor;
-import dicerolling.NewDiceRoller;
+import dicerolling.DiceRoller;
 import dicerolling.PoolProcessor;
 import logic.PlotPointEnhancementHelper;
 import org.javacord.api.entity.channel.TextChannel;
@@ -17,8 +17,8 @@ public class TestRollCommand implements CommandExecutor {
         String messageContent = message.getContent();
         final PoolProcessor poolProcessor = new PoolProcessor(messageContent, author);
 
-        NewDiceRoller newDiceRoller = new NewDiceRoller(poolProcessor.getDicePool());
-        final EmbedBuilder resultEmbed = newDiceRoller.generateResults(author);
+        DiceRoller diceRoller = new DiceRoller(poolProcessor.getDicePool());
+        final EmbedBuilder resultEmbed = diceRoller.generateResults(author);
         new MessageBuilder()
                 .setEmbed(resultEmbed)
                 .send(channel)

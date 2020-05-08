@@ -3,9 +3,10 @@ package commands;
 import com.vdurmont.emoji.EmojiParser;
 import de.btobastian.sdcf4j.Command;
 import de.btobastian.sdcf4j.CommandExecutor;
+import dicerolling.DicePool;
 import dicerolling.DiceRoller;
+import dicerolling.PoolProcessor;
 import doom.DoomWriter;
-import logic.CommandProcessor;
 import logic.PlotPointEnhancementHelper;
 import logic.RandomColor;
 import org.javacord.api.entity.channel.TextChannel;
@@ -27,13 +28,17 @@ public class RollCommand implements CommandExecutor {
         try {
             Properties prop = new Properties();
             prop.load(new FileInputStream("resources/bot.properties"));
+            final PoolProcessor poolProcessor = new PoolProcessor(messageContent, author);
+            final DicePool dicePool = poolProcessor.getDicePool();
+            final int plotPointsSpent = dicePool.getPlotPointsSpent() - dicePool.getPlotPointDiscount();
+            DiceRoller diceRoller = new DiceRoller(dicePool);
             //Subtract doom points if GM is rolling
             if (author.getIdAsString().equals(prop.getProperty("gameMaster"))) {
-                DiceRoller diceRoller = new DiceRoller(messageContent);
+
                 new MessageBuilder()
                         .setEmbed(diceRoller.generateResults(message.getAuthor()))
                         .send(channel);
-                if (commandContainsPlotDice(messageContent)) {
+                if (plotPointsSpent != 0) {
                     DoomWriter writer = new DoomWriter();
                     EmbedBuilder doomEmbed = writer.addDoom(getPlotPointsSpent(messageContent) * -1);
                     channel.sendMessage(doomEmbed);
@@ -41,10 +46,7 @@ public class RollCommand implements CommandExecutor {
             }
             //Players
             else {
-                String convertedMessage = new CommandProcessor(author, channel).handleCommand(messageContent);
-                DiceRoller diceRoller = new DiceRoller(convertedMessage);
                 deductPlotPoints(messageContent, author, channel);
-
                 new MessageBuilder()
                         .setEmbed(diceRoller.generateResults(author))
                         .send(channel)
