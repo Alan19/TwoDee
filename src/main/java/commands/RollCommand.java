@@ -39,6 +39,7 @@ public class RollCommand implements CommandExecutor {
                     channel.sendMessage(doomEmbed);
                 }
             }
+            //Players
             else {
                 String convertedMessage = new CommandProcessor(author, channel).handleCommand(messageContent);
                 DiceRoller diceRoller = new DiceRoller(convertedMessage);

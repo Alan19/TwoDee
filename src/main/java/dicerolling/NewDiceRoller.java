@@ -23,7 +23,6 @@ public class NewDiceRoller {
     public NewDiceRoller(DicePool dicePool) {
         this.dicePool = dicePool;
         rollResult = new RollResultBuilder(dicePool.getKeepHowMany(), false);
-//        rollDice(random);
     }
 
     public int getDoom() {
@@ -44,7 +43,7 @@ public class NewDiceRoller {
                 .setAuthor(author)
                 .setColor(RandomColor.getRandomColor())
                 .addField("Regular dice", formatResults(result.getDice()), true)
-                .addField("Picked", resultsToString(result.getKeptDice()), true)
+                .addField("Picked", resultsToString(result.getPickedDice()), true)
                 .addField("Dropped", resultsToString(result.getDropped()), true)
                 .addField("Plot dice", resultsToString(result.getPlotDice()), true)
                 .addField("Kept dice", resultsToString(result.getKeptDice()), true)
@@ -119,7 +118,12 @@ public class NewDiceRoller {
         return resultString.toString();
     }
 
-    // Username is stored as <@!140973544891744256>
+    /**
+     * Add 1 plot point if player generates an opportunity on their roll (at least one 1)
+     *
+     * @param author The player that rolled a 1
+     * @return The EmbedBuilder that shows the change in plot points for the player
+     */
     public EmbedBuilder addPlotPoints(MessageAuthor author) {
         if (rollResult.getDoom() != 0) {
             PPManager manager = new PPManager();

@@ -10,8 +10,8 @@ import java.util.List;
 public class PoolProcessor {
     private final String command;
     private final MessageAuthor author;
-    private final String[] options = new String[]{"-fsu", "-fsd", "-mf", "-here", "--keep", "-k", "-discount", "-opportunities"};
     private final DicePool dicePool = new DicePool();
+    private HashMap<String, Integer> skillMap;
 
     public PoolProcessor(String command, MessageAuthor author) {
         this.command = command;
@@ -36,7 +36,7 @@ public class PoolProcessor {
             else if (param.startsWith("-fsd=")) {
                 nextDiceFacetMod = Integer.parseInt(param.substring(5)) * -1;
             }
-            else if (param.startsWith("-mf=")) {
+            else if (param.startsWith("-maxf=")) {
                 maxFacets = Integer.parseInt(param.substring(4));
             }
             else if (param.startsWith("-difficulty")) {
@@ -71,6 +71,9 @@ public class PoolProcessor {
             //Flat bonus or penalty
             else if (param.matches("([-+])\\d+")) {
                 dicePool.addFlatBonus(Integer.parseInt(param.substring(1)));
+            }
+            else if (param.startsWith("-minf=")) {
+                dicePool.setMinFacets(Integer.parseInt(param.substring(6)));
             }
         }
     }
@@ -111,24 +114,17 @@ public class PoolProcessor {
 
         int diceFacets = Integer.parseInt(param.substring(i));
 
-        if (nextDiceFacetMod != 0) {
-            int totalFacets = numberOfDiceInt * diceFacets + nextDiceFacetMod;
-            if (totalFacets > diceFacets) {
-                for (int j = 0; j < totalFacets / diceFacets; j++) {
-                    dicePool.addDice(diceType.toString(), diceFacets);
-                }
-                if (totalFacets % diceFacets > 2) {
-                    dicePool.addDice(diceType.toString(), totalFacets % diceFacets);
-                }
-            }
-            else if (totalFacets > 2) {
-                dicePool.addDice(diceType.toString(), totalFacets);
-            }
-        }
-        else {
-            for (int j = 0; j < numberOfDiceInt; j++) {
+        int totalFacets = numberOfDiceInt * diceFacets + nextDiceFacetMod;
+        if (totalFacets > diceFacets) {
+            for (int j = 0; j < totalFacets / diceFacets; j++) {
                 dicePool.addDice(diceType.toString(), diceFacets);
             }
+            if (totalFacets % diceFacets > 2) {
+                dicePool.addDice(diceType.toString(), totalFacets % diceFacets);
+            }
+        }
+        else if (totalFacets > 2) {
+            dicePool.addDice(diceType.toString(), totalFacets);
         }
     }
 
@@ -167,13 +163,16 @@ public class PoolProcessor {
      */
     private int retrieveSkill(String skill, String id) {
         try {
-            SheetsManager characterInfo = new SheetsManager(id);
-            List<List<Object>> values = characterInfo.getResult().getValues();
-            final Object[] skillArray = values.stream().filter(objects -> objects.size() == 2 && ((String) objects.get(1)).matches("\\d+")).toArray();
-            HashMap<String, Integer> skillMap = new HashMap<>();
-            for (Object o : skillArray) {
-                List<String> pair = (List<String>) o;
-                skillMap.put(pair.get(0).replace(" ", "").toLowerCase(), Integer.parseInt(pair.get(1)));
+            //Only pull info the first time
+            if (skillMap == null) {
+                SheetsManager characterInfo = new SheetsManager(id);
+                List<List<Object>> values = characterInfo.getResult().getValues();
+                final Object[] skillArray = values.stream().filter(objects -> objects.size() == 2 && ((String) objects.get(1)).matches("\\d+")).toArray();
+                skillMap = new HashMap<>();
+                for (Object o : skillArray) {
+                    List<String> pair = (List<String>) o;
+                    skillMap.put(pair.get(0).replace(" ", "").toLowerCase(), Integer.parseInt(pair.get(1)));
+                }
             }
             return skillMap.getOrDefault(skill, -1);
         } catch (IOException e) {

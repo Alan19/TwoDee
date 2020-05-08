@@ -95,7 +95,9 @@ public class RollResultBuilder {
 
     public int getTotal() {
         int sum = 0;
-        sum += dice.stream().limit(Math.min(keepHowMany, dice.size())).mapToInt(sortedResult -> sortedResult).sum();
+        ArrayList<Integer> diceCopy = new ArrayList<>(dice);
+        diceCopy.sort(Comparator.reverseOrder());
+        sum += diceCopy.stream().limit(Math.min(keepHowMany, dice.size())).mapToInt(sortedResult -> sortedResult).sum();
         sum += plotDice.stream().mapToInt(value -> value).sum();
         sum += keptDice.stream().mapToInt(kd -> kd).sum();
         sum += flatBonus.stream().mapToInt(f -> f).sum();
@@ -135,5 +137,12 @@ public class RollResultBuilder {
         ArrayList<Integer> sortedResults = new ArrayList<>(dice);
         sortedResults.sort(Comparator.reverseOrder());
         return sortedResults.subList(keepHowMany, sortedResults.size());
+    }
+
+    public List<Integer> getPickedDice() {
+        ArrayList<Integer> sortedResults = new ArrayList<>(dice);
+        sortedResults.sort(Comparator.reverseOrder());
+        return sortedResults.subList(0, keepHowMany);
+
     }
 }

@@ -15,6 +15,7 @@ public class DicePool {
     private String difficulty = "";
     private int plotPointDiscount = 0;
     private boolean enableOpportunities = true;
+    private int minFacets = 0;
 
     public List<Integer> getRegularDice() {
         return regularDice;
@@ -111,6 +112,11 @@ public class DicePool {
 
     public DicePool enableEnhancement(boolean enable) {
         enableEnhancementEmojis = enable;
+        return this;
+    }
+
+    public DicePool setMinFacets(int minFacets) {
+        this.minFacets = minFacets;
         return this;
     }
 }
