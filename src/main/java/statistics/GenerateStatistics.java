@@ -1,29 +1,27 @@
 package statistics;
 
+import dicerolling.DicePool;
 import logic.EmbedField;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import statistics.resultvisitors.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class GenerateStatistics implements StatisticsState {
-    private ArrayList<Integer> regularDice;
-    private ArrayList<Integer> plotDice;
-    private ArrayList<Integer> flatBonus;
-    private ArrayList<Integer> keptDice;
-    private PoolOptions poolOptions;
+    private final List<Integer> regularDice;
+    private final List<Integer> plotDice;
+    private final List<Integer> flatBonus;
+    private final List<Integer> keptDice;
+    private final DicePool dicePool;
 
-    public GenerateStatistics(PoolOptions poolOptions) {
-        this.poolOptions = poolOptions;
-        this.regularDice = poolOptions.getRegularDice();
-        this.plotDice = poolOptions.getPlotDice();
-        this.flatBonus = poolOptions.getFlatBonus();
-        this.keptDice = poolOptions.getKeptDice();
+    public GenerateStatistics(DicePool dicePool) {
+        this.dicePool = dicePool;
+        this.regularDice = dicePool.getRegularDice();
+        this.plotDice = dicePool.getPlotDice();
+        this.flatBonus = dicePool.getFlatBonuses();
+        this.keptDice = dicePool.getKeptDice();
     }
 
     /**
@@ -120,7 +118,7 @@ public class GenerateStatistics implements StatisticsState {
         for (Integer bonus : flatBonus) {
             //Directly insert if HashMap is empty
             if (rollResultOccurrences.isEmpty()) {
-                RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop(), true).addKeptResult(bonus);
+                RollResultBuilder newResult = new RollResultBuilder(dicePool.getNumberOfKeptDice(), true).addKeptResult(bonus);
                 rollResultOccurrences.put(newResult, (long) 1);
             }
             else {
@@ -143,7 +141,7 @@ public class GenerateStatistics implements StatisticsState {
             if (rollResultOccurrences.isEmpty()) {
                 //Create n RollResult objects with each possible outcome of the dice
                 for (int i = 1; i <= dice; i++) {
-                    RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop(), true).addKeptResult(i);
+                    RollResultBuilder newResult = new RollResultBuilder(dicePool.getNumberOfKeptDice(), true).addKeptResult(i);
                     rollResultOccurrences.put(newResult, (long) 1);
                 }
             }
@@ -165,7 +163,7 @@ public class GenerateStatistics implements StatisticsState {
             if (rollResultOccurrences.isEmpty()) {
                 //Create n RollResult objects with each possible outcome of the dice
                 for (int i = 1; i <= dice; i++) {
-                    RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop(), true).addPlotResult(Math.max(i, dice / 2));
+                    RollResultBuilder newResult = new RollResultBuilder(dicePool.getNumberOfKeptDice(), true).addPlotResult(Math.max(i, dice / 2));
                     rollResultOccurrences.put(newResult, rollResultOccurrences.getOrDefault(newResult, (long) 0) + (long) 1);
                 }
             }
@@ -187,7 +185,7 @@ public class GenerateStatistics implements StatisticsState {
             if (rollResultOccurrences.isEmpty()) {
                 //Create n RollResult objects with each possible outcome of the dice
                 for (int i = 1; i <= dice; i++) {
-                    RollResultBuilder newResult = new RollResultBuilder(poolOptions.getTop(), true).addResult(i);
+                    RollResultBuilder newResult = new RollResultBuilder(dicePool.getNumberOfKeptDice(), true).addResult(i);
                     rollResultOccurrences.put(newResult, (long) 1);
                 }
             }

@@ -33,7 +33,7 @@ public class DicePool {
         return flatBonuses;
     }
 
-    public int getKeepHowMany() {
+    public int getNumberOfKeptDice() {
         return keepHowMany;
     }
 

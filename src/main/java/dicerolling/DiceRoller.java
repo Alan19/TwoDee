@@ -19,7 +19,7 @@ public class DiceRoller {
 
     public DiceRoller(DicePool dicePool) {
         this.dicePool = dicePool;
-        rollResult = new RollResultBuilder(dicePool.getKeepHowMany(), false);
+        rollResult = new RollResultBuilder(dicePool.getNumberOfKeptDice(), false);
         Random random = new Random();
         rollDice(random, dicePool);
     }

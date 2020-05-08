@@ -1,12 +1,13 @@
 package statistics;
 
+import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 public class StatisticsContext {
     private StatisticsState state;
     private EmbedBuilder embedBuilder;
 
-    public StatisticsContext(String message) {
+    public StatisticsContext(Message message) {
         state = new ScanDice(message);
         execute();
     }

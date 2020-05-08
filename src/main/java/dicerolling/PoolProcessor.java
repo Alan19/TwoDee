@@ -181,4 +181,8 @@ public class PoolProcessor {
         }
     }
 
+    public boolean validPool() {
+        return !dicePool.getRegularDice().isEmpty() || !dicePool.getPlotDice().isEmpty() || !dicePool.getKeptDice().isEmpty();
+    }
+
 }
