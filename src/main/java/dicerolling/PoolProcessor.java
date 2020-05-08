@@ -39,7 +39,7 @@ public class PoolProcessor {
             else if (param.startsWith("-maxf=")) {
                 maxFacets = Integer.parseInt(param.substring(4));
             }
-            else if (param.startsWith("-difficulty")) {
+            else if (param.startsWith("-diff")) {
                 processDifficultyLevel(param);
             }
             else if (param.startsWith("-k=")) {
@@ -79,7 +79,7 @@ public class PoolProcessor {
     }
 
     private void processDifficultyLevel(String param) {
-        dicePool.setDifficulty(param.startsWith("-difficulty=") ? param.substring(12) : "default");
+        dicePool.setDifficulty(param.startsWith("-diff=") ? param.substring(6) : "default");
     }
 
     private void processPlotPointDiscount(String param) {

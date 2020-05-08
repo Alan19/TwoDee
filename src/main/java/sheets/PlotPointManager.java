@@ -10,7 +10,11 @@ import java.util.List;
 /**
  * This class handles the getting and setting of the plot points from a player
  */
-public class PPManager implements IPlotPointMethods {
+public class PlotPointManager {
+
+    private PlotPointManager() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Sets the plot points of a player using Google's provided write method and the player's document ID. Returns the
@@ -20,15 +24,13 @@ public class PPManager implements IPlotPointMethods {
      * @param number The new number of plot points
      * @return The new number of plot points
      */
-    @Override
-    public int setPlotPoints(String target, int number) {
+    public static int setPlotPoints(String target, int number) {
         SheetsManager.writePlotPoints(number, new UserInfo().getDocID(target));
         return number;
     }
 
     //Grabs plot point values from SheetsQuickStart using a player's document ID
-    @Override
-    public int getPlotPoints(String target) {
+    public static int getPlotPoints(String target) {
         try {
             ValueRange range = SheetsManager.getPlotPointCell(new UserInfo().getDocID(target));
             List<List<Object>> values = range.getValues();

@@ -22,6 +22,6 @@ public class TestRollCommand implements CommandExecutor {
         new MessageBuilder()
                 .setEmbed(resultEmbed)
                 .send(channel)
-                .thenAcceptAsync(new PlotPointEnhancementHelper()::addPlotPointEnhancementEmojis);
+                .thenAcceptAsync(PlotPointEnhancementHelper::addPlotPointEnhancementEmojis);
     }
 }

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A builder version of RollResult
@@ -136,13 +138,13 @@ public class RollResultBuilder {
     public List<Integer> getDropped() {
         ArrayList<Integer> sortedResults = new ArrayList<>(dice);
         sortedResults.sort(Comparator.reverseOrder());
-        return sortedResults.subList(keepHowMany, sortedResults.size());
+        return IntStream.range(Math.min(sortedResults.size(), keepHowMany), sortedResults.size()).mapToObj(sortedResults::get).collect(Collectors.toCollection(ArrayList::new));
     }
 
     public List<Integer> getPickedDice() {
         ArrayList<Integer> sortedResults = new ArrayList<>(dice);
         sortedResults.sort(Comparator.reverseOrder());
-        return sortedResults.subList(0, keepHowMany);
+        return sortedResults.subList(0, Math.min(keepHowMany, dice.size()));
 
     }
 }
