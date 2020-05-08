@@ -4,7 +4,6 @@ import discord.TwoDee;
 import logic.RandomColor;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
-import statistics.RollResultBuilder;
 import statistics.resultvisitors.DifficultyVisitor;
 
 import java.util.List;
@@ -14,12 +13,12 @@ import java.util.stream.Collectors;
 
 public class DiceRoller {
     public static final String NONE = "*none*";
-    private final RollResultBuilder rollResult;
+    private final RollResult rollResult;
     private final DicePool dicePool;
 
     public DiceRoller(DicePool dicePool) {
         this.dicePool = dicePool;
-        rollResult = new RollResultBuilder(dicePool.getNumberOfKeptDice(), false);
+        rollResult = new RollResult(dicePool.getNumberOfKeptDice(), false);
         Random random = new Random();
         rollDice(random, dicePool);
     }
@@ -33,7 +32,7 @@ public class DiceRoller {
         return buildResultEmbed(author, rollResult);
     }
 
-    private EmbedBuilder buildResultEmbed(MessageAuthor author, RollResultBuilder result) {
+    private EmbedBuilder buildResultEmbed(MessageAuthor author, RollResult result) {
         return new EmbedBuilder()
                 .setDescription("Here's the result for" + createDicePoolString(dicePool))
                 .setTitle(TwoDee.getRollTitleMessage())

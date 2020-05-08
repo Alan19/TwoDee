@@ -1,6 +1,7 @@
 package statistics;
 
 import dicerolling.DicePool;
+import dicerolling.RollResult;
 import logic.EmbedField;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import statistics.resultvisitors.*;
@@ -32,8 +33,8 @@ public class GenerateStatistics implements StatisticsState {
     @Override
     public void process(StatisticsContext context) {
         //Generate the roll result to occurrence HashMap
-        HashMap<RollResultBuilder, Long> results = generateResultsHash();
-        final int[] resultStream = results.keySet().stream().mapToInt(RollResultBuilder::getTotal).toArray();
+        HashMap<RollResult, Long> results = generateResultsHash();
+        final int[] resultStream = results.keySet().stream().mapToInt(RollResult::getTotal).toArray();
         final int minRoll = Arrays.stream(resultStream).min().orElse(0);
         final int maxRoll = Arrays.stream(resultStream).max().orElse(0);
 
@@ -49,7 +50,7 @@ public class GenerateStatistics implements StatisticsState {
 
 
         //Generate the opportunity to occurrence HashMap
-        final int[] opportunityArr = results.keySet().stream().mapToInt(RollResultBuilder::getDoom).toArray();
+        final int[] opportunityArr = results.keySet().stream().mapToInt(RollResult::getDoom).toArray();
         final int minOpportunities = Arrays.stream(opportunityArr).min().orElse(0);
         final int maxOpportunities = Arrays.stream(opportunityArr).max().orElse(0);
         final Map<Integer, Long> rollToOpportunities = IntStream.rangeClosed(minOpportunities, maxOpportunities)
@@ -104,8 +105,8 @@ public class GenerateStatistics implements StatisticsState {
      *
      * @return A Hashmap of all of the possible results mapped to the number of times it occurs
      */
-    private HashMap<RollResultBuilder, Long> generateResultsHash() {
-        HashMap<RollResultBuilder, Long> rollResultOccurrences = new HashMap<>();
+    private HashMap<RollResult, Long> generateResultsHash() {
+        HashMap<RollResult, Long> rollResultOccurrences = new HashMap<>();
         //Create n roll result objects for each face of the die
         rollResultOccurrences = processNormalDice(rollResultOccurrences);
         rollResultOccurrences = processPlotDice(rollResultOccurrences);
@@ -114,18 +115,18 @@ public class GenerateStatistics implements StatisticsState {
         return rollResultOccurrences;
     }
 
-    private HashMap<RollResultBuilder, Long> processFlatBonus(HashMap<RollResultBuilder, Long> rollResultOccurrences) {
+    private HashMap<RollResult, Long> processFlatBonus(HashMap<RollResult, Long> rollResultOccurrences) {
         for (Integer bonus : flatBonus) {
             //Directly insert if HashMap is empty
             if (rollResultOccurrences.isEmpty()) {
-                RollResultBuilder newResult = new RollResultBuilder(dicePool.getNumberOfKeptDice(), true).addKeptResult(bonus);
+                RollResult newResult = new RollResult(dicePool.getNumberOfKeptDice(), true).addKeptResult(bonus);
                 rollResultOccurrences.put(newResult, (long) 1);
             }
             else {
                 //Create new HashMap to copy values into
-                HashMap<RollResultBuilder, Long> mappedResult = new HashMap<>();
+                HashMap<RollResult, Long> mappedResult = new HashMap<>();
                 rollResultOccurrences.forEach((key, value) -> {
-                    RollResultBuilder newResult = key.copy().addFlatBonus(bonus);
+                    RollResult newResult = key.copy().addFlatBonus(bonus);
                     mappedResult.put(newResult, mappedResult.getOrDefault(newResult, (long) 0) + value);
                 });
                 //Replace the original HashMap
@@ -135,19 +136,19 @@ public class GenerateStatistics implements StatisticsState {
         return rollResultOccurrences;
     }
 
-    private HashMap<RollResultBuilder, Long> processKeptDice(HashMap<RollResultBuilder, Long> rollResultOccurrences) {
+    private HashMap<RollResult, Long> processKeptDice(HashMap<RollResult, Long> rollResultOccurrences) {
         for (Integer dice : keptDice) {
             //Directly insert if HashMap is empty
             if (rollResultOccurrences.isEmpty()) {
                 //Create n RollResult objects with each possible outcome of the dice
                 for (int i = 1; i <= dice; i++) {
-                    RollResultBuilder newResult = new RollResultBuilder(dicePool.getNumberOfKeptDice(), true).addKeptResult(i);
+                    RollResult newResult = new RollResult(dicePool.getNumberOfKeptDice(), true).addKeptResult(i);
                     rollResultOccurrences.put(newResult, (long) 1);
                 }
             }
             else {
                 //Create new HashMap to copy values into
-                HashMap<RollResultBuilder, Long> mappedResult = new HashMap<>();
+                HashMap<RollResult, Long> mappedResult = new HashMap<>();
                 //Map each roll result object into n roll result objects by adding a nice result of 1 through n to the result object
                 rollResultOccurrences.forEach((key, value) -> IntStream.rangeClosed(1, dice).mapToObj(i -> key.copy().addKeptResult(i)).forEach(newResult -> mappedResult.put(newResult, mappedResult.getOrDefault(newResult, (long) 0) + value)));
                 //Replace the original HashMap
@@ -157,19 +158,19 @@ public class GenerateStatistics implements StatisticsState {
         return rollResultOccurrences;
     }
 
-    private HashMap<RollResultBuilder, Long> processPlotDice(HashMap<RollResultBuilder, Long> rollResultOccurrences) {
+    private HashMap<RollResult, Long> processPlotDice(HashMap<RollResult, Long> rollResultOccurrences) {
         for (Integer dice : plotDice) {
             //Directly insert if HashMap is empty
             if (rollResultOccurrences.isEmpty()) {
                 //Create n RollResult objects with each possible outcome of the dice
                 for (int i = 1; i <= dice; i++) {
-                    RollResultBuilder newResult = new RollResultBuilder(dicePool.getNumberOfKeptDice(), true).addPlotResult(Math.max(i, dice / 2));
+                    RollResult newResult = new RollResult(dicePool.getNumberOfKeptDice(), true).addPlotResult(Math.max(i, dice / 2));
                     rollResultOccurrences.put(newResult, rollResultOccurrences.getOrDefault(newResult, (long) 0) + (long) 1);
                 }
             }
             else {
                 //Create new HashMap to copy values into
-                HashMap<RollResultBuilder, Long> mappedResult = new HashMap<>();
+                HashMap<RollResult, Long> mappedResult = new HashMap<>();
                 //Map each roll result object into n roll result objects by adding a nice result of 1 through n to the result object
                 rollResultOccurrences.forEach((key, value) -> IntStream.rangeClosed(1, dice).mapToObj(i -> key.copy().addPlotResult(Math.max(i, dice / 2))).forEach(newResult -> mappedResult.put(newResult, mappedResult.getOrDefault(newResult, (long) 0) + value)));
                 //Replace the original HashMap
@@ -179,19 +180,19 @@ public class GenerateStatistics implements StatisticsState {
         return rollResultOccurrences;
     }
 
-    private HashMap<RollResultBuilder, Long> processNormalDice(HashMap<RollResultBuilder, Long> rollResultOccurrences) {
+    private HashMap<RollResult, Long> processNormalDice(HashMap<RollResult, Long> rollResultOccurrences) {
         for (Integer dice : regularDice) {
             //Directly insert if HashMap is empty
             if (rollResultOccurrences.isEmpty()) {
                 //Create n RollResult objects with each possible outcome of the dice
                 for (int i = 1; i <= dice; i++) {
-                    RollResultBuilder newResult = new RollResultBuilder(dicePool.getNumberOfKeptDice(), true).addResult(i);
+                    RollResult newResult = new RollResult(dicePool.getNumberOfKeptDice(), true).addResult(i);
                     rollResultOccurrences.put(newResult, (long) 1);
                 }
             }
             else {
                 //Create new HashMap to copy values into
-                HashMap<RollResultBuilder, Long> mappedResult = new HashMap<>();
+                HashMap<RollResult, Long> mappedResult = new HashMap<>();
                 //Map each roll result object into n roll result objects by adding a nice result of 1 through n to the result object
                 rollResultOccurrences
                         //Map each object in rollResultOccurrences to n DiceResult objects

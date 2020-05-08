@@ -21,6 +21,10 @@ public class DicePool {
         return regularDice;
     }
 
+    public void setRegularDice(List<Integer> regularDice) {
+        this.regularDice = regularDice;
+    }
+
     public List<Integer> getPlotDice() {
         return plotDice;
     }
@@ -35,6 +39,11 @@ public class DicePool {
 
     public int getNumberOfKeptDice() {
         return keepHowMany;
+    }
+
+    public DicePool setNumberOfKeptDice(int num) {
+        keepHowMany = num;
+        return this;
     }
 
     public boolean isEnableEnhancementEmojis() {
@@ -64,7 +73,9 @@ public class DicePool {
     }
 
     public DicePool addDice(int dice) {
-        regularDice.add(dice);
+        if (dice > minFacets) {
+            regularDice.add(dice);
+        }
         return this;
     }
 
@@ -78,11 +89,6 @@ public class DicePool {
         return this;
     }
 
-    public DicePool setNumberOfKeptDice(int num) {
-        keepHowMany = num;
-        return this;
-    }
-
     public DicePool setOpportunities(boolean enable) {
         enableOpportunities = enable;
         return this;
@@ -91,13 +97,13 @@ public class DicePool {
     public DicePool addDice(String diceType, int dice) {
         switch (diceType) {
             case "d":
-                regularDice.add(dice);
+                addDice(dice);
                 break;
             case "pd":
-                plotDice.add(dice);
+                addPlotDice(dice);
                 break;
             case "kd":
-                keptDice.add(dice);
+                addKeptDice(dice);
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + diceType);

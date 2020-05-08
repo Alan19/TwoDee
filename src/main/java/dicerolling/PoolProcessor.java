@@ -6,6 +6,7 @@ import sheets.SheetsManager;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PoolProcessor {
     private final String command;
@@ -30,6 +31,7 @@ public class PoolProcessor {
         int maxFacets = 12;
         String nextDiceType = "d";
         for (String param : paramArray) {
+            //TODO Switch everything to regex
             if (param.startsWith("-fsu=")) {
                 nextDiceFacetMod = Integer.parseInt(param.substring(5));
             }
@@ -54,6 +56,9 @@ public class PoolProcessor {
             else if (param.startsWith("-opp=")) {
                 dicePool.setOpportunities(Boolean.parseBoolean(param.substring(5)));
             }
+            else if (param.startsWith("-nd=")) {
+                nextDiceType = param.substring(4);
+            }
             //Skill
             else if (param.chars().allMatch(Character::isLetter)) {
                 addSkillFromSpreadsheetToPool(nextDiceFacetMod, maxFacets, nextDiceType, param);
@@ -74,6 +79,7 @@ public class PoolProcessor {
             }
             else if (param.startsWith("-minf=")) {
                 dicePool.setMinFacets(Integer.parseInt(param.substring(6)));
+                dicePool.setRegularDice(dicePool.getRegularDice().stream().filter(integer -> integer >= Integer.parseInt(param.substring(6))).collect(Collectors.toList()));
             }
         }
     }
@@ -137,6 +143,7 @@ public class PoolProcessor {
      * @param param            The name of the skill to fetch
      */
     private void addSkillFromSpreadsheetToPool(int nextDiceFacetMod, int maxFacets, String nextDiceType, String param) {
+        //TODO Print error if skill is not found
         int skillFacets = retrieveSkill(param, author.getIdAsString());
         skillFacets += nextDiceFacetMod;
         if (skillFacets > 0) {
