@@ -141,10 +141,13 @@ public class PoolProcessor {
      * @param maxFacets        The max facets you are rolling for the dice
      * @param nextDiceType     The type of dice (normal, plot, kept) to add to the pool
      * @param param            The name of the skill to fetch
+     * @return true if the skill is found, false if not
      */
-    private void addSkillFromSpreadsheetToPool(int nextDiceFacetMod, int maxFacets, String nextDiceType, String param) {
-        //TODO Print error if skill is not found
+    private boolean addSkillFromSpreadsheetToPool(int nextDiceFacetMod, int maxFacets, String nextDiceType, String param) {
         int skillFacets = retrieveSkill(param, author.getIdAsString());
+        if (skillFacets == -1) {
+            return false;
+        }
         skillFacets += nextDiceFacetMod;
         if (skillFacets > 0) {
             if (skillFacets > maxFacets) {
@@ -159,6 +162,7 @@ public class PoolProcessor {
                 dicePool.addDice(nextDiceType, skillFacets);
             }
         }
+        return true;
     }
 
     /**

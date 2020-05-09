@@ -148,7 +148,7 @@ public class DiceRoller {
     private void rollDie(Random random, List<Integer> dice) {
         dice.stream()
                 .mapToInt(die -> random.nextInt(die) + 1)
-                .forEach(result -> rollResult.addResult(result));
+                .forEach(rollResult::addResult);
     }
 
     private void rollKeptDie(Random random, List<Integer> keptDice) {
