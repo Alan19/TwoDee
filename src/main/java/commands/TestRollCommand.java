@@ -16,16 +16,20 @@ public class TestRollCommand implements CommandExecutor {
     public void onCommand(Message message, MessageAuthor author, TextChannel channel) {
         String messageContent = message.getContent();
         final PoolProcessor poolProcessor = new PoolProcessor(messageContent, author);
-
-        DiceRoller diceRoller = new DiceRoller(poolProcessor.getDicePool());
-        final EmbedBuilder resultEmbed = diceRoller.generateResults(author);
-        new MessageBuilder()
-                .setEmbed(resultEmbed)
-                .send(channel)
-                .thenAcceptAsync(rollMessage -> {
-                    if (poolProcessor.getDicePool().isEnableEnhancementEmojis()) {
-                        PlotPointEnhancementHelper.addPlotPointEnhancementEmojis(rollMessage);
-                    }
-                });
+        if (poolProcessor.getErrorEmbed() != null) {
+            new MessageBuilder().setEmbed(poolProcessor.getErrorEmbed()).send(channel);
+        }
+        else {
+            DiceRoller diceRoller = new DiceRoller(poolProcessor.getDicePool());
+            final EmbedBuilder resultEmbed = diceRoller.generateResults(author);
+            new MessageBuilder()
+                    .setEmbed(resultEmbed)
+                    .send(channel)
+                    .thenAcceptAsync(rollMessage -> {
+                        if (poolProcessor.getDicePool().isEnableEnhancementEmojis()) {
+                            PlotPointEnhancementHelper.addPlotPointEnhancementEmojis(rollMessage);
+                        }
+                    });
+        }
     }
 }

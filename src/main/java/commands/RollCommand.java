@@ -37,21 +37,26 @@ public class RollCommand implements CommandExecutor {
 
         //Variables containing roll information
         final PoolProcessor poolProcessor = new PoolProcessor(messageContent, author);
-        final DicePool dicePool = poolProcessor.getDicePool();
+        if (poolProcessor.getErrorEmbed() != null) {
+            new MessageBuilder().setEmbed(poolProcessor.getErrorEmbed()).send(channel);
+        }
+        else {
+            final DicePool dicePool = poolProcessor.getDicePool();
 
-        DiceRoller diceRoller = new DiceRoller(dicePool);
-        final CompletableFuture<Message> sentMessage = new MessageBuilder()
-                .setEmbed(diceRoller.generateResults(message.getAuthor()))
-                .send(channel);
+            DiceRoller diceRoller = new DiceRoller(dicePool);
+            final CompletableFuture<Message> sentMessage = new MessageBuilder()
+                    .setEmbed(diceRoller.generateResults(message.getAuthor()))
+                    .send(channel);
 
 
-        sentMessage.thenAcceptAsync(resultEmbed -> {
-            try {
-                handleMessageSideEffects(message, dicePool, diceRoller, resultEmbed);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+            sentMessage.thenAcceptAsync(resultEmbed -> {
+                try {
+                    handleMessageSideEffects(message, dicePool, diceRoller, resultEmbed);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
     }
 
     private void handleMessageSideEffects(Message message, DicePool dicePool, DiceRoller diceRoller, Message resultEmbed) throws IOException {

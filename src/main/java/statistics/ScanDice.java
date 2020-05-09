@@ -29,6 +29,9 @@ public class ScanDice implements StatisticsState {
         else if (getTotalCombos(poolOptions.getDicePool()) < 0) {
             context.setState(new GenerateOverloadMessage());
         }
+        else if (poolOptions.getErrorEmbed() != null) {
+            context.setEmbedBuilder(poolOptions.getErrorEmbed());
+        }
         else {
             context.setState(new GenerateStatistics(poolOptions.getDicePool()));
         }

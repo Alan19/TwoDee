@@ -1,6 +1,7 @@
 package dicerolling;
 
 import org.javacord.api.entity.message.MessageAuthor;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 import sheets.SheetsManager;
 
 import java.io.IOException;
@@ -13,11 +14,16 @@ public class PoolProcessor {
     private final MessageAuthor author;
     private final DicePool dicePool = new DicePool();
     private HashMap<String, Integer> skillMap;
+    private EmbedBuilder errorEmbed;
 
     public PoolProcessor(String command, MessageAuthor author) {
         this.command = command;
         this.author = author;
         preprocess();
+    }
+
+    public EmbedBuilder getErrorEmbed() {
+        return errorEmbed;
     }
 
     public DicePool getDicePool() {
@@ -61,7 +67,14 @@ public class PoolProcessor {
             }
             //Skill
             else if (param.chars().allMatch(Character::isLetter)) {
-                addSkillFromSpreadsheetToPool(nextDiceFacetMod, maxFacets, nextDiceType, param);
+                final boolean foundSKill = addSkillFromSpreadsheetToPool(nextDiceFacetMod, maxFacets, nextDiceType, param);
+                if (!foundSKill) {
+                    errorEmbed = new EmbedBuilder()
+                            .setAuthor(author)
+                            .setTitle("Skill not found!")
+                            .setDescription("Cannot find: " + param);
+                    return;
+                }
                 //Reset default dice settings
                 nextDiceFacetMod = 0;
                 maxFacets = 12;
