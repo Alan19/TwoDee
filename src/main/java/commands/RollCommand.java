@@ -31,52 +31,59 @@ public class RollCommand implements CommandExecutor {
      * @param message The message containing the command
      * @param channel The channel the message was sent from
      */
-    @Command(aliases = {"~r", "~roll"}, description = "A command that allows you to roll dice\n\tdie: A string representing a die. Some die examples are d4, pd12, 3d12, kd12, +3.", privateMessages = false, usage = "~r die|skill [die|skill ...]")
+    @Command(aliases = {"~r", "~roll"}, description = "A command that allows you to roll dice\n\tdie: A string representing a die. Some die examples are d4, pd12, 3d12, kd12, +3.\n\tskill: The value of a cell from a character's spreadsheet with no spaces and all lowercase.", privateMessages = false, usage = "~r [-fsu=x|-fsd=x|-maxf=x|-diff=|-k=x|-pdisc=x|-enh=true/false|-opp=true/false|-nd=pd/d/kd|-minf=x] die|skill [die|skill ...]", showInHelpPage = false)
     public void onCommand(MessageAuthor author, Message message, TextChannel channel) {
         String messageContent = message.getContent();
-        try {
-            Properties prop = new Properties();
-            prop.load(new FileInputStream("resources/bot.properties"));
 
-            //Variables containing roll information
-            final PoolProcessor poolProcessor = new PoolProcessor(messageContent, author);
-            final DicePool dicePool = poolProcessor.getDicePool();
-            final int plotPointsSpent = dicePool.getPlotPointsSpent() - dicePool.getPlotPointDiscount();
+        //Variables containing roll information
+        final PoolProcessor poolProcessor = new PoolProcessor(messageContent, author);
+        final DicePool dicePool = poolProcessor.getDicePool();
 
-            DiceRoller diceRoller = new DiceRoller(dicePool);
-            final CompletableFuture<Message> sentMessage = new MessageBuilder()
-                    .setEmbed(diceRoller.generateResults(message.getAuthor()))
-                    .send(channel);
+        DiceRoller diceRoller = new DiceRoller(dicePool);
+        final CompletableFuture<Message> sentMessage = new MessageBuilder()
+                .setEmbed(diceRoller.generateResults(message.getAuthor()))
+                .send(channel);
 
 
-            sentMessage.thenAcceptAsync(resultEmbed -> {
-                //DMs use doom points as plot points and 1s do not increase the doom pool
-                if (author.getIdAsString().equals(prop.getProperty("gameMaster"))) {
-                    if (plotPointsSpent != 0) {
-                        DoomWriter writer = new DoomWriter();
-                        EmbedBuilder doomEmbed = writer.addDoom(plotPointsSpent * -1);
-                        channel.sendMessage(doomEmbed);
-                    }
-                }
-                //Players have to spend plot points and gain doom points on opportunities
-                else {
-                    if (dicePool.isEnableOpportunities() && diceRoller.getDoom() >= 1) {
-                        resultEmbed.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
-                        new MessageBuilder().setEmbed(addOnePlotPointAndGenerateEmbed(author));
-                    }
-                    if (plotPointsSpent != 0) {
-                        new MessageBuilder().setEmbed(deductPlotPoints(plotPointsSpent, author)).send(channel);
-                    }
-                }
-                if (!dicePool.getDifficulty().equals("")) {
-                    new MessageBuilder().setEmbed(SuccessCalculatorEmbed.generateDifficultyEmbed(dicePool.getDifficulty(), diceRoller.getTotal(), author)).send(channel);
-                }
-                if (dicePool.isEnableEnhancementEmojis()) {
-                    PlotPointEnhancementHelper.addPlotPointEnhancementEmojis(resultEmbed);
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
+        sentMessage.thenAcceptAsync(resultEmbed -> {
+            try {
+                handleMessageSideEffects(message, dicePool, diceRoller, resultEmbed);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void handleMessageSideEffects(Message message, DicePool dicePool, DiceRoller diceRoller, Message resultEmbed) throws IOException {
+        Properties prop = new Properties();
+        prop.load(new FileInputStream("resources/bot.properties"));
+        final int plotPointsSpent = dicePool.getPlotPointsSpent() - dicePool.getPlotPointDiscount();
+        MessageAuthor author = message.getAuthor();
+        TextChannel channel = message.getChannel();
+
+        //DMs use doom points as plot points and 1s do not increase the doom pool
+        if (author.getIdAsString().equals(prop.getProperty("gameMaster"))) {
+            if (plotPointsSpent != 0) {
+                DoomWriter writer = new DoomWriter();
+                EmbedBuilder doomEmbed = writer.addDoom(plotPointsSpent * -1);
+                channel.sendMessage(doomEmbed);
+            }
+        }
+        //Players have to spend plot points and gain doom points on opportunities
+        else {
+            if (dicePool.isEnableOpportunities() && diceRoller.getDoom() >= 1) {
+                resultEmbed.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
+                new MessageBuilder().setEmbed(addOnePlotPointAndGenerateEmbed(author));
+            }
+            if (plotPointsSpent != 0) {
+                new MessageBuilder().setEmbed(deductPlotPoints(plotPointsSpent, author)).send(channel);
+            }
+        }
+        if (!dicePool.getDifficulty().equals("")) {
+            new MessageBuilder().setEmbed(SuccessCalculatorEmbed.generateDifficultyEmbed(dicePool.getDifficulty(), diceRoller.getTotal(), author)).send(channel);
+        }
+        if (dicePool.isEnableEnhancementEmojis()) {
+            PlotPointEnhancementHelper.addPlotPointEnhancementEmojis(resultEmbed);
         }
     }
 

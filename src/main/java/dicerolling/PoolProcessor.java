@@ -44,10 +44,10 @@ public class PoolProcessor {
             else if (param.startsWith("-diff")) {
                 processDifficultyLevel(param);
             }
-            else if (param.startsWith("-k=")) {
+            else if (param.startsWith("-t=")) {
                 dicePool.setNumberOfKeptDice(Integer.parseInt(param.substring(3)));
             }
-            else if (param.startsWith("-pd")) {
+            else if (param.startsWith("-pdisc=")) {
                 processPlotPointDiscount(param);
             }
             else if (param.startsWith("-enh=")) {
@@ -89,8 +89,8 @@ public class PoolProcessor {
     }
 
     private void processPlotPointDiscount(String param) {
-        if (param.startsWith("-pd="))
-            dicePool.setPlotPointDiscount(Integer.parseInt(param.substring(4)));
+        if (param.startsWith("-pdisc="))
+            dicePool.setPlotPointDiscount(Integer.parseInt(param.substring(7)));
         else
             dicePool.setPlotPointDiscount(Integer.MAX_VALUE);
     }
