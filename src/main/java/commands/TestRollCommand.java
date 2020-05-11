@@ -26,7 +26,7 @@ public class TestRollCommand implements CommandExecutor {
                     .setEmbed(resultEmbed)
                     .send(channel)
                     .thenAcceptAsync(rollMessage -> {
-                        if (poolProcessor.getDicePool().isEnableEnhancementEmojis()) {
+                        if (poolProcessor.getDicePool().enableEnhancements()) {
                             PlotPointEnhancementHelper.addPlotPointEnhancementEmojis(rollMessage);
                         }
                     });

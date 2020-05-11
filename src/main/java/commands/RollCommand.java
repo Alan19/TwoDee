@@ -31,7 +31,7 @@ public class RollCommand implements CommandExecutor {
      * @param message The message containing the command
      * @param channel The channel the message was sent from
      */
-    @Command(aliases = {"~r", "~roll"}, description = "A command that allows you to roll dice\n\tdie: A string representing a die. Some die examples are d4, pd12, 3d12, kd12, +3.\n\tskill: The value of a cell from a character's spreadsheet with no spaces and all lowercase.", privateMessages = false, usage = "~r [-fsu=x|-fsd=x|-maxf=x|-diff=|-k=x|-pdisc=x|-enh=true/false|-opp=true/false|-nd=pd/d/kd|-minf=x] die|skill [die|skill ...]", showInHelpPage = false)
+    @Command(aliases = {"~r", "~roll"}, description = "A command that allows you to roll dice\n\tdie: A string representing a die. Some die examples are d4, pd12, 3d12, kd12, +3.\n\tskill: The value of a cell from a character's spreadsheet with no spaces and all lowercase.", privateMessages = false, usage = "~r [-fsu=x|-fsd=x|-maxf=x|-diff=|-k=x|-pdisc=x|-enh=true/false|-opp=true/false|-nd=pd/d/kd|-minf=x] die|skill [die|skill ...]")
     public void onCommand(MessageAuthor author, Message message, TextChannel channel) {
         String messageContent = message.getContent();
 
@@ -51,7 +51,7 @@ public class RollCommand implements CommandExecutor {
 
             sentMessage.thenAcceptAsync(resultEmbed -> {
                 try {
-                    handleMessageSideEffects(message, dicePool, diceRoller, resultEmbed);
+                    handleMessageSideEffects(message, dicePool, diceRoller);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -59,7 +59,15 @@ public class RollCommand implements CommandExecutor {
         }
     }
 
-    private void handleMessageSideEffects(Message message, DicePool dicePool, DiceRoller diceRoller, Message resultEmbed) throws IOException {
+    /**
+     * Handles the side effects after rolling a pool of dice such as modifying the doom pool and plot point counts
+     *
+     * @param message    The message that was sent
+     * @param dicePool   The dice pool that was rolled
+     * @param diceRoller The DiceRoller object with information about the result of the dice rolled
+     * @throws IOException The exception thrown if bot.properties is not found
+     */
+    private void handleMessageSideEffects(Message message, DicePool dicePool, DiceRoller diceRoller) throws IOException {
         Properties prop = new Properties();
         prop.load(new FileInputStream("resources/bot.properties"));
         final int plotPointsSpent = dicePool.getPlotPointsSpent() - dicePool.getPlotPointDiscount();
@@ -76,9 +84,12 @@ public class RollCommand implements CommandExecutor {
         }
         //Players have to spend plot points and gain doom points on opportunities
         else {
-            if (dicePool.isEnableOpportunities() && diceRoller.getDoom() >= 1) {
-                resultEmbed.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
-                new MessageBuilder().setEmbed(addOnePlotPointAndGenerateEmbed(author));
+            if (dicePool.enableOpportunities() && diceRoller.getDoom() >= 1) {
+                message.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
+                channel.sendMessage(addOnePlotPointAndGenerateEmbed(author));
+                DoomWriter writer = new DoomWriter();
+                EmbedBuilder doomEmbed = writer.addDoom(diceRoller.getDoom());
+                channel.sendMessage(doomEmbed);
             }
             if (plotPointsSpent != 0) {
                 new MessageBuilder().setEmbed(deductPlotPoints(plotPointsSpent, author)).send(channel);
@@ -87,8 +98,8 @@ public class RollCommand implements CommandExecutor {
         if (!dicePool.getDifficulty().equals("")) {
             new MessageBuilder().setEmbed(SuccessCalculatorEmbed.generateDifficultyEmbed(dicePool.getDifficulty(), diceRoller.getTotal(), author)).send(channel);
         }
-        if (dicePool.isEnableEnhancementEmojis()) {
-            PlotPointEnhancementHelper.addPlotPointEnhancementEmojis(resultEmbed);
+        if (dicePool.enableEnhancements()) {
+            PlotPointEnhancementHelper.addPlotPointEnhancementEmojis(message);
         }
     }
 
@@ -104,11 +115,17 @@ public class RollCommand implements CommandExecutor {
         int newPP = PlotPointManager.setPlotPoints(userID, oldPP + 1);
         return new EmbedBuilder()
                 .setAuthor(author)
-                .setTitle("Gambling with fate...")
+                .setTitle("An opportunity!")
                 .setDescription(oldPP + " → " + newPP);
-
     }
 
+    /**
+     * Deduct plot points from a player and generate an embed that shows the change in plot points
+     *
+     * @param plotPointsSpent The number of plot points being spent
+     * @param author          The player who made the roll
+     * @return The EmbedBuilder showing the change in plot points
+     */
     public EmbedBuilder deductPlotPoints(int plotPointsSpent, MessageAuthor author) {
         String authorID = author.getIdAsString();
         int previous = PlotPointManager.getPlotPoints(authorID);

@@ -46,7 +46,7 @@ public class DicePool {
         return this;
     }
 
-    public boolean isEnableEnhancementEmojis() {
+    public boolean enableEnhancements() {
         return enableEnhancementEmojis;
     }
 
@@ -68,7 +68,7 @@ public class DicePool {
         return this;
     }
 
-    public boolean isEnableOpportunities() {
+    public boolean enableOpportunities() {
         return enableOpportunities;
     }
 

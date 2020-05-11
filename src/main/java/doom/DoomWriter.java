@@ -51,7 +51,7 @@ public class DoomWriter {
     /**
      * Sets the doom on the properties file. If doom points would drop below 0, return an error.
      *
-     * @param newDoom
+     * @param newDoom The new value of the doom pool
      * @return The embed with a new doom value
      */
     public EmbedBuilder setDoom(int newDoom) {
