@@ -21,6 +21,9 @@ public class PoolProcessor {
         this.command = command;
         this.author = author;
         preprocess();
+        if (dicePool.getRegularDice().isEmpty() && dicePool.getPlotDice().isEmpty() && dicePool.getKeptDice().isEmpty() && dicePool.getFlatBonuses().isEmpty()) {
+            errorEmbed = new EmbedBuilder().setAuthor(author).setTitle("Invalid Dice Pool!").setDescription("There's no dice for me to roll!");
+        }
     }
 
     public EmbedBuilder getErrorEmbed() {

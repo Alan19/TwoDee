@@ -44,14 +44,14 @@ public class RollCommand implements CommandExecutor {
             final DicePool dicePool = poolProcessor.getDicePool();
 
             DiceRoller diceRoller = new DiceRoller(dicePool);
-            final CompletableFuture<Message> sentMessage = new MessageBuilder()
+            final CompletableFuture<Message> sentMessageFuture = new MessageBuilder()
                     .setEmbed(diceRoller.generateResults(message.getAuthor()))
                     .send(channel);
 
 
-            sentMessage.thenAcceptAsync(resultEmbed -> {
+            sentMessageFuture.thenAcceptAsync(sentMessage -> {
                 try {
-                    handleMessageSideEffects(message, dicePool, diceRoller);
+                    handleMessageSideEffects(message, dicePool, diceRoller, sentMessage);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -62,17 +62,18 @@ public class RollCommand implements CommandExecutor {
     /**
      * Handles the side effects after rolling a pool of dice such as modifying the doom pool and plot point counts
      *
-     * @param message    The message that was sent
-     * @param dicePool   The dice pool that was rolled
-     * @param diceRoller The DiceRoller object with information about the result of the dice rolled
+     * @param userMessage The message that was sent by a Discord user
+     * @param dicePool    The dice pool that was rolled
+     * @param diceRoller  The DiceRoller object with information about the result of the dice rolled
+     * @param sentMessage The message with the embed containing the roll result
      * @throws IOException The exception thrown if bot.properties is not found
      */
-    private void handleMessageSideEffects(Message message, DicePool dicePool, DiceRoller diceRoller) throws IOException {
+    private void handleMessageSideEffects(Message userMessage, DicePool dicePool, DiceRoller diceRoller, Message sentMessage) throws IOException {
         Properties prop = new Properties();
         prop.load(new FileInputStream("resources/bot.properties"));
         final int plotPointsSpent = dicePool.getPlotPointsSpent() - dicePool.getPlotPointDiscount();
-        MessageAuthor author = message.getAuthor();
-        TextChannel channel = message.getChannel();
+        MessageAuthor author = userMessage.getAuthor();
+        TextChannel channel = userMessage.getChannel();
 
         //DMs use doom points as plot points and 1s do not increase the doom pool
         if (author.getIdAsString().equals(prop.getProperty("gameMaster"))) {
@@ -85,7 +86,7 @@ public class RollCommand implements CommandExecutor {
         //Players have to spend plot points and gain doom points on opportunities
         else {
             if (dicePool.enableOpportunities() && diceRoller.getDoom() >= 1) {
-                message.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
+                sentMessage.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
                 channel.sendMessage(addOnePlotPointAndGenerateEmbed(author));
                 DoomWriter writer = new DoomWriter();
                 EmbedBuilder doomEmbed = writer.addDoom(diceRoller.getDoom());
@@ -99,7 +100,7 @@ public class RollCommand implements CommandExecutor {
             new MessageBuilder().setEmbed(SuccessCalculatorEmbed.generateDifficultyEmbed(dicePool.getDifficulty(), diceRoller.getTotal(), author)).send(channel);
         }
         if (dicePool.enableEnhancements()) {
-            PlotPointEnhancementHelper.addPlotPointEnhancementEmojis(message);
+            PlotPointEnhancementHelper.addPlotPointEnhancementEmojis(sentMessage);
         }
     }
 
