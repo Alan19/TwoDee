@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class PoolProcessor {
     private final String command;
@@ -37,33 +38,47 @@ public class PoolProcessor {
         int maxFacets = 12;
         String nextDiceType = "d";
         for (String param : paramArray) {
-            //TODO Switch everything to regex
-            if (param.startsWith("-fsu=")) {
+            if (param.matches("-fsu=[1-9]\\d*")) {
                 nextDiceFacetMod = Integer.parseInt(param.substring(5));
             }
-            else if (param.startsWith("-fsd=")) {
+            else if (param.matches("-fsd=[1-9]\\d*")) {
                 nextDiceFacetMod = Integer.parseInt(param.substring(5)) * -1;
             }
-            else if (param.startsWith("-maxf=")) {
+            else if (param.matches("-maxf=[1-9]\\d*")) {
                 maxFacets = Integer.parseInt(param.substring(4));
             }
-            else if (param.startsWith("-diff")) {
+            else if (param.matches("(-diff=[a-zA-Z]+|-diff)")) {
                 processDifficultyLevel(param);
             }
-            else if (param.startsWith("-t=")) {
+            else if (param.matches("-t=[1-9]\\d*")) {
                 dicePool.setNumberOfKeptDice(Integer.parseInt(param.substring(3)));
             }
-            else if (param.startsWith("-pdisc=")) {
+            else if (param.matches("-pdisc=[1-9]\\d*")) {
                 processPlotPointDiscount(param);
             }
-            else if (param.startsWith("-enh=")) {
+            else if (param.matches("-enh=(true|false)")) {
                 dicePool.enableEnhancement(Boolean.parseBoolean(param.substring(9)));
             }
-            else if (param.startsWith("-opp=")) {
+            else if (param.matches("-opp=(true|false)")) {
                 dicePool.setOpportunities(Boolean.parseBoolean(param.substring(5)));
             }
-            else if (param.startsWith("-nd=")) {
+            else if (param.matches("-nd=(d|kd|pd)")) {
                 nextDiceType = param.substring(4);
+            }
+            //Any type of dice
+            else if (param.matches("\\d*([kp])?d\\d+")) {
+                addDiceToPool(nextDiceFacetMod, param);
+                //Reset facet modifier
+                nextDiceFacetMod = 0;
+            }
+            //Flat bonus or penalty
+            else if (param.matches("([-+])\\d+")) {
+                dicePool.addFlatBonus(Integer.parseInt(param.substring(1)));
+            }
+            //Minimum dice facets (inclusive)
+            else if (param.matches("-minf=[1-9]\\d*")) {
+                dicePool.setMinFacets(Integer.parseInt(param.substring(6)));
+                dicePool.setRegularDice(dicePool.getRegularDice().stream().filter(integer -> integer >= Integer.parseInt(param.substring(6))).collect(Collectors.toList()));
             }
             //Skill
             else if (param.chars().allMatch(Character::isLetter)) {
@@ -80,20 +95,7 @@ public class PoolProcessor {
                 maxFacets = 12;
                 nextDiceType = "d";
             }
-            //Any type of dice
-            else if (param.matches("\\d*([kp])?d\\d+")) {
-                addDiceToPool(nextDiceFacetMod, param);
-                //Reset facet modifier
-                nextDiceFacetMod = 0;
-            }
-            //Flat bonus or penalty
-            else if (param.matches("([-+])\\d+")) {
-                dicePool.addFlatBonus(Integer.parseInt(param.substring(1)));
-            }
-            else if (param.startsWith("-minf=")) {
-                dicePool.setMinFacets(Integer.parseInt(param.substring(6)));
-                dicePool.setRegularDice(dicePool.getRegularDice().stream().filter(integer -> integer >= Integer.parseInt(param.substring(6))).collect(Collectors.toList()));
-            }
+
         }
     }
 
@@ -134,7 +136,12 @@ public class PoolProcessor {
         int diceFacets = Integer.parseInt(param.substring(i));
 
         int totalFacets = numberOfDiceInt * diceFacets + nextDiceFacetMod;
-        if (totalFacets > diceFacets) {
+        //Case for d1-d4
+        if (diceFacets > 0 && diceFacets < 4 && nextDiceFacetMod == 0) {
+            IntStream.range(0, numberOfDiceInt).forEach(j -> dicePool.addDice(diceType.toString(), diceFacets));
+        }
+        //Case for multiple dice
+        else if (totalFacets > diceFacets) {
             for (int j = 0; j < totalFacets / diceFacets; j++) {
                 dicePool.addDice(diceType.toString(), diceFacets);
             }
@@ -142,6 +149,7 @@ public class PoolProcessor {
                 dicePool.addDice(diceType.toString(), totalFacets % diceFacets);
             }
         }
+        //Normal case
         else if (totalFacets > 2) {
             dicePool.addDice(diceType.toString(), totalFacets);
         }
