@@ -68,7 +68,7 @@ public class RollCommand implements CommandExecutor {
      * @param sentMessage The message with the embed containing the roll result
      * @throws IOException The exception thrown if bot.properties is not found
      */
-    private void handleMessageSideEffects(Message userMessage, DicePool dicePool, DiceRoller diceRoller, Message sentMessage) throws IOException {
+    public static void handleMessageSideEffects(Message userMessage, DicePool dicePool, DiceRoller diceRoller, Message sentMessage) throws IOException {
         Properties prop = new Properties();
         prop.load(new FileInputStream("resources/bot.properties"));
         final int plotPointsSpent = dicePool.getPlotPointsSpent() - dicePool.getPlotPointDiscount();
@@ -92,7 +92,7 @@ public class RollCommand implements CommandExecutor {
                 EmbedBuilder doomEmbed = writer.addDoom(diceRoller.getDoom());
                 channel.sendMessage(doomEmbed);
             }
-            if (plotPointsSpent != 0) {
+            if (plotPointsSpent != 0 && plotPointsSpent != Integer.MAX_VALUE) {
                 new MessageBuilder().setEmbed(deductPlotPoints(plotPointsSpent, author)).send(channel);
             }
         }
@@ -110,7 +110,7 @@ public class RollCommand implements CommandExecutor {
      * @param author The player that rolled a 1
      * @return The EmbedBuilder that shows the change in plot points for the player
      */
-    public EmbedBuilder addOnePlotPointAndGenerateEmbed(MessageAuthor author) {
+    public static EmbedBuilder addOnePlotPointAndGenerateEmbed(MessageAuthor author) {
         String userID = author.getIdAsString();
         int oldPP = PlotPointManager.getPlotPoints(userID);
         int newPP = PlotPointManager.setPlotPoints(userID, oldPP + 1);
@@ -127,7 +127,7 @@ public class RollCommand implements CommandExecutor {
      * @param author          The player who made the roll
      * @return The EmbedBuilder showing the change in plot points
      */
-    public EmbedBuilder deductPlotPoints(int plotPointsSpent, MessageAuthor author) {
+    public static EmbedBuilder deductPlotPoints(int plotPointsSpent, MessageAuthor author) {
         String authorID = author.getIdAsString();
         int previous = PlotPointManager.getPlotPoints(authorID);
         int current = PlotPointManager.setPlotPoints(authorID, PlotPointManager.getPlotPoints(authorID) - plotPointsSpent);
