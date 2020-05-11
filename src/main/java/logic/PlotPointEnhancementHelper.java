@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class PlotPointEnhancementHelper {
 
     private static final TreeMap<Integer, String> oneToTwelveEmojiMap = new TreeMap<>();
-    private static final String cancelEmoji = EmojiParser.parseToUnicode(":regional_indicator_x:");
+    public static final String CANCEL_EMOJI = EmojiParser.parseToUnicode(":regional_indicator_x:");
 
     static {
         oneToTwelveEmojiMap.put(1, EmojiParser.parseToUnicode(":one:"));
@@ -43,10 +43,9 @@ public class PlotPointEnhancementHelper {
      * @return A completable future when all emojis get removed
      */
     public static CompletableFuture<Void> removeEnhancementEmojis(Message message) {
-        PlotPointEnhancementHelper helper = new PlotPointEnhancementHelper();
         //Store all of the futures for allOf
         //Remove 1 to 10
-        ArrayList<CompletableFuture<Void>> completableFutures = helper.getOneToTwelveEmojiMap()
+        ArrayList<CompletableFuture<Void>> completableFutures = PlotPointEnhancementHelper.getOneToTwelveEmojiMap()
                 .values()
                 .stream()
                 .map(message::removeReactionsByEmoji)
@@ -99,7 +98,4 @@ public class PlotPointEnhancementHelper {
         return tag.substring(2, tag.length() - 1);
     }
 
-    public static String getCancelEmoji() {
-        return cancelEmoji;
-    }
 }

@@ -9,7 +9,6 @@ public class StatisticsTest {
 
     @BeforeEach
     public void setUp(){
-        generator = new StatisticsContext("d10 2d12 pd10 pd12");
     }
 
     @Test
