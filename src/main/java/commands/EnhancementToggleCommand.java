@@ -32,7 +32,7 @@ public class EnhancementToggleCommand implements CommandExecutor {
         prop.load(new FileInputStream("resources/bot.properties"));
         if (message.getContent().matches("~te (on|off|clear|.+)")) {
             //Add player(s) to override
-            if (message.getMentionedUsers().isEmpty()) {
+            if (!message.getMentionedUsers().isEmpty()) {
                 addPlayersToOverride(message, channel, server, api, prop);
             }
             //On/off/clear
