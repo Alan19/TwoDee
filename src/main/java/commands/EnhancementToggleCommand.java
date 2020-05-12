@@ -32,13 +32,12 @@ public class EnhancementToggleCommand implements CommandExecutor {
         prop.load(new FileInputStream("resources/bot.properties"));
         if (message.getContent().matches("~te (on|off|clear|.+)")) {
             //Add player(s) to override
-            if (args.length > 1) {
+            if (message.getMentionedUsers().isEmpty()) {
                 addPlayersToOverride(message, channel, server, api, prop);
             }
             //On/off/clear
             else {
                 if (args[0].equals("clear")) {
-                    prop.setProperty(ENHANCEMENT, args[0]);
                     prop.setProperty(ENHANCEMENT_OVERRIDE, "");
                     channel.sendMessage("Enhancement overrides have been cleared. Enhancements are currently " + (prop.getProperty(ENHANCEMENT).equals(ON) ? ENABLED : DISABLED) + ".");
                 }
