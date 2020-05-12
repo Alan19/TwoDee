@@ -11,7 +11,7 @@ public class DicePool {
     private List<Integer> flatBonuses = new ArrayList<>();
     //Configs
     private int keepHowMany = 2;
-    private boolean enableEnhancementEmojis = true; //TODO Switch to reading from configs
+    private boolean enableEnhancementEmojis = true;
     private String difficulty = "";
     private int plotPointDiscount = 0;
     private boolean enableOpportunities = true;
