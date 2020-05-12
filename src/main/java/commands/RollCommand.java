@@ -92,7 +92,7 @@ public class RollCommand implements CommandExecutor {
                 EmbedBuilder doomEmbed = writer.addDoom(diceRoller.getDoom());
                 channel.sendMessage(doomEmbed);
             }
-            if (plotPointsSpent != 0 && plotPointsSpent != Integer.MAX_VALUE) {
+            if (plotPointsSpent != 0 && dicePool.getPlotPointDiscount() != Integer.MAX_VALUE) {
                 new MessageBuilder().setEmbed(deductPlotPoints(plotPointsSpent, author)).send(channel);
             }
         }
