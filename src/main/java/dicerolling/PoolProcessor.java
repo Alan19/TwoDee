@@ -77,9 +77,13 @@ public class PoolProcessor {
                 //Reset facet modifier
                 nextDiceFacetMod = 0;
             }
-            //Flat bonus or penalty
-            else if (param.matches("([-+])\\d+")) {
+            //Flat bonus
+            else if (param.matches("\\+[1-9]\\d*")) {
                 dicePool.addFlatBonus(Integer.parseInt(param.substring(1)));
+            }
+            //Flat penalty
+            else if (param.matches("-[1-9]\\d*")) {
+                dicePool.addFlatBonus(-1 * Integer.parseInt(param.substring(1)));
             }
             //Minimum dice facets (inclusive)
             else if (param.matches("-minf=[1-9]\\d*")) {
