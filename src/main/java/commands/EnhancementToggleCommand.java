@@ -55,7 +55,7 @@ public class EnhancementToggleCommand implements CommandExecutor {
     }
 
     private void addPlayersToOverride(Message message, TextChannel channel, Server server, DiscordApi api, Properties prop) {
-        String overrideUsers = prop.getProperty(ENHANCEMENT_OVERRIDE);
+        String overrideUsers = prop.getProperty(ENHANCEMENT_OVERRIDE, "");
         List<User> users = new ArrayList<>();
         Arrays.stream(overrideUsers.split(",")).forEach(s -> api.getCachedUserById(s).ifPresent(users::add));
         message.getMentionedUsers().stream().filter(mentionedUser -> !users.contains(mentionedUser)).forEach(users::add);
