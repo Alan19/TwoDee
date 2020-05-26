@@ -111,7 +111,7 @@ public class EmojiPurgeCommand implements CommandExecutor {
      */
     private String generateProgressMessage(int messagesToClear, int emojis, int current) {
         DecimalFormat df = new DecimalFormat("0.##");
-        return "Removing " + emojis + " emojis from " + messagesToClear + " messages! " + current + "/" + messagesToClear + " (" + df.format((double) messagesToClear / messagesToClear * 100) + "%)" + (current == messagesToClear ? "\nDone!" : "");
+        return "Removing " + emojis + " emojis from " + messagesToClear + " messages! " + current + "/" + messagesToClear + " (" + df.format((double) current / messagesToClear * 100) + "%)" + (current == messagesToClear ? "\nDone!" : "");
     }
 
     /**

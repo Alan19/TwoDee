@@ -36,6 +36,9 @@ public class PoolProcessor {
         return dicePool;
     }
 
+    /**
+     * Sets the dice and options for the pool. Allows players to add or subtract facets from skills, set the difficulty calculation embed, set the plot point modifier, and enable enhancement reactions.
+     */
     private void preprocess() {
         String trimmedCommand = command.replaceAll("\\s+", " ");
         String[] paramArray = trimmedCommand.split(" ");
@@ -234,14 +237,17 @@ public class PoolProcessor {
         try {
             //Only pull info the first time
             if (skillMap == null) {
+                //Pull columns from summary spreadsheet with info for the specified character
                 SheetsManager characterInfo = new SheetsManager(id);
                 List<List<Object>> values = characterInfo.getResult().getValues();
-                final Object[] skillArray = values.stream().filter(objects -> objects.size() == 2 && ((String) objects.get(1)).matches("\\d+")).toArray();
+                //Filter columns to only include string to integer pairs and cast to strings
+                final List<List<String>> skillArray = values.stream()
+                        .filter(objects -> objects.size() == 2 && ((String) objects.get(1)).matches("\\d+") && objects.get(0) instanceof String && objects.get(1) instanceof String)
+                        .map(objects -> Arrays.asList((String) objects.get(0), (String) objects.get(1)))
+                        .collect(Collectors.toList());
                 skillMap = new HashMap<>();
-                for (Object o : skillArray) {
-                    List<String> pair = (List<String>) o;
-                    skillMap.put(pair.get(0).replace(" ", "").toLowerCase(), Integer.parseInt(pair.get(1)));
-                }
+                //Put skill/facet count pairs into HashMap after making the skill all lowercase and removing whitespace
+                skillArray.forEach(o -> skillMap.put(o.get(0).replace(" ", "").toLowerCase(), Integer.parseInt(o.get(1))));
             }
             return skillMap.getOrDefault(skill, -1);
         } catch (IOException e) {
