@@ -122,8 +122,8 @@ public class PoolProcessor {
         Properties prop = new Properties();
         try {
             prop.load(new FileInputStream("resources/bot.properties"));
-            final String overrideList = prop.getProperty(EnhancementToggleCommand.ENHANCEMENT_OVERRIDE);
-            final String defaultOption = prop.getProperty(EnhancementToggleCommand.ENHANCEMENT);
+            final String overrideList = prop.getProperty(EnhancementToggleCommand.ENHANCEMENT_OVERRIDE, "");
+            final String defaultOption = prop.getProperty(EnhancementToggleCommand.ENHANCEMENT, EnhancementToggleCommand.ON);
             final ArrayList<User> overrideUsers = Arrays.stream(overrideList.split(","))
                     .map(s -> author.getApi().getCachedUserById(s))
                     .filter(Optional::isPresent)
