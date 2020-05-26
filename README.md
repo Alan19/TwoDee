@@ -19,6 +19,7 @@ IntelliJ, Java 8, Gradle
 4. Add resource files
 4. Run TwoDee to generate Google API token
 5. To get a distribution, use ./gradle distzip
+6. To run from the command line, use ./gradle run
 
 ## Built With
 
