@@ -37,7 +37,7 @@ public class PlotPointCommand implements CommandExecutor {
         try {
             Properties prop = new Properties();
             prop.load(new FileInputStream("resources/bot.properties"));
-            mainChannelID = prop.getProperty("main_channel_id");
+            mainChannelID = prop.getProperty("main_channel_id", "");
         } catch (IOException e) {
             e.printStackTrace();
         }

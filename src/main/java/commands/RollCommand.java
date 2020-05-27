@@ -76,7 +76,7 @@ public class RollCommand implements CommandExecutor {
         TextChannel channel = userMessage.getChannel();
 
         //DMs use doom points as plot points and 1s do not increase the doom pool
-        if (author.getIdAsString().equals(prop.getProperty("gameMaster"))) {
+        if (author.getIdAsString().equals(prop.getProperty("gameMaster", ""))) {
             if (plotPointsSpent != 0) {
                 DoomWriter writer = new DoomWriter();
                 EmbedBuilder doomEmbed = writer.addDoom(plotPointsSpent * -1);
