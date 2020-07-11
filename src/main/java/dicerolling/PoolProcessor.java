@@ -62,7 +62,7 @@ public class PoolProcessor {
             else if (param.matches("-t=[1-9]\\d*")) {
                 dicePool.setNumberOfKeptDice(Integer.parseInt(param.substring(3)));
             }
-            else if (param.matches("(-pdisc=[1-9]\\d*|-pdisc)")) {
+            else if (param.matches("(-pdisc=-?[1-9]\\d*|-pdisc)")) {
                 processPlotPointDiscount(param);
             }
             else if (param.matches("-enh=(true|false)")) {

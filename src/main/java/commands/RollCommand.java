@@ -74,10 +74,9 @@ public class RollCommand implements CommandExecutor {
         final int plotPointsSpent = dicePool.getPlotPointsSpent() - dicePool.getPlotPointDiscount();
         MessageAuthor author = userMessage.getAuthor();
         TextChannel channel = userMessage.getChannel();
-
         //DMs use doom points as plot points and 1s do not increase the doom pool
         if (author.getIdAsString().equals(prop.getProperty("gameMaster", ""))) {
-            if (plotPointsSpent != 0) {
+            if (plotPointsSpent != 0 && dicePool.getPlotPointDiscount() != Integer.MAX_VALUE) {
                 DoomWriter writer = new DoomWriter();
                 EmbedBuilder doomEmbed = writer.addDoom(plotPointsSpent * -1);
                 channel.sendMessage(doomEmbed);
@@ -93,11 +92,11 @@ public class RollCommand implements CommandExecutor {
                 channel.sendMessage(doomEmbed);
             }
             if (plotPointsSpent != 0 && dicePool.getPlotPointDiscount() != Integer.MAX_VALUE) {
-                new MessageBuilder().setEmbed(deductPlotPoints(plotPointsSpent, author)).send(channel);
+                channel.sendMessage(deductPlotPoints(plotPointsSpent, author));
             }
         }
         if (!dicePool.getDifficulty().equals("")) {
-            new MessageBuilder().setEmbed(SuccessCalculatorEmbed.generateDifficultyEmbed(dicePool.getDifficulty(), diceRoller.getTotal(), author)).send(channel);
+            channel.sendMessage(SuccessCalculatorEmbed.generateDifficultyEmbed(dicePool.getDifficulty(), diceRoller.getTotal(), author));
         }
         if (dicePool.enableEnhancements()) {
             PlotPointEnhancementHelper.addPlotPointEnhancementEmojis(sentMessage);
