@@ -1,15 +1,16 @@
 package statistics.resultvisitors;
 
+import com.google.common.collect.ImmutableList;
 import dicerolling.RollResult;
 import logic.EmbedField;
 
-import java.text.DecimalFormat;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class OpportunityVisitor {
+public class OpportunityVisitor implements ResultVisitor {
     private final Map<RollResult, Long> results;
     private final HashMap<Integer, String> difficulties = new HashMap<>();
 
@@ -25,7 +26,8 @@ public class OpportunityVisitor {
         difficulties.put(31, "Impossible");
     }
 
-    public EmbedField generateField() {
+    @Override
+    public List<EmbedField> getEmbedField() {
         final EmbedField embedField = new EmbedField();
         embedField.setTitle("Chance of failure with opportunity");
         String output;
@@ -35,7 +37,7 @@ public class OpportunityVisitor {
                 .map(entry -> entry.getValue() + ": " + generatePercentage(getNumberOfFailsWithOpportunities(entry), numberOfCombinations) + "\n")
                 .collect(Collectors.joining());
         embedField.appendContent(output);
-        return embedField;
+        return ImmutableList.of(embedField);
     }
 
     private long getNumberOfFailsWithOpportunities(Map.Entry<Integer, String> entry) {
@@ -45,12 +47,8 @@ public class OpportunityVisitor {
                 .sum();
     }
 
-    private String generatePercentage(Long numberOfOccurrences, long numberOfResults) {
-        final double resultProbability = (double) numberOfOccurrences / numberOfResults;
-        final double resultPercentage = resultProbability * 100;
-        String formatString = "0.#####" + (resultPercentage < 0.00001 && resultPercentage > 0 ? "E00" : "") + "%";
-        DecimalFormat df = new DecimalFormat(formatString);
-        return df.format(resultProbability);
+    @Override
+    public void visit(Map<Integer, Long> hashMap) {
+        //We don't use an <Integer, Long> map
     }
-
 }

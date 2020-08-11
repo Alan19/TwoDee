@@ -91,6 +91,8 @@ public class GenerateStatistics implements StatisticsState {
         ResultVisitor doomVisitor = new DoomVisitor();
         doomVisitor.visit(rollToOpportunities);
         resultVisitors.add(doomVisitor);
+        OpportunityVisitor opportunityVisitor = new OpportunityVisitor(results);
+        resultVisitors.add(opportunityVisitor);
         ResultVisitor statisticsVisitor = new StatisticsVisitor();
         statisticsVisitor.visit(rollToOccurrences);
         resultVisitors.add(statisticsVisitor);
@@ -99,8 +101,6 @@ public class GenerateStatistics implements StatisticsState {
                 statsEmbed.addInlineField(field.getTitle(), field.getContent());
             }
         }
-        final OpportunityVisitor opportunityVisitor = new OpportunityVisitor(results);
-        statsEmbed.addInlineField("Chance of Failure with Opportunities", opportunityVisitor.generateField().getContent());
         return statsEmbed;
     }
 
