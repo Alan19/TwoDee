@@ -62,11 +62,12 @@ public class GenerateStatistics implements StatisticsState {
                         .mapToLong(Map.Entry::getValue)
                         .sum()));
 
+
         if (rollToOccurrences.values().stream().anyMatch(aLong -> aLong < 0) || rollToOpportunities.values().stream().anyMatch(aLong -> aLong < 0)) {
             context.setState(new GenerateOverloadMessage());
             return;
         }
-        EmbedBuilder statsEmbed = generateEmbed(rollToOccurrences, rollToOpportunities);
+        EmbedBuilder statsEmbed = generateEmbed(rollToOccurrences, rollToOpportunities, results);
         context.setEmbedBuilder(statsEmbed);
     }
 
@@ -75,9 +76,10 @@ public class GenerateStatistics implements StatisticsState {
      *
      * @param rollToOccurrences   The HashMap that represents the roll mapped to the number of occurrences of the total
      * @param rollToOpportunities The HashMap that maps the number of opportunities to the number of occurrences
+     * @param results             The HashMap that contains each possible combination of dice with the number of occurrences of that combination
      * @return The embed to be sent
      */
-    private EmbedBuilder generateEmbed(Map<Integer, Long> rollToOccurrences, Map<Integer, Long> rollToOpportunities) {
+    private EmbedBuilder generateEmbed(Map<Integer, Long> rollToOccurrences, Map<Integer, Long> rollToOpportunities, HashMap<RollResult, Long> results) {
         EmbedBuilder statsEmbed = new EmbedBuilder();
         ArrayList<ResultVisitor> resultVisitors = new ArrayList<>();
         ResultVisitor sumVisitor = new SumVisitor();
@@ -92,6 +94,8 @@ public class GenerateStatistics implements StatisticsState {
         ResultVisitor statisticsVisitor = new StatisticsVisitor();
         statisticsVisitor.visit(rollToOccurrences);
         resultVisitors.add(statisticsVisitor);
+        final OpportunityVisitor opportunityVisitor = new OpportunityVisitor(results);
+        statsEmbed.addInlineField("Chance of Failure with Opportunities", opportunityVisitor.generateField().getContent());
         for (ResultVisitor visitor : resultVisitors) {
             for (EmbedField field : visitor.getEmbedField()) {
                 statsEmbed.addInlineField(field.getTitle(), field.getContent());
