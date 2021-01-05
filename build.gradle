@@ -7,7 +7,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 group = 'main'
-version = '5.5.9'
+version = '6.0.0'
 
 description = "A bot for the Facets tabletop RPG"
 
@@ -20,22 +20,21 @@ targetCompatibility = 1.8
 repositories {
 
      maven { url "https://jitpack.io" }
-     maven { url "http://repo.maven.apache.org/maven2" }
+     maven { url "https://repo1.maven.org/maven2" }
 }
 dependencies {
     compile group: 'org.codehaus.mojo', name: 'exec-maven-plugin', version:'1.6.0'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.9.6'
-    compile group: 'org.javacord', name: 'javacord', version:'3.0.5'
-    compile group: 'com.google.api-client', name: 'google-api-client', version:'1.23.0'
-    compile group: 'com.google.oauth-client', name: 'google-oauth-client-jetty', version:'1.23.0'
-    compile group: 'com.google.apis', name: 'google-api-services-sheets', version:'v4-rev539-1.23.0'
-    compile group: 'com.esotericsoftware.yamlbeans', name: 'yamlbeans', version:'1.06'
-    compile group: 'org.apache.commons', name: 'commons-lang3', version:'3.4'
+    compile group: 'org.javacord', name: 'javacord', version:'3.1.2'
+    compile group: 'com.google.api-client', name: 'google-api-client', version:'1.30.4'
+    compile group: 'com.google.oauth-client', name: 'google-oauth-client-jetty', version:'1.30.6'
+    compile group: 'com.google.apis', name: 'google-api-services-sheets', version:'v4-rev539-1.25.0'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version:'3.11'
     compile group: 'de.btobastian.sdcf4j', name: 'sdcf4j-core', version:'v1.0.10'
     compile group: 'de.btobastian.sdcf4j', name: 'sdcf4j-javacord', version:'v1.0.10'
     compile group: 'com.vdurmont', name: 'emoji-java', version:'4.0.0'
-    compile group: 'org.apache.commons', name: 'commons-math3', version: '3.0'
-    implementation 'com.google.code.gson:gson:2.8.5'
+    compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
+    implementation 'com.google.code.gson:gson:2.8.6'
 }
 
 distZip {

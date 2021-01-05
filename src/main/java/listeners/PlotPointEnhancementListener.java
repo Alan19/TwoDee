@@ -34,7 +34,7 @@ public class PlotPointEnhancementListener implements EventListener {
     public void startListening() {
         api.addReactionAddListener(event -> {
             //Do nothing if the bot is the one who reacts
-            if (event.getUser().isYourself()) {
+            if (event.getUser().map(User::isYourself).orElse(false)) {
                 return;
             }
             //Check if bot has made the react on the post already
@@ -62,7 +62,7 @@ public class PlotPointEnhancementListener implements EventListener {
         int rollVal = Integer.parseInt(message.getEmbeds().get(0).getFields().get(6).getValue());
         Emoji emoji = reaction.getEmoji();
         int toAdd = getAddAmount(emoji);
-        User user = event.getUser();
+        User user = event.getUser().get();
         String gameMasterID = getGameMaster();
         if (user.getIdAsString().equals(gameMasterID)) {
             sendDoomPointEnhancementMessage(toAdd, rollVal, event.getChannel(), user);
