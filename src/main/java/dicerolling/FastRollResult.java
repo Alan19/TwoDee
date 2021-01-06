@@ -9,12 +9,12 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class FastRollResult implements PoolResult {
-    private Multiset<Integer> regularDice;
-    private Multiset<Integer> plotDice;
-    private Multiset<Integer> keptDice;
-    private int flatBonus;
-    private int doomGenerated;
-    private int diceKept;
+    private final Multiset<Integer> regularDice;
+    private final Multiset<Integer> plotDice;
+    private final Multiset<Integer> keptDice;
+    private final int flatBonus;
+    private final int doomGenerated;
+    private final int diceKept;
 
     public FastRollResult() {
         regularDice = TreeMultiset.create(Comparator.reverseOrder());
