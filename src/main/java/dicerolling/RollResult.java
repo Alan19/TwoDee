@@ -7,9 +7,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-/**
- * A builder version of RollResult
- */
 public class RollResult {
     private List<Integer> dice;
     private List<Integer> plotDice;
@@ -72,6 +69,9 @@ public class RollResult {
         if (cleanUnnecessary) {
             plotDice.sort(Comparator.reverseOrder());
         }
+        if (i == 1) {
+            doom++;
+        }
         return this;
     }
 
@@ -98,9 +98,16 @@ public class RollResult {
     public int getTotal() {
         int sum = 0;
         ArrayList<Integer> diceCopy = new ArrayList<>(dice);
+        ArrayList<Integer> plotDiceCopy = new ArrayList<>(plotDice);
+        if (plotDiceCopy.size() > 1) {
+            plotDiceCopy.sort(Comparator.reverseOrder());
+            diceCopy.addAll(plotDiceCopy.subList(1, plotDiceCopy.size()));
+        }
         diceCopy.sort(Comparator.reverseOrder());
-        sum += diceCopy.stream().limit(Math.min(keepHowMany, dice.size())).mapToInt(sortedResult -> sortedResult).sum();
-        sum += plotDice.stream().mapToInt(value -> value).sum();
+        sum += diceCopy.stream().limit(Math.min(keepHowMany, diceCopy.size())).mapToInt(sortedResult -> sortedResult).sum();
+        if (!plotDiceCopy.isEmpty()) {
+            sum += plotDiceCopy.get(0);
+        }
         sum += keptDice.stream().mapToInt(kd -> kd).sum();
         sum += flatBonus.stream().mapToInt(f -> f).sum();
         return sum;
@@ -137,14 +144,24 @@ public class RollResult {
 
     public List<Integer> getDropped() {
         ArrayList<Integer> sortedResults = new ArrayList<>(dice);
+        if (plotDice.size() > 1) {
+            ArrayList<Integer> sortedPlotPointResults = new ArrayList<>(plotDice);
+            sortedPlotPointResults.sort(Comparator.reverseOrder());
+            sortedResults.addAll(sortedPlotPointResults.subList(1, sortedPlotPointResults.size()));
+        }
         sortedResults.sort(Comparator.reverseOrder());
-        return IntStream.range(Math.min(sortedResults.size(), keepHowMany), sortedResults.size()).mapToObj(sortedResults::get).collect(Collectors.toCollection(ArrayList::new));
+        final int adjustedKept = keepHowMany + plotDice.size() > 1 ? 1 : 0;
+        return IntStream.range(Math.min(sortedResults.size(), adjustedKept), sortedResults.size()).mapToObj(sortedResults::get).collect(Collectors.toCollection(ArrayList::new));
     }
 
     public List<Integer> getPickedDice() {
         ArrayList<Integer> sortedResults = new ArrayList<>(dice);
+        if (plotDice.size() > 1) {
+            ArrayList<Integer> sortedPlotPointResults = new ArrayList<>(plotDice);
+            sortedPlotPointResults.sort(Comparator.reverseOrder());
+            sortedResults.addAll(sortedPlotPointResults.subList(1, sortedPlotPointResults.size()));
+        }
         sortedResults.sort(Comparator.reverseOrder());
         return sortedResults.subList(0, Math.min(keepHowMany, dice.size()));
-
     }
 }

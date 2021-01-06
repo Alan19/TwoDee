@@ -141,7 +141,7 @@ public class DiceRoller {
      */
     private void rollPlotDice(Random random, List<Integer> plotDice) {
         plotDice.stream()
-                .mapToInt(die -> Math.max(random.nextInt(die) + 1, die / 2))
+                .mapToInt(die -> plotDice.size() <= 1 ? Math.max(random.nextInt(die) + 1, die / 2) : random.nextInt(die) + 1)
                 .forEach(rollResult::addPlotResult);
     }
 
