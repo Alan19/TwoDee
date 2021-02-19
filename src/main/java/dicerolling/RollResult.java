@@ -7,6 +7,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * A class that stores information about the results of a roll from a dice pool
+ */
 public class RollResult {
     private List<Integer> dice;
     private List<Integer> plotDice;
