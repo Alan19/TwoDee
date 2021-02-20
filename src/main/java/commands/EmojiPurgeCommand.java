@@ -49,7 +49,8 @@ public class EmojiPurgeCommand implements CommandExecutor {
             }
             CompletableFuture<Message> emojiRemovalMessage = new MessageBuilder().setEmbed(emojiEmbedBuilder).send(channel);
             emojiRemovalMessage.thenAccept(StatisticsCommand::addCancelReactToMessage);
-        } else {
+        }
+        else {
             removeAllPlotPointEmojisFromChannel(channel);
         }
     }
@@ -110,7 +111,7 @@ public class EmojiPurgeCommand implements CommandExecutor {
      */
     private String generateProgressMessage(int messagesToClear, int emojis, int current) {
         DecimalFormat df = new DecimalFormat("0.##");
-        return "Removing " + emojis + " emojis from " + messagesToClear + " messages! " + current + "/" + messagesToClear + " (" + df.format((double) messagesToClear / messagesToClear * 100) + "%)" + (current == messagesToClear ? "\nDone!" : "");
+        return "Removing " + emojis + " emojis from " + messagesToClear + " messages! " + current + "/" + messagesToClear + " (" + df.format((double) current / messagesToClear * 100) + "%)" + (current == messagesToClear ? "\nDone!" : "");
     }
 
     /**
@@ -119,13 +120,12 @@ public class EmojiPurgeCommand implements CommandExecutor {
      * @param messageList The list of messages to search
      */
     private int getNumberOfEmojisToRemove(ArrayList<Message> messageList) {
-        PlotPointEnhancementHelper helper = new PlotPointEnhancementHelper();
         AtomicInteger emojisInList = new AtomicInteger();
         messageList.stream()
                 .map(Message::getReactions)
                 .forEach(reactions -> reactions.stream()
                         .filter(Reaction::containsYou)
-                        .filter(reaction -> helper.isEmojiEnhancementEmoji(reaction.getEmoji()))
+                        .filter(reaction -> PlotPointEnhancementHelper.isEmojiEnhancementEmoji(reaction.getEmoji()))
                         .forEach(reaction -> emojisInList.addAndGet(reaction.getCount())));
         return emojisInList.get();
     }
@@ -137,14 +137,13 @@ public class EmojiPurgeCommand implements CommandExecutor {
      * @return An arraylist of messages with enhancement emojis
      */
     private ArrayList<Message> getMessagesWithEnhancementEmojis(TextChannel channel) {
-        PlotPointEnhancementHelper helper = new PlotPointEnhancementHelper();
 
         Stream<Message> allMessagesInChannel = channel.getMessagesAsStream();
         Stream<Message> filteredStream = allMessagesInChannel
                 .filter(message1 -> message1.getReactions()
                         .stream()
                         .map(Reaction::getEmoji)
-                        .anyMatch(helper::isEmojiEnhancementEmoji));
+                        .anyMatch(PlotPointEnhancementHelper::isEmojiEnhancementEmoji));
         return filteredStream.collect(Collectors.toCollection(ArrayList::new));
     }
 }

@@ -43,6 +43,7 @@ public class TwoDee {
                 cmdHandler.registerCommand(new PlotPointCommand(api));
                 cmdHandler.registerCommand(new CalendarCommand());
                 cmdHandler.registerCommand(new EmojiPurgeCommand());
+                cmdHandler.registerCommand(new EnhancementToggleCommand());
 
                 //Create listeners
                 PlotPointEnhancementListener enhancementListener = new PlotPointEnhancementListener(api);

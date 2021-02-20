@@ -12,7 +12,7 @@ import org.javacord.api.entity.message.Reaction;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.reaction.ReactionAddEvent;
-import sheets.PPManager;
+import sheets.PlotPointManager;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -24,7 +24,7 @@ import java.util.Properties;
  */
 public class PlotPointEnhancementListener implements EventListener {
 
-    private DiscordApi api;
+    private final DiscordApi api;
 
     public PlotPointEnhancementListener(DiscordApi api) {
         this.api = api;
@@ -34,7 +34,7 @@ public class PlotPointEnhancementListener implements EventListener {
     public void startListening() {
         api.addReactionAddListener(event -> {
             //Do nothing if the bot is the one who reacts
-            if (event.getUser().isYourself()) {
+            if (event.getUser().map(User::isYourself).orElse(false)) {
                 return;
             }
             //Check if bot has made the react on the post already
@@ -43,7 +43,8 @@ public class PlotPointEnhancementListener implements EventListener {
                     event.requestMessage().thenAcceptAsync(message -> {
                         if (reaction.getEmoji().equalsEmoji("\uD83C\uDDFD")) {
                             PlotPointEnhancementHelper.removeEnhancementEmojis(message);
-                        } else if (new PlotPointEnhancementHelper().isEmojiNumberEmoji(reaction.getEmoji())) {
+                        }
+                        else if (PlotPointEnhancementHelper.isEmojiNumberEmoji(reaction.getEmoji())) {
                             enhanceRoll(event, reaction, message);
                             //Wipe reactions and then add star emoji to show that it was enhanced with plot points
                             PlotPointEnhancementHelper.removeEnhancementEmojis(message);
@@ -61,11 +62,12 @@ public class PlotPointEnhancementListener implements EventListener {
         int rollVal = Integer.parseInt(message.getEmbeds().get(0).getFields().get(6).getValue());
         Emoji emoji = reaction.getEmoji();
         int toAdd = getAddAmount(emoji);
-        User user = event.getUser();
+        User user = event.getUser().get();
         String gameMasterID = getGameMaster();
         if (user.getIdAsString().equals(gameMasterID)) {
             sendDoomPointEnhancementMessage(toAdd, rollVal, event.getChannel(), user);
-        } else {
+        }
+        else {
             sendPlotPointEnhancementMessage(event.getChannel(), rollVal, toAdd, user);
         }
     }
@@ -89,14 +91,13 @@ public class PlotPointEnhancementListener implements EventListener {
      * @param user    The user object that reacted to the roll
      */
     private void sendPlotPointEnhancementMessage(TextChannel channel, int rollVal, int toAdd, User user) {
-        PPManager manager = new PPManager();
-        int oldPP = manager.getPlotPoints(user.getIdAsString());
-        int newPP = manager.setPlotPoints(user.getIdAsString(), oldPP - toAdd);
+        int oldPP = PlotPointManager.getPlotPoints(user.getIdAsString());
+        int newPP = PlotPointManager.setPlotPoints(user.getIdAsString(), oldPP - toAdd);
         new MessageBuilder()
                 .setEmbed(
                         new EmbedBuilder()
                                 .setAuthor(user)
-                                .addField("Enhanced Total", rollVal + " → " + Integer.toString(rollVal + toAdd))
+                                .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))
                                 .addField("Plot Points", oldPP + " → " + newPP)
                                 .setColor(RandomColor.getRandomColor())
                 )
@@ -133,18 +134,18 @@ public class PlotPointEnhancementListener implements EventListener {
      */
     private int getAddAmount(Emoji emoji) {
         int toAdd = 0;
-        PlotPointEnhancementHelper helper = new PlotPointEnhancementHelper();
         if (emoji.isCustomEmoji()) {
-            String trimmedEmoji = helper.trimCustomEmoji(emoji.asKnownCustomEmoji().get());
-            for (Map.Entry<Integer, String> emojiEntry : helper.getOneToTwelveEmojiMap().entrySet()) {
+            String trimmedEmoji = PlotPointEnhancementHelper.trimCustomEmoji(emoji.asKnownCustomEmoji().get());
+            for (Map.Entry<Integer, String> emojiEntry : PlotPointEnhancementHelper.getOneToTwelveEmojiMap().entrySet()) {
                 if (emojiEntry.getValue().equals(trimmedEmoji)) {
                     toAdd = emojiEntry.getKey();
                 }
             }
-        } else {
+        }
+        else {
             String unicodeEmoji = emoji.asUnicodeEmoji().get();
             for (Map.Entry<Integer, String> emojiEntry :
-                    helper.getOneToTwelveEmojiMap().entrySet()) {
+                    PlotPointEnhancementHelper.getOneToTwelveEmojiMap().entrySet()) {
                 if (emojiEntry.getValue().equals(unicodeEmoji)) {
                     toAdd = emojiEntry.getKey();
                 }

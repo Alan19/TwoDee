@@ -7,7 +7,7 @@ public class GenerateOverloadMessage implements StatisticsState {
     public void process(StatisticsContext context) {
         context.setEmbedBuilder(
                 new EmbedBuilder()
-                    .setDescription("That's way too many dice for me to handle. Try using less dice.")
+                        .setDescription("That's way too many dice for me to handle. Try using less dice.")
         );
     }
 }

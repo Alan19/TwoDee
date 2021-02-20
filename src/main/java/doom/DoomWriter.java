@@ -10,7 +10,7 @@ import java.util.Properties;
 
 public class DoomWriter {
 
-    private Properties prop;
+    private final Properties prop;
 
     public DoomWriter() {
         prop = new Properties();
@@ -25,7 +25,7 @@ public class DoomWriter {
         int currentDoom = getDoom();
         int newDoomInt = currentDoom + doomVal;
         setDoom(newDoomInt);
-        return generateDoomEmbed();
+        return generateDoomEmbed(currentDoom);
     }
 
     public EmbedBuilder generateDoomEmbed() {
@@ -33,7 +33,15 @@ public class DoomWriter {
         return new EmbedBuilder()
                 .setTitle("Doom!")
                 .setDescription(String.valueOf(getDoom()))
-                .setColor(new Color(Integer.max(doomVal, 255)));
+                .setColor(new Color((int) (doomVal % 101 * (2.55))));
+    }
+
+    public EmbedBuilder generateDoomEmbed(int oldDoom) {
+        int doomVal = getDoom();
+        return new EmbedBuilder()
+                .setTitle("Doom!")
+                .setDescription(oldDoom + " → " + getDoom())
+                .setColor(new Color((int) (doomVal % 101 * (2.55))));
     }
 
     public int getDoom() {
@@ -42,11 +50,13 @@ public class DoomWriter {
 
     /**
      * Sets the doom on the properties file. If doom points would drop below 0, return an error.
-     * @param newDoom
+     *
+     * @param newDoom The new value of the doom pool
      * @return The embed with a new doom value
      */
     public EmbedBuilder setDoom(int newDoom) {
-        if (newDoom < 0){
+        int oldDoom = getDoom();
+        if (newDoom < 0) {
             return generateInvalidDoomEmbed();
         }
         else {
@@ -56,7 +66,7 @@ public class DoomWriter {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return generateDoomEmbed();
+            return generateDoomEmbed(oldDoom);
         }
     }
 

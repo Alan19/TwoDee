@@ -76,7 +76,8 @@ public class CalendarCommand implements CommandExecutor {
             //Check if first session has started already
             if (currentTime.isAfter(startTimeOfFirstSession)) {
                 return startTimeOfLastSession;
-            } else {
+            }
+            else {
                 return startTimeOfFirstSession;
             }
         }
@@ -98,7 +99,8 @@ public class CalendarCommand implements CommandExecutor {
 
     /**
      * Returns an arraylist of the date of the days that are 8 days after the first and third Saturdays of the month.
-     * @param year The input year
+     *
+     * @param year  The input year
      * @param month The input month
      * @return The days of the month that have a session
      */

@@ -14,7 +14,7 @@ import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
-import sheets.PPManager;
+import sheets.PlotPointManager;
 
 import java.awt.*;
 import java.io.FileInputStream;
@@ -37,15 +37,14 @@ public class PlotPointCommand implements CommandExecutor {
         try {
             Properties prop = new Properties();
             prop.load(new FileInputStream("resources/bot.properties"));
-            mainChannelID = prop.getProperty("main_channel_id");
+            mainChannelID = prop.getProperty("main_channel_id", "");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private PPManager ppManager = new PPManager();
-    private UserInfo userInfo = new UserInfo();
-    private DiscordApi api;
+    private final UserInfo userInfo = new UserInfo();
+    private final DiscordApi api;
     private Server server;
 
     public PlotPointCommand(DiscordApi api) {
@@ -67,15 +66,20 @@ public class PlotPointCommand implements CommandExecutor {
         for (String arg : params) {
             if ("add".equals(arg)) {
                 command = CommandType.ADD;
-            } else if ("addhere".equals(arg)) {
+            }
+            else if ("addhere".equals(arg)) {
                 command = CommandType.ADDHERE;
-            } else if ("sub".equals(arg)) {
+            }
+            else if ("sub".equals(arg)) {
                 command = CommandType.SUB;
-            } else if ("set".equals(arg)) {
+            }
+            else if ("set".equals(arg)) {
                 command = CommandType.SET;
-            } else if ("addall".equals(arg)) {
+            }
+            else if ("addall".equals(arg)) {
                 command = CommandType.ADDALL;
-            } else if (NumberUtils.isParsable(arg)) {
+            }
+            else if (NumberUtils.isParsable(arg)) {
                 amount = Integer.parseInt(arg);
             }
         }
@@ -115,8 +119,8 @@ public class PlotPointCommand implements CommandExecutor {
         for (String ID : userInfo.getUsers()) {
             String message = "";
             try {
-                allPlayerEmbed.addField(api.getUserById(ID).get().getDisplayName(server), ppManager.getPlotPoints(ID) + " → " +
-                        ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number));
+                allPlayerEmbed.addField(api.getUserById(ID).get().getDisplayName(server), PlotPointManager.getPlotPoints(ID) + " → " +
+                        PlotPointManager.setPlotPoints(ID, PlotPointManager.getPlotPoints(ID) + number));
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
@@ -128,8 +132,8 @@ public class PlotPointCommand implements CommandExecutor {
     }
 
     private EmbedBuilder setPlotPoints(String target, int number) {
-        int oldPP = ppManager.getPlotPoints(target);
-        int newPP = ppManager.setPlotPoints(target, number);
+        int oldPP = PlotPointManager.getPlotPoints(target);
+        int newPP = PlotPointManager.setPlotPoints(target, number);
         return generateEmbed(oldPP, newPP, target);
     }
 
@@ -148,8 +152,8 @@ public class PlotPointCommand implements CommandExecutor {
             for (String ID : userInfo.getUsers()) {
                 if (isConnected(ID)) {
                     userPresent = true;
-                    allPlayerEmbed.addField(api.getUserById(ID).get().getDisplayName(server), ppManager.getPlotPoints(ID) + " → " +
-                            ppManager.setPlotPoints(ID, ppManager.getPlotPoints(ID) + number));
+                    allPlayerEmbed.addField(api.getUserById(ID).get().getDisplayName(server), PlotPointManager.getPlotPoints(ID) + " → " +
+                            PlotPointManager.setPlotPoints(ID, PlotPointManager.getPlotPoints(ID) + number));
                 }
                 Random random = new Random();
                 allPlayerEmbed.setColor(new Color(random.nextFloat(), random.nextFloat(), random.nextFloat()));
@@ -170,8 +174,8 @@ public class PlotPointCommand implements CommandExecutor {
     }
 
     private EmbedBuilder addPlotPoints(String target, int number) {
-        int oldPP = ppManager.getPlotPoints(target);
-        int newPP = ppManager.setPlotPoints(target, ppManager.getPlotPoints(target) + number);
+        int oldPP = PlotPointManager.getPlotPoints(target);
+        int newPP = PlotPointManager.setPlotPoints(target, PlotPointManager.getPlotPoints(target) + number);
         return generateEmbed(oldPP, newPP, target);
     }
 
@@ -195,7 +199,7 @@ public class PlotPointCommand implements CommandExecutor {
             return new EmbedBuilder()
                     .setAuthor(user.getDisplayName(server), "", user.getAvatar())
                     .setTitle("Plot points")
-                    .setDescription(String.valueOf(ppManager.getPlotPoints(target)));
+                    .setDescription(String.valueOf(PlotPointManager.getPlotPoints(target)));
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return new EmbedBuilder()

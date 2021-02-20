@@ -11,23 +11,26 @@ import java.io.IOException;
 import java.util.List;
 
 public class CommandProcessor {
-    private MessageAuthor author;
-    private TextChannel channel;
+    private final MessageAuthor author;
+    private final TextChannel channel;
 
     public CommandProcessor(MessageAuthor author, TextChannel channel) {
         this.author = author;
         this.channel = channel;
     }
 
+
     private boolean validSkill(String skillName, String param) {
         String skill = skillName.replaceAll("\\s+", "").toLowerCase();
         return skill.equals(param);
-    }//Checks to see if any parameters are words to find appropriate replacements in the Google doc
+    }
 
+    //Checks to see if any parameters are words to find appropriate replacements in the Google doc
     public String handleCommand(String command) {
         String trimmedCommand = command.replaceAll("\\s+", " ");
         String convertedCommand = getConvertedCommand(trimmedCommand);
-        if (convertedCommand == null) return null;
+        if (convertedCommand == null)
+            return null;
         System.out.println(convertedCommand);
         return convertedCommand;
     }
@@ -41,8 +44,9 @@ public class CommandProcessor {
             }
         }
         return String.join(" ", paramArray);
-    }//If the skill exists, renames array element and returns true. Otherwise, returns false.
+    }
 
+    //If the skill exists, renames array element and returns true. Otherwise, returns false.
     private boolean skillExists(String[] paramArray, int i) {
         try {
             SheetsManager characterInfo = new SheetsManager(author.getIdAsString());

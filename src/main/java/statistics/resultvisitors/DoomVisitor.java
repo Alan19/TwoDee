@@ -1,28 +1,26 @@
 package statistics.resultvisitors;
 
 import logic.EmbedField;
-import statistics.RollResult;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class DoomVisitor implements ResultVisitor{
+public class DoomVisitor implements ResultVisitor {
 
-    private int sum = 0;
-    private TreeMap<Integer, Integer> doomMap = new TreeMap<>();
+    private long sum = 0;
+    private TreeMap<Integer, Long> doomMap = new TreeMap<>();
 
+    /**
+     * Populate doomMap using a Opportunity to Occurrences HashMap
+     *
+     * @param hashMap An Opportunity to Occurrences HashMap
+     */
     @Override
-    public void visit(RollResult result) {
-        int doom = result.getDoom();
-        if (doomMap.containsKey(doom)){
-            doomMap.put(doom, doomMap.get(doom) + 1);
-        }
-        else {
-            doomMap.put(doom, 1);
-        }
-        sum++;
+    public void visit(Map<Integer, Long> hashMap) {
+        hashMap.forEach((integer, aLong) -> doomMap.put(integer, aLong));
+        sum = hashMap.values().stream().mapToLong(value -> value).sum();
     }
 
     @Override
@@ -30,7 +28,7 @@ public class DoomVisitor implements ResultVisitor{
         ArrayList<EmbedField> embedFields = new ArrayList<>();
         EmbedField doomField = new EmbedField();
         doomField.setTitle("Chance to generate doom");
-        for (Map.Entry<Integer, Integer> entry: doomMap.entrySet()){
+        for (Map.Entry<Integer, Long> entry : doomMap.entrySet()) {
             doomField.appendContent(entry.getKey() + ": " + generatePercentage(entry.getValue(), sum) + "\n");
         }
         embedFields.add(doomField);

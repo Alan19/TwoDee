@@ -13,10 +13,10 @@ import java.util.stream.Collectors;
 
 public class PlotPointEnhancementHelper {
 
-    private TreeMap<Integer, String> oneToTwelveEmojiMap = new TreeMap<>();
-    private String cancelEmoji = EmojiParser.parseToUnicode(":regional_indicator_x:");
+    private static final TreeMap<Integer, String> oneToTwelveEmojiMap = new TreeMap<>();
+    public static final String CANCEL_EMOJI = EmojiParser.parseToUnicode(":regional_indicator_x:");
 
-    public PlotPointEnhancementHelper() {
+    static {
         oneToTwelveEmojiMap.put(1, EmojiParser.parseToUnicode(":one:"));
         oneToTwelveEmojiMap.put(2, EmojiParser.parseToUnicode(":two:"));
         oneToTwelveEmojiMap.put(3, EmojiParser.parseToUnicode(":three:"));
@@ -29,6 +29,11 @@ public class PlotPointEnhancementHelper {
         oneToTwelveEmojiMap.put(10, EmojiParser.parseToUnicode(":keycap_ten:"));
         oneToTwelveEmojiMap.put(11, "keycap_11:525867366303793182");
         oneToTwelveEmojiMap.put(12, "keycap_12:525867383890509864");
+
+    }
+
+    private PlotPointEnhancementHelper() {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -38,10 +43,9 @@ public class PlotPointEnhancementHelper {
      * @return A completable future when all emojis get removed
      */
     public static CompletableFuture<Void> removeEnhancementEmojis(Message message) {
-        PlotPointEnhancementHelper helper = new PlotPointEnhancementHelper();
         //Store all of the futures for allOf
         //Remove 1 to 10
-        ArrayList<CompletableFuture<Void>> completableFutures = helper.getOneToTwelveEmojiMap()
+        ArrayList<CompletableFuture<Void>> completableFutures = PlotPointEnhancementHelper.getOneToTwelveEmojiMap()
                 .values()
                 .stream()
                 .map(message::removeReactionsByEmoji)
@@ -59,41 +63,39 @@ public class PlotPointEnhancementHelper {
         return CompletableFuture.allOf(castedFutures);
     }
 
-    public SortedMap<Integer, String> getOneToTwelveEmojiMap() {
+    public static SortedMap<Integer, String> getOneToTwelveEmojiMap() {
         return oneToTwelveEmojiMap;
     }
 
-    public void addPlotPointEnhancementEmojis(Message rollMessage) {
+    public static void addPlotPointEnhancementEmojis(Message rollMessage) {
         for (String emoji : oneToTwelveEmojiMap.values()) {
             rollMessage.addReaction(emoji);
         }
         rollMessage.addReaction("\uD83C\uDDFD");
     }
 
-    public boolean isEmojiNumberEmoji(Emoji emoji) {
+    public static boolean isEmojiNumberEmoji(Emoji emoji) {
         if (emoji.isUnicodeEmoji() && emoji.asUnicodeEmoji().isPresent()) {
-            return oneToTwelveEmojiMap.values().contains(emoji.asUnicodeEmoji().get());
-        } else if (emoji.isKnownCustomEmoji() && emoji.asKnownCustomEmoji().isPresent()) {
+            return oneToTwelveEmojiMap.containsValue(emoji.asUnicodeEmoji().get());
+        }
+        else if (emoji.isKnownCustomEmoji() && emoji.asKnownCustomEmoji().isPresent()) {
             String trimmedEmoji = trimCustomEmoji(emoji.asKnownCustomEmoji().get());
-            return oneToTwelveEmojiMap.values().contains(trimmedEmoji);
+            return oneToTwelveEmojiMap.containsValue(trimmedEmoji);
         }
         return false;
     }
 
-    public boolean isEmojiCancelEmoji(Emoji emoji) {
+    public static boolean isEmojiCancelEmoji(Emoji emoji) {
         return emoji.equalsEmoji(":regional_indicator_x:");
     }
 
-    public boolean isEmojiEnhancementEmoji(Emoji emoji) {
+    public static boolean isEmojiEnhancementEmoji(Emoji emoji) {
         return isEmojiCancelEmoji(emoji) || isEmojiNumberEmoji(emoji);
     }
 
-    public String trimCustomEmoji(KnownCustomEmoji emoji) {
+    public static String trimCustomEmoji(KnownCustomEmoji emoji) {
         String tag = emoji.asKnownCustomEmoji().get().getMentionTag();
         return tag.substring(2, tag.length() - 1);
     }
 
-    public String getCancelEmoji() {
-        return cancelEmoji;
-    }
 }
