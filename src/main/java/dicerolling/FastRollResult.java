@@ -46,7 +46,7 @@ public class FastRollResult implements PoolResult {
         final List<Integer> kept = updatedDice.stream().limit(diceKept).collect(Collectors.toList());
         final Multiset<Integer> newDiceList = TreeMultiset.create(Comparator.reverseOrder());
         newDiceList.addAll(kept);
-        return new FastRollResult(newDiceList, plotDice, keptDice, flatBonus, doomGenerated + diceValue == 1 ? 1 : 0, diceKept);
+        return new FastRollResult(newDiceList, plotDice, keptDice, flatBonus, doomGenerated + (diceValue == 1 ? 1 : 0), diceKept);
     }
 
     public FastRollResult addPlotDice(int diceValue) {
