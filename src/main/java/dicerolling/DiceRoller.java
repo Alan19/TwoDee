@@ -39,10 +39,10 @@ public class DiceRoller {
                 .addField("Regular dice", formatResults(result.getRegularDice()), true)
                 .addField("Plot dice", formatResults(result.getPlotDice()), true)
                 .addField("Kept dice", formatResults(result.getKeptDice()), true)
-                .addField("Dropped", resultsToString(result.getAllDroppedDice()), true)
                 .addField("Picked", resultsToString(result.getAllPickedDice()), true)
                 .addField("Flat bonuses", resultsToString(result.getFlatBonuses()), true)
                 .addField("Total", String.valueOf(result.getTotal()), true)
+                .addField("Dropped", resultsToString(result.getAllDroppedDice()), true)
                 .addField("Tier Hit", result.getTierHit());
     }
 

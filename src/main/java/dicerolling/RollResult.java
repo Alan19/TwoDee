@@ -56,7 +56,7 @@ public class RollResult implements PoolResultWithEmbed {
         sortedRegularDice.addAll(regularDice);
 
         Multiset<Integer> sortedPlotDice = TreeMultiset.create(Comparator.reverseOrder());
-        sortedRegularDice.addAll(plotDice);
+        sortedPlotDice.addAll(plotDice);
 
         final int plotDie = sortedPlotDice.stream().limit(1).mapToInt(Integer::intValue).findFirst().orElse(0);
         sortedRegularDice.addAll(sortedPlotDice.stream().skip(1).collect(Collectors.toList()));
