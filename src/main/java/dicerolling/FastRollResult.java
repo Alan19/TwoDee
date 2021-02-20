@@ -55,7 +55,7 @@ public class FastRollResult implements PoolResult {
      * @return A deep copy of FastRollResult with the die added and the excess regular dice discarded and an updated doom counter if the value of the die is 1
      */
     @Override
-    public FastRollResult addRegularDice(int diceValue) {
+    public PoolResult addRegularDice(int diceValue) {
         Multiset<Integer> updatedDice = copyDiceList(regularDice);
         updatedDice.add(diceValue);
         final List<Integer> kept = updatedDice.stream().limit(diceKept).collect(Collectors.toList());
@@ -79,8 +79,8 @@ public class FastRollResult implements PoolResult {
         final Multiset<Integer> newPlotDiceList = TreeMultiset.create(Comparator.reverseOrder());
         newPlotDiceList.addAll(kept);
 
-        final FastRollResult[] fastRollResult = {new FastRollResult(regularDice, newPlotDiceList, keptDice, flatBonus, doomGenerated, diceKept)};
-        updatedPlotDice.stream().skip(1).forEach(integer -> fastRollResult[0] = fastRollResult[0].addRegularDice(integer));
+        final FastRollResult[] fastRollResult = {new FastRollResult(regularDice, newPlotDiceList, keptDice, flatBonus, doomGenerated + (diceValue == 1 ? 1 : 0), diceKept)};
+        updatedPlotDice.stream().skip(1).forEach(integer -> fastRollResult[0] = (FastRollResult) fastRollResult[0].addRegularDice(integer));
         return fastRollResult[0];
     }
 
@@ -115,7 +115,6 @@ public class FastRollResult implements PoolResult {
      * @param diceSet The set to copy
      * @return A deep copy of the set that sorts elements in reverse order
      */
-    @Override
     public Multiset<Integer> copyDiceList(Multiset<Integer> diceSet) {
         Multiset<Integer> updatedDice = TreeMultiset.create(Comparator.reverseOrder());
         updatedDice.addAll(diceSet);

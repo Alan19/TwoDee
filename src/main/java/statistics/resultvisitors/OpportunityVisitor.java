@@ -1,7 +1,7 @@
 package statistics.resultvisitors;
 
 import com.google.common.collect.ImmutableList;
-import dicerolling.FastRollResult;
+import dicerolling.PoolResult;
 import logic.EmbedField;
 
 import java.util.Comparator;
@@ -11,10 +11,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class OpportunityVisitor implements ResultVisitor {
-    private final HashMap<FastRollResult, Long> results;
+    private final HashMap<PoolResult, Long> results;
     private final HashMap<Integer, String> difficulties = new HashMap<>();
 
-    public OpportunityVisitor(HashMap<FastRollResult, Long> results) {
+    public OpportunityVisitor(HashMap<PoolResult, Long> results) {
         this.results = results;
         difficulties.put(3, "Easy");
         difficulties.put(7, "Average");

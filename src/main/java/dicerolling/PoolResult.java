@@ -1,17 +1,13 @@
 package dicerolling;
 
-import com.google.common.collect.Multiset;
-
 public interface PoolResult {
-    FastRollResult addRegularDice(int diceValue);
+    PoolResult addRegularDice(int diceValue);
 
-    FastRollResult addPlotDice(int diceValue);
+    PoolResult addPlotDice(int diceValue);
 
-    FastRollResult addKeptDice(int diceValue);
+    PoolResult addKeptDice(int diceValue);
 
-    FastRollResult addFlatBonus(int bonus);
-
-    Multiset<Integer> copyDiceList(Multiset<Integer> diceSet);
+    PoolResult addFlatBonus(int bonus);
 
     int getTotal();
 

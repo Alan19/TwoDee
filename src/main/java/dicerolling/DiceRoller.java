@@ -4,10 +4,8 @@ import discord.TwoDee;
 import logic.RandomColor;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
-import statistics.resultvisitors.DifficultyVisitor;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -18,13 +16,13 @@ public class DiceRoller {
 
     public DiceRoller(DicePool dicePool) {
         this.dicePool = dicePool;
-        rollResult = new RollResult(dicePool.getNumberOfKeptDice(), false);
+        rollResult = new RollResult(dicePool.getNumberOfKeptDice());
         Random random = new Random();
         rollDice(random, dicePool);
     }
 
     public int getDoom() {
-        return rollResult.getDoom();
+        return rollResult.getDoomGenerated();
     }
 
     public EmbedBuilder generateResults(MessageAuthor author) {
@@ -38,14 +36,14 @@ public class DiceRoller {
                 .setTitle(TwoDee.getRollTitleMessage())
                 .setAuthor(author)
                 .setColor(RandomColor.getRandomColor())
-                .addField("Regular dice", formatResults(result.getDice()), true)
-                .addField("Picked", resultsToString(result.getPickedDice()), true)
-                .addField("Dropped", resultsToString(result.getDropped()), true)
-                .addField("Plot dice", resultsToString(result.getPlotDice()), true)
-                .addField("Kept dice", resultsToString(result.getKeptDice()), true)
-                .addField("Flat bonuses", resultsToString(result.getFlatBonus()), true)
+                .addField("Regular dice", formatResults(result.getRegularDice()), true)
+                .addField("Plot dice", formatResults(result.getPlotDice()), true)
+                .addField("Kept dice", formatResults(result.getKeptDice()), true)
+                .addField("Dropped", resultsToString(result.getAllDroppedDice()), true)
+                .addField("Picked", resultsToString(result.getAllPickedDice()), true)
+                .addField("Flat bonuses", resultsToString(result.getFlatBonuses()), true)
                 .addField("Total", String.valueOf(result.getTotal()), true)
-                .addField("Tier Hit", tiersHit(result.getTotal()));
+                .addField("Tier Hit", result.getTierHit());
     }
 
     private String createDicePoolString(DicePool dicePool) {
@@ -55,30 +53,6 @@ public class DiceRoller {
         dicePool.getKeptDice().forEach(integer -> dicePoolString.append(" kd").append(integer));
         dicePool.getFlatBonuses().stream().map(integer -> (integer > 0) ? ("+" + integer) : integer).forEach(dicePoolString::append);
         return dicePoolString.toString();
-    }
-
-    private String tiersHit(int total) {
-        DifficultyVisitor difficultyVisitor = new DifficultyVisitor();
-        if (total < 3) {
-            return "None";
-        }
-        StringBuilder output = new StringBuilder();
-        for (Map.Entry<Integer, String> diffEntry : difficultyVisitor.getDifficultyMap().entrySet()) {
-            if (difficultyVisitor.generateStageDifficulty(diffEntry.getKey() + 1) > total) {
-                output.append(diffEntry.getValue());
-                break;
-            }
-        }
-        if (total < 10) {
-            return String.valueOf(output);
-        }
-        for (Map.Entry<Integer, String> diffEntry : difficultyVisitor.getDifficultyMap().entrySet()) {
-            if (difficultyVisitor.generateStageExtraordinaryDifficulty(diffEntry.getKey() + 1) > total) {
-                output.append(", Extraordinary ").append(diffEntry.getValue());
-                break;
-            }
-        }
-        return String.valueOf(output);
     }
 
     /**
@@ -142,19 +116,19 @@ public class DiceRoller {
     private void rollPlotDice(Random random, List<Integer> plotDice) {
         plotDice.stream()
                 .mapToInt(die -> plotDice.size() <= 1 ? Math.max(random.nextInt(die) + 1, die / 2) : random.nextInt(die) + 1)
-                .forEach(rollResult::addPlotResult);
+                .forEach(rollResult::addPlotDice);
     }
 
     private void rollDie(Random random, List<Integer> dice) {
         dice.stream()
                 .mapToInt(die -> random.nextInt(die) + 1)
-                .forEach(rollResult::addResult);
+                .forEach(rollResult::addRegularDice);
     }
 
     private void rollKeptDie(Random random, List<Integer> keptDice) {
         keptDice.stream()
                 .mapToInt(keptDie -> random.nextInt(keptDie) + 1)
-                .forEach(rollResult::addKeptResult);
+                .forEach(rollResult::addKeptDice);
     }
 
     //Replaces brackets in the string. If the string is blank, returns "none" in italics
