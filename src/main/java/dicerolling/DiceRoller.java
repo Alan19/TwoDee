@@ -36,14 +36,14 @@ public class DiceRoller {
                 .setTitle(TwoDee.getRollTitleMessage())
                 .setAuthor(author)
                 .setColor(RandomColor.getRandomColor())
-                .addField("Regular dice", formatResults(result.getRegularDice()), true)
-                .addField("Plot dice", formatResults(result.getPlotDice()), true)
-                .addField("Kept dice", formatResults(result.getKeptDice()), true)
-                .addField("Picked", resultsToString(result.getAllPickedDice()), true)
-                .addField("Flat bonuses", resultsToString(result.getFlatBonuses()), true)
+                .addField("Regular dice", formatRegularDiceResults(result.getRegularDice(), true), true)
+                .addField("Plot dice", formatRegularDiceResults(result.getPlotDice(), true), true)
+                .addField("Kept dice", formatRegularDiceResults(result.getKeptDice(), true), true)
+                .addField("Picked", formatRegularDiceResults(result.getAllPickedDice(), false), true)
+                .addField("Flat bonuses", formatRegularDiceResults(result.getFlatBonuses(), false), true)
+                .addField("Dropped", formatRegularDiceResults(result.getAllDroppedDice(), false), true)
                 .addField("Total", String.valueOf(result.getTotal()), true)
-                .addField("Dropped", resultsToString(result.getAllDroppedDice()), true)
-                .addField("Tier Hit", result.getTierHit());
+                .addField("Tier Hit", result.getTierHit(), true);
     }
 
     private String createDicePoolString(DicePool dicePool) {
@@ -58,39 +58,17 @@ public class DiceRoller {
     /**
      * Converts a list of integers to a string with the 1s bolded
      *
-     * @param s A list of integers with dice outcomes
-     * @return A string of integers separated by commas with the 1s bolded
+     * @param s       A list of integers with dice outcomes
+     * @param boldOne If 1s should be bolded in the list
+     * @return A string of integers separated by commas with the 1s bolded, or None if the list is empty
      */
-    private String formatResults(List<Integer> s) {
-        StringBuilder resultString = new StringBuilder();
-        if (s.size() > 1) {
-            for (int i = 0; i < s.size() - 1; i++) {
-                if (s.get(i) == 1) {
-                    resultString.append("**1**, ");
-                }
-                else {
-                    resultString.append(s.get(i)).append(", ");
-                }
-            }
-            if (s.get(s.size() - 1) == 1) {
-                resultString.append("**1**");
-            }
-            else {
-                resultString.append(s.get(s.size() - 1));
-            }
-        }
-        else if (s.size() == 1) {
-            if (s.get(0) == 1) {
-                resultString.append("**1**");
-            }
-            else {
-                resultString.append(s.get(0));
-            }
-        }
-        else {
+    private String formatRegularDiceResults(List<Integer> s, boolean boldOne) {
+        if (s.isEmpty()) {
             return NONE;
         }
-        return resultString.toString();
+        else {
+            return s.stream().map(die -> die == 1 && boldOne ? "**1**" : String.valueOf(die)).collect(Collectors.joining(", "));
+        }
     }
 
 
@@ -129,11 +107,6 @@ public class DiceRoller {
         keptDice.stream()
                 .mapToInt(keptDie -> random.nextInt(keptDie) + 1)
                 .forEach(rollResult::addKeptDice);
-    }
-
-    //Replaces brackets in the string. If the string is blank, returns "none" in italics
-    private String resultsToString(List<Integer> result) {
-        return result.isEmpty() ? NONE : result.stream().map(Object::toString).collect(Collectors.joining(", "));
     }
 
     public int getTotal() {

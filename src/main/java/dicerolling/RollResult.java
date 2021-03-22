@@ -6,6 +6,7 @@ import com.google.common.collect.TreeMultiset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 /**
@@ -106,11 +107,11 @@ public class RollResult implements PoolResultWithEmbed {
     }
 
     @Override
-    public int getPickedPlotDie() {
+    public OptionalInt getPickedPlotDie() {
         Multiset<Integer> sortedPlotDice = TreeMultiset.create(Comparator.reverseOrder());
         sortedPlotDice.addAll(plotDice);
 
-        return sortedPlotDice.stream().limit(1).mapToInt(Integer::intValue).findFirst().orElse(0);
+        return sortedPlotDice.stream().limit(1).mapToInt(Integer::intValue).findFirst();
     }
 
     @Override
@@ -129,7 +130,7 @@ public class RollResult implements PoolResultWithEmbed {
     @Override
     public List<Integer> getAllPickedDice() {
         final ArrayList<Integer> picked = new ArrayList<>(getPickedRegularDice());
-        picked.add(getPickedPlotDie());
+        getPickedPlotDie().ifPresent(picked::add);
         picked.addAll(getKeptDice());
         return picked;
     }

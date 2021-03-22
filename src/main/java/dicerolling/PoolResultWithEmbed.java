@@ -4,6 +4,7 @@ import statistics.resultvisitors.DifficultyVisitor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 
 public interface PoolResultWithEmbed extends PoolResult {
     List<Integer> getRegularDice();
@@ -14,7 +15,7 @@ public interface PoolResultWithEmbed extends PoolResult {
 
     List<Integer> getPlotDice();
 
-    int getPickedPlotDie();
+    OptionalInt getPickedPlotDie();
 
     List<Integer> getDegradedPlotDice();
 

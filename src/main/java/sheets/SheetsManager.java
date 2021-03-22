@@ -56,7 +56,7 @@ public class SheetsManager {
         }
     }
 
-    private ValueRange result;
+    private final ValueRange result;
 
     //Builds a new sheet object that contain information about the user's character
     public SheetsManager(String id) throws IOException {
