@@ -7,7 +7,7 @@ import dicerolling.DicePool;
 import dicerolling.DiceRoller;
 import dicerolling.PoolProcessor;
 import dicerolling.SuccessCalculatorEmbed;
-import doom.DoomWriter;
+import doom.DoomHandler;
 import logic.PlotPointEnhancementHelper;
 import logic.RandomColor;
 import org.javacord.api.entity.channel.TextChannel;
@@ -77,8 +77,7 @@ public class RollCommand implements CommandExecutor {
         //DMs use doom points as plot points and 1s do not increase the doom pool
         if (author.getIdAsString().equals(prop.getProperty("gameMaster", ""))) {
             if (plotPointsSpent != 0 && dicePool.getPlotPointDiscount() != Integer.MAX_VALUE) {
-                DoomWriter writer = new DoomWriter();
-                EmbedBuilder doomEmbed = writer.addDoom(plotPointsSpent * -1);
+                EmbedBuilder doomEmbed = DoomHandler.addDoom(plotPointsSpent * -1);
                 channel.sendMessage(doomEmbed);
             }
         }
@@ -87,8 +86,7 @@ public class RollCommand implements CommandExecutor {
             if (dicePool.enableOpportunities() && diceRoller.getDoom() >= 1) {
                 sentMessage.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
                 channel.sendMessage(addOnePlotPointAndGenerateEmbed(author));
-                DoomWriter writer = new DoomWriter();
-                EmbedBuilder doomEmbed = writer.addDoom(diceRoller.getDoom());
+                EmbedBuilder doomEmbed = DoomHandler.addDoom(diceRoller.getDoom());
                 channel.sendMessage(doomEmbed);
             }
             if (plotPointsSpent != 0 && dicePool.getPlotPointDiscount() != Integer.MAX_VALUE) {

@@ -1,6 +1,6 @@
 package listeners;
 
-import doom.DoomWriter;
+import doom.DoomHandler;
 import logic.PlotPointEnhancementHelper;
 import logic.RandomColor;
 import org.javacord.api.DiscordApi;
@@ -112,10 +112,9 @@ public class PlotPointEnhancementListener implements EventListener {
      * @param channel The channel the message was sent from
      */
     private void sendDoomPointEnhancementMessage(int toAdd, int rollVal, TextChannel channel, User user) {
-        DoomWriter doomWriter = new DoomWriter();
-        int oldDoom = doomWriter.getDoom();
-        doomWriter.addDoom(toAdd * -1);
-        int newDoom = doomWriter.getDoom();
+        int oldDoom = DoomHandler.getDoom();
+        DoomHandler.addDoom(toAdd * -1);
+        int newDoom = DoomHandler.getDoom();
         new MessageBuilder()
                 .setEmbed(
                         new EmbedBuilder()
