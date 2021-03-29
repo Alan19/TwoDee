@@ -14,6 +14,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * Generates statistics for a dice pool by calculating the sample set of all possible outcomes. Does this by using a Map of RollResults to number of occurrences. For every die in the pool, and for every facet of that die, map each RollResult in the map to a copy of that object with that die result added.
+ */
 public class GenerateStatistics implements StatisticsState {
     private final DicePool dicePool;
 
@@ -66,6 +69,8 @@ public class GenerateStatistics implements StatisticsState {
         EmbedBuilder statsEmbed = generateEmbed(rollToOccurrences, rollToOpportunities, results);
         context.setEmbedBuilder(statsEmbed);
     }
+
+    // TODO Rework / remove the visitor pattern
 
     /**
      * Creates an embed based on the statistics

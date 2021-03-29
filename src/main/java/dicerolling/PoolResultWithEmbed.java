@@ -27,6 +27,11 @@ public interface PoolResultWithEmbed extends PoolResult {
 
     List<Integer> getFlatBonuses();
 
+    /**
+     * Generates a string that contains the tier and extraordinary tier hit by the roll
+     *
+     * @return The tiers and extraordinary tier hit by the roll, if any
+     */
     default String getTierHit() {
         DifficultyVisitor difficultyVisitor = new DifficultyVisitor();
         int total = getTotal();
