@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+/**
+ * Creates a RollResult object by using a dice pool
+ */
 public class DiceRoller {
     public static final String NONE = "*none*";
     private final RollResult rollResult;
@@ -21,31 +24,44 @@ public class DiceRoller {
         rollDice(random, dicePool);
     }
 
+    /**
+     * Gets the number of doom in rollResult
+     *
+     * @return The number of doom points generated from this dice pool
+     */
     public int getDoom() {
         return rollResult.getDoomGenerated();
     }
 
+    /**
+     * Generates an embed for the result of the dice roll
+     *
+     * @param author The author of the message
+     * @return An embed with the results of each die, the total, the dice picked and dropped, and the tiers hit
+     */
     public EmbedBuilder generateResults(MessageAuthor author) {
         //Build embed
-        return buildResultEmbed(author, rollResult);
-    }
-
-    private EmbedBuilder buildResultEmbed(MessageAuthor author, RollResult result) {
         return new EmbedBuilder()
                 .setDescription("Here's the result for" + createDicePoolString(dicePool))
                 .setTitle(TwoDee.getRollTitleMessage())
                 .setAuthor(author)
                 .setColor(RandomColor.getRandomColor())
-                .addField("Regular dice", formatRegularDiceResults(result.getRegularDice(), true), true)
-                .addField("Plot dice", formatRegularDiceResults(result.getPlotDice(), true), true)
-                .addField("Kept dice", formatRegularDiceResults(result.getKeptDice(), true), true)
-                .addField("Picked", formatRegularDiceResults(result.getAllPickedDice(), false), true)
-                .addField("Flat bonuses", formatRegularDiceResults(result.getFlatBonuses(), false), true)
-                .addField("Dropped", formatRegularDiceResults(result.getAllDroppedDice(), false), true)
-                .addField("Total", String.valueOf(result.getTotal()), true)
-                .addField("Tier Hit", result.getTierHit(), true);
+                .addField("Regular dice", formatRegularDiceResults(rollResult.getRegularDice(), true), true)
+                .addField("Plot dice", formatRegularDiceResults(rollResult.getPlotDice(), true), true)
+                .addField("Kept dice", formatRegularDiceResults(rollResult.getKeptDice(), true), true)
+                .addField("Picked", formatRegularDiceResults(rollResult.getAllPickedDice(), false), true)
+                .addField("Flat bonuses", formatRegularDiceResults(rollResult.getFlatBonuses(), false), true)
+                .addField("Dropped", formatRegularDiceResults(rollResult.getAllDroppedDice(), false), true)
+                .addField("Total", String.valueOf(rollResult.getTotal()), true)
+                .addField("Tier Hit", rollResult.getTierHit(), true);
     }
 
+    /**
+     * Generates the string for the dice in the dice pool
+     *
+     * @param dicePool The dice pool to generate the string for
+     * @return The dice pool in dice as a string
+     */
     private String createDicePoolString(DicePool dicePool) {
         StringBuilder dicePoolString = new StringBuilder();
         dicePool.getRegularDice().forEach(integer -> dicePoolString.append(" d").append(integer));
@@ -72,7 +88,7 @@ public class DiceRoller {
     }
 
 
-    //Roll all of the dice. Plot dice have a minimum value of its maximum roll/2
+    //Roll all of the dice. Plot dice have a minimum value of its facets / 2 if there is only one plot die
     private void rollDice(Random random, DicePool dicePool) {
         //Roll dice
         rollDie(random, dicePool.getRegularDice());
@@ -81,6 +97,11 @@ public class DiceRoller {
         addFlatBonus(dicePool.getFlatBonuses());
     }
 
+    /**
+     * Adds all flat bonuses to the result
+     *
+     * @param flatBonus The value of the flat bonus
+     */
     private void addFlatBonus(List<Integer> flatBonus) {
         flatBonus.forEach(rollResult::addFlatBonus);
     }
@@ -97,18 +118,35 @@ public class DiceRoller {
                 .forEach(rollResult::addPlotDice);
     }
 
+    /**
+     * Rolls all regular dice
+     *
+     * @param random The random number generator
+     * @param dice   The list of regular dice
+     */
     private void rollDie(Random random, List<Integer> dice) {
         dice.stream()
                 .mapToInt(die -> random.nextInt(die) + 1)
                 .forEach(rollResult::addRegularDice);
     }
 
+    /**
+     * Rolls all kept dice
+     *
+     * @param random   The random number generator
+     * @param keptDice The list of kept dice
+     */
     private void rollKeptDie(Random random, List<Integer> keptDice) {
         keptDice.stream()
                 .mapToInt(keptDie -> random.nextInt(keptDie) + 1)
                 .forEach(rollResult::addKeptDice);
     }
 
+    /**
+     * Gets the value of a roll
+     *
+     * @return The value of the roll
+     */
     public int getTotal() {
         return rollResult.getTotal();
     }
