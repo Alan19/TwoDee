@@ -12,6 +12,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import org.javacord.api.entity.user.User;
 import players.PartyHandler;
@@ -131,6 +132,16 @@ public class SheetsHandler {
         if (rangeOptional.isPresent()) {
             final ValueRange plotPointRange = rangeOptional.get();
             plotPointRange.setValues(Collections.singletonList(Collections.singletonList(String.valueOf(count))));
+            final Optional<String> spreadsheetID = getSpreadsheetForPartyMember(user);
+            if (spreadsheetID.isPresent()) {
+                try {
+                    UpdateValuesResponse result = instance.service.spreadsheets().values().update(spreadsheetID.get(), plotPointRange.getRange(), plotPointRange)
+                            .setValueInputOption("RAW")
+                            .execute();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             return true;
         }
         else {
