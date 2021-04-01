@@ -15,10 +15,12 @@ import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
-import sheets.PlotPointManager;
+import org.javacord.api.entity.user.User;
+import sheets.SheetsHandler;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 
@@ -85,12 +87,14 @@ public class RollCommand implements CommandExecutor {
         else {
             if (dicePool.enableOpportunities() && diceRoller.getDoom() >= 1) {
                 sentMessage.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
-                channel.sendMessage(addOnePlotPointAndGenerateEmbed(author));
+                if (author.asUser().isPresent()) {
+                    channel.sendMessage(addOnePlotPointAndGenerateEmbed(author.asUser().get()));
+                }
                 EmbedBuilder doomEmbed = DoomHandler.addDoom(diceRoller.getDoom());
                 channel.sendMessage(doomEmbed);
             }
-            if (plotPointsSpent != 0 && dicePool.getPlotPointDiscount() != Integer.MAX_VALUE) {
-                channel.sendMessage(deductPlotPoints(plotPointsSpent, author));
+            if (plotPointsSpent != 0 && dicePool.getPlotPointDiscount() != Integer.MAX_VALUE && author.asUser().isPresent()) {
+                channel.sendMessage(deductPlotPoints(plotPointsSpent, author.asUser().get()));
             }
         }
         if (!dicePool.getDifficulty().equals("")) {
@@ -107,14 +111,21 @@ public class RollCommand implements CommandExecutor {
      * @param author The player that rolled a 1
      * @return The EmbedBuilder that shows the change in plot points for the player
      */
-    public static EmbedBuilder addOnePlotPointAndGenerateEmbed(MessageAuthor author) {
-        String userID = author.getIdAsString();
-        int oldPP = PlotPointManager.getPlotPoints(userID);
-        int newPP = PlotPointManager.setPlotPoints(userID, oldPP + 1);
-        return new EmbedBuilder()
-                .setAuthor(author)
-                .setTitle("An opportunity!")
-                .setDescription(oldPP + " → " + newPP);
+    public static EmbedBuilder addOnePlotPointAndGenerateEmbed(User author) {
+        if (SheetsHandler.getPlotPoints(author).isPresent()) {
+            int oldPP = SheetsHandler.getPlotPoints(author).get();
+            final int newPP = oldPP + 1;
+            SheetsHandler.setPlotPoints(author, newPP);
+            return new EmbedBuilder()
+                    .setAuthor(author)
+                    .setTitle("An opportunity!")
+                    .setDescription(oldPP + " → " + newPP);
+        }
+        else {
+            return new EmbedBuilder()
+                    .setAuthor(author)
+                    .setDescription("I was unable to access the plot points of " + author.getName());
+        }
     }
 
     /**
@@ -124,15 +135,22 @@ public class RollCommand implements CommandExecutor {
      * @param author          The player who made the roll
      * @return The EmbedBuilder showing the change in plot points
      */
-    public static EmbedBuilder deductPlotPoints(int plotPointsSpent, MessageAuthor author) {
-        String authorID = author.getIdAsString();
-        int previous = PlotPointManager.getPlotPoints(authorID);
-        int current = PlotPointManager.setPlotPoints(authorID, PlotPointManager.getPlotPoints(authorID) - plotPointsSpent);
-        return new EmbedBuilder()
-                .setAuthor(author)
-                .setTitle("Plot points!")
-                .setColor(RandomColor.getRandomColor())
-                .setDescription(previous + " → " + current);
+    public static EmbedBuilder deductPlotPoints(int plotPointsSpent, User author) {
+        final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(author);
+        if (plotPoints.isPresent()) {
+            final int newPlotPints = plotPoints.get() - plotPointsSpent;
+            SheetsHandler.setPlotPoints(author, newPlotPints);
+            return new EmbedBuilder()
+                    .setAuthor(author)
+                    .setTitle("Plot points!")
+                    .setColor(RandomColor.getRandomColor())
+                    .setDescription(plotPoints.get() + " → " + newPlotPints);
+        }
+        else {
+            return new EmbedBuilder()
+                    .setAuthor(author)
+                    .setDescription("I was unable to access the plot points of " + author.getName());
+        }
     }
 
 }

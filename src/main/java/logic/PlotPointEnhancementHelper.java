@@ -13,23 +13,14 @@ import java.util.stream.Collectors;
 
 public class PlotPointEnhancementHelper {
 
-    private static final TreeMap<Integer, String> oneToTwelveEmojiMap = new TreeMap<>();
+    private static final TreeMap<Integer, String> ONE_TO_FOUR_EMOJI_MAP = new TreeMap<>();
     public static final String CANCEL_EMOJI = EmojiParser.parseToUnicode(":regional_indicator_x:");
 
     static {
-        oneToTwelveEmojiMap.put(1, EmojiParser.parseToUnicode(":one:"));
-        oneToTwelveEmojiMap.put(2, EmojiParser.parseToUnicode(":two:"));
-        oneToTwelveEmojiMap.put(3, EmojiParser.parseToUnicode(":three:"));
-        oneToTwelveEmojiMap.put(4, EmojiParser.parseToUnicode(":four:"));
-        oneToTwelveEmojiMap.put(5, EmojiParser.parseToUnicode(":five:"));
-        oneToTwelveEmojiMap.put(6, EmojiParser.parseToUnicode(":six:"));
-        oneToTwelveEmojiMap.put(7, EmojiParser.parseToUnicode(":seven:"));
-        oneToTwelveEmojiMap.put(8, EmojiParser.parseToUnicode(":eight:"));
-        oneToTwelveEmojiMap.put(9, EmojiParser.parseToUnicode(":nine:"));
-        oneToTwelveEmojiMap.put(10, EmojiParser.parseToUnicode(":keycap_ten:"));
-        oneToTwelveEmojiMap.put(11, "keycap_11:525867366303793182");
-        oneToTwelveEmojiMap.put(12, "keycap_12:525867383890509864");
-
+        ONE_TO_FOUR_EMOJI_MAP.put(1, EmojiParser.parseToUnicode(":one:"));
+        ONE_TO_FOUR_EMOJI_MAP.put(2, EmojiParser.parseToUnicode(":two:"));
+        ONE_TO_FOUR_EMOJI_MAP.put(3, EmojiParser.parseToUnicode(":three:"));
+        ONE_TO_FOUR_EMOJI_MAP.put(4, EmojiParser.parseToUnicode(":four:"));
     }
 
     private PlotPointEnhancementHelper() {
@@ -45,7 +36,7 @@ public class PlotPointEnhancementHelper {
     public static CompletableFuture<Void> removeEnhancementEmojis(Message message) {
         //Store all of the futures for allOf
         //Remove 1 to 10
-        ArrayList<CompletableFuture<Void>> completableFutures = PlotPointEnhancementHelper.getOneToTwelveEmojiMap()
+        ArrayList<CompletableFuture<Void>> completableFutures = PlotPointEnhancementHelper.getOneToFourEmojiMap()
                 .values()
                 .stream()
                 .map(message::removeReactionsByEmoji)
@@ -63,12 +54,12 @@ public class PlotPointEnhancementHelper {
         return CompletableFuture.allOf(castedFutures);
     }
 
-    public static SortedMap<Integer, String> getOneToTwelveEmojiMap() {
-        return oneToTwelveEmojiMap;
+    public static SortedMap<Integer, String> getOneToFourEmojiMap() {
+        return ONE_TO_FOUR_EMOJI_MAP;
     }
 
     public static void addPlotPointEnhancementEmojis(Message rollMessage) {
-        for (String emoji : oneToTwelveEmojiMap.values()) {
+        for (String emoji : ONE_TO_FOUR_EMOJI_MAP.values()) {
             rollMessage.addReaction(emoji);
         }
         rollMessage.addReaction("\uD83C\uDDFD");
@@ -76,11 +67,11 @@ public class PlotPointEnhancementHelper {
 
     public static boolean isEmojiNumberEmoji(Emoji emoji) {
         if (emoji.isUnicodeEmoji() && emoji.asUnicodeEmoji().isPresent()) {
-            return oneToTwelveEmojiMap.containsValue(emoji.asUnicodeEmoji().get());
+            return ONE_TO_FOUR_EMOJI_MAP.containsValue(emoji.asUnicodeEmoji().get());
         }
         else if (emoji.isKnownCustomEmoji() && emoji.asKnownCustomEmoji().isPresent()) {
             String trimmedEmoji = trimCustomEmoji(emoji.asKnownCustomEmoji().get());
-            return oneToTwelveEmojiMap.containsValue(trimmedEmoji);
+            return ONE_TO_FOUR_EMOJI_MAP.containsValue(trimmedEmoji);
         }
         return false;
     }

@@ -12,11 +12,12 @@ import org.javacord.api.entity.message.Reaction;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.reaction.ReactionAddEvent;
-import sheets.PlotPointManager;
+import sheets.SheetsHandler;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 
 /**
@@ -91,17 +92,19 @@ public class PlotPointEnhancementListener implements EventListener {
      * @param user    The user object that reacted to the roll
      */
     private void sendPlotPointEnhancementMessage(TextChannel channel, int rollVal, int toAdd, User user) {
-        int oldPP = PlotPointManager.getPlotPoints(user.getIdAsString());
-        int newPP = PlotPointManager.setPlotPoints(user.getIdAsString(), oldPP - toAdd);
-        new MessageBuilder()
-                .setEmbed(
-                        new EmbedBuilder()
-                                .setAuthor(user)
-                                .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))
-                                .addField("Plot Points", oldPP + " → " + newPP)
-                                .setColor(RandomColor.getRandomColor())
-                )
-                .send(channel);
+        Optional<Integer> oldPP = SheetsHandler.getPlotPoints(user);
+        if (oldPP.isPresent()) {
+            final int newPP = oldPP.get() - toAdd;
+            SheetsHandler.setPlotPoints(user, newPP);
+            new MessageBuilder()
+                    .setEmbed(
+                            new EmbedBuilder()
+                                    .setAuthor(user)
+                                    .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))
+                                    .addField("Plot Points", oldPP + " → " + newPP)
+                                    .setColor(RandomColor.getRandomColor())
+                    ).send(channel);
+        }
     }
 
     /**
@@ -135,7 +138,7 @@ public class PlotPointEnhancementListener implements EventListener {
         int toAdd = 0;
         if (emoji.isCustomEmoji()) {
             String trimmedEmoji = PlotPointEnhancementHelper.trimCustomEmoji(emoji.asKnownCustomEmoji().get());
-            for (Map.Entry<Integer, String> emojiEntry : PlotPointEnhancementHelper.getOneToTwelveEmojiMap().entrySet()) {
+            for (Map.Entry<Integer, String> emojiEntry : PlotPointEnhancementHelper.getOneToFourEmojiMap().entrySet()) {
                 if (emojiEntry.getValue().equals(trimmedEmoji)) {
                     toAdd = emojiEntry.getKey();
                 }
@@ -144,7 +147,7 @@ public class PlotPointEnhancementListener implements EventListener {
         else {
             String unicodeEmoji = emoji.asUnicodeEmoji().get();
             for (Map.Entry<Integer, String> emojiEntry :
-                    PlotPointEnhancementHelper.getOneToTwelveEmojiMap().entrySet()) {
+                    PlotPointEnhancementHelper.getOneToFourEmojiMap().entrySet()) {
                 if (emojiEntry.getValue().equals(unicodeEmoji)) {
                     toAdd = emojiEntry.getKey();
                 }

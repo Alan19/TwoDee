@@ -14,6 +14,10 @@ public class Party {
     @Expose
     private List<PartyMember> members;
 
+    @SerializedName("channel")
+    @Expose
+    private long channel;
+
     public Party(String name, List<PartyMember> members) {
         super();
         this.name = name;
@@ -34,5 +38,13 @@ public class Party {
 
     public void setMembers(List<PartyMember> members) {
         this.members = members;
+    }
+
+    public long getChannel() {
+        return channel;
+    }
+
+    public void setChannel(int channel) {
+        this.channel = channel;
     }
 }

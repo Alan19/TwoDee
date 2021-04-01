@@ -116,7 +116,7 @@ public class SheetsHandler {
      * @return The number of plot points a user has in an optional, or empty if the user does not have a linked character sheet
      */
     public static Optional<Integer> getPlotPoints(User user) {
-        return getPlotPointRange(user).map(valueRange -> (int) valueRange.getValues().get(0).get(0));
+        return getPlotPointRange(user).map(valueRange -> Integer.parseInt((String) valueRange.getValues().get(0).get(0)));
     }
 
     /**
@@ -130,7 +130,7 @@ public class SheetsHandler {
         final Optional<ValueRange> rangeOptional = getPlotPointRange(user);
         if (rangeOptional.isPresent()) {
             final ValueRange plotPointRange = rangeOptional.get();
-            plotPointRange.setValues(Collections.singletonList(Collections.singletonList(count)));
+            plotPointRange.setValues(Collections.singletonList(Collections.singletonList(String.valueOf(count))));
             return true;
         }
         else {
