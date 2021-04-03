@@ -140,6 +140,24 @@ public class SheetsHandler {
     }
 
     /**
+     * Gets the plot point cap for the user
+     *
+     * @param user The user to check the cap of
+     * @return An optional containing the plot point cap of the user, or Optional.empty() if the cell cannot be retrieved
+     */
+    public static Optional<Integer> getPlotPointSoftCap(User user) {
+        final Optional<String> spreadsheetForUser = getSpreadsheetForPartyMember(user);
+        if (spreadsheetForUser.isPresent()) {
+            try {
+                return Optional.of(instance.service.spreadsheets().values().get(spreadsheetForUser.get(), "MaxPlotPoints").execute()).map(valueRange -> Integer.parseInt((String) valueRange.getValues().get(0).get(0)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Gets the spreadsheet ID for a user
      *
      * @param user The user to look up
