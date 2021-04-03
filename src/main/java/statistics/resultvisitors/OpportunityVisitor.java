@@ -1,7 +1,7 @@
 package statistics.resultvisitors;
 
 import com.google.common.collect.ImmutableList;
-import dicerolling.RollResult;
+import dicerolling.PoolResult;
 import logic.EmbedField;
 
 import java.util.Comparator;
@@ -11,10 +11,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class OpportunityVisitor implements ResultVisitor {
-    private final Map<RollResult, Long> results;
-    private final HashMap<Integer, String> difficulties = new HashMap<>();
+    private final Map<PoolResult, Long> results;
+    private final Map<Integer, String> difficulties = new HashMap<>();
 
-    public OpportunityVisitor(Map<RollResult, Long> results) {
+    public OpportunityVisitor(Map<PoolResult, Long> results) {
         this.results = results;
         difficulties.put(3, "Easy");
         difficulties.put(7, "Average");
@@ -42,7 +42,7 @@ public class OpportunityVisitor implements ResultVisitor {
 
     private long getNumberOfFailsWithOpportunities(Map.Entry<Integer, String> entry) {
         return results.entrySet().stream()
-                .filter(rollResultLongEntry -> rollResultLongEntry.getKey().getTotal() < entry.getKey() && rollResultLongEntry.getKey().getDoom() > 0)
+                .filter(rollResultLongEntry -> rollResultLongEntry.getKey().getTotal() < entry.getKey() && rollResultLongEntry.getKey().getDoomGenerated() > 0)
                 .mapToLong(Map.Entry::getValue)
                 .sum();
     }

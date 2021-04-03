@@ -4,7 +4,7 @@ import commands.EnhancementToggleCommand;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
-import sheets.SheetsManager;
+import sheets.SheetsHandler;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -16,7 +16,7 @@ public class PoolProcessor {
     private final String command;
     private final MessageAuthor author;
     private final DicePool dicePool = new DicePool();
-    private HashMap<String, Integer> skillMap;
+    private Map<String, Integer> skillMap;
     private EmbedBuilder errorEmbed;
 
     public PoolProcessor(String command, MessageAuthor author) {
@@ -234,26 +234,11 @@ public class PoolProcessor {
      * @return The facet value of the string, or -1 if the skill was not found
      */
     private int retrieveSkill(String skill, String id) {
-        try {
-            //Only pull info the first time
-            if (skillMap == null) {
-                //Pull columns from summary spreadsheet with info for the specified character
-                SheetsManager characterInfo = new SheetsManager(id);
-                List<List<Object>> values = characterInfo.getResult().getValues();
-                //Filter columns to only include string to integer pairs and cast to strings
-                final List<List<String>> skillArray = values.stream()
-                        .filter(objects -> objects.size() == 2 && ((String) objects.get(1)).matches("\\d+") && objects.get(0) instanceof String && objects.get(1) instanceof String)
-                        .map(objects -> Arrays.asList((String) objects.get(0), (String) objects.get(1)))
-                        .collect(Collectors.toList());
-                skillMap = new HashMap<>();
-                //Put skill/facet count pairs into HashMap after making the skill all lowercase and removing whitespace
-                skillArray.forEach(o -> skillMap.put(o.get(0).replace(" ", "").toLowerCase(), Integer.parseInt(o.get(1))));
-            }
-            return skillMap.getOrDefault(skill, -1);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return -1;
+        //Only pull info the first time
+        if (skillMap == null) {
+            skillMap = SheetsHandler.getSkills(author.asUser().get()).get();
         }
+        return skillMap.getOrDefault(skill, -1);
     }
 
     public boolean validPool() {

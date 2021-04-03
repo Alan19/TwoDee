@@ -1,150 +1,154 @@
 package dicerolling;
 
+import com.google.common.collect.Multiset;
+import com.google.common.collect.TreeMultiset;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
- * A builder version of RollResult
+ * A class that stores information about the results of a roll from a dice pool
  */
-public class RollResult {
-    private List<Integer> dice;
-    private List<Integer> plotDice;
-    private List<Integer> keptDice;
-    private List<Integer> flatBonus;
-    private int doom;
-    private int keepHowMany;
-    private boolean cleanUnnecessary;
+public class RollResult implements PoolResultWithEmbed {
+    private final int diceKept;
+    private final List<Integer> regularDice;
+    private final List<Integer> plotDice;
+    private final List<Integer> keptDice;
+    private final List<Integer> flatBonus;
 
-    public RollResult(int keep, boolean statisticsMode) {
-        dice = new ArrayList<>();
-        plotDice = new ArrayList<>();
-        keptDice = new ArrayList<>();
-        flatBonus = new ArrayList<>();
-        doom = 0;
-        keepHowMany = keep;
-        cleanUnnecessary = statisticsMode;
+    public RollResult(int diceKept) {
+        this.diceKept = diceKept;
+        this.regularDice = new ArrayList<>();
+        this.plotDice = new ArrayList<>();
+        this.keptDice = new ArrayList<>();
+        this.flatBonus = new ArrayList<>();
     }
 
-    private RollResult(List<Integer> dice, List<Integer> plotDice, List<Integer> keptDice, List<Integer> flatBonus, int keepHowMany, int doom, boolean cleanUnnecessary) {
-        this.dice = dice;
-        this.plotDice = plotDice;
-        this.keptDice = keptDice;
-        this.flatBonus = flatBonus;
-        this.keepHowMany = keepHowMany;
-        this.doom = doom;
-        this.cleanUnnecessary = cleanUnnecessary;
+    @Override
+    public PoolResult addRegularDice(int diceValue) {
+        regularDice.add(diceValue);
+        return this;
     }
 
-    public List<Integer> getDice() {
-        return dice;
+    @Override
+    public PoolResult addPlotDice(int diceValue) {
+        plotDice.add(diceValue);
+        return this;
     }
 
+    @Override
+    public PoolResult addKeptDice(int diceValue) {
+        keptDice.add(diceValue);
+        return this;
+    }
+
+    @Override
+    public PoolResult addFlatBonus(int bonus) {
+        flatBonus.add(bonus);
+        return this;
+    }
+
+    @Override
+    public int getTotal() {
+        Multiset<Integer> sortedRegularDice = TreeMultiset.create(Comparator.reverseOrder());
+        sortedRegularDice.addAll(regularDice);
+
+        Multiset<Integer> sortedPlotDice = TreeMultiset.create(Comparator.reverseOrder());
+        sortedPlotDice.addAll(plotDice);
+
+        final int plotDie = sortedPlotDice.stream().limit(1).mapToInt(Integer::intValue).findFirst().orElse(0);
+        sortedRegularDice.addAll(sortedPlotDice.stream().skip(1).collect(Collectors.toList()));
+
+        return sortedRegularDice.stream().limit(diceKept).mapToInt(Integer::intValue).sum() + plotDie + keptDice.stream().mapToInt(Integer::intValue).sum() + flatBonus.stream().mapToInt(Integer::intValue).sum();
+    }
+
+    @Override
+    public int getDoomGenerated() {
+        return Math.toIntExact(regularDice.stream().filter(integer -> integer == 1).count() + plotDice.stream().filter(integer -> integer == 1).count() + keptDice.stream().filter(integer -> integer == 1).count());
+    }
+
+    @Override
+    public List<Integer> getRegularDice() {
+        return regularDice;
+    }
+
+    @Override
+    public List<Integer> getPickedRegularDice() {
+        Multiset<Integer> sortedRegularDice = TreeMultiset.create(Comparator.reverseOrder());
+        sortedRegularDice.addAll(regularDice);
+
+        Multiset<Integer> sortedPlotDice = TreeMultiset.create(Comparator.reverseOrder());
+        sortedPlotDice.addAll(plotDice);
+
+        sortedRegularDice.addAll(sortedPlotDice.stream().skip(1).collect(Collectors.toList()));
+
+        return sortedRegularDice.stream().limit(diceKept).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Integer> getDroppedRegularDice() {
+        Multiset<Integer> sortedRegularDice = TreeMultiset.create(Comparator.reverseOrder());
+        sortedRegularDice.addAll(regularDice);
+
+        Multiset<Integer> sortedPlotDice = TreeMultiset.create(Comparator.reverseOrder());
+        sortedPlotDice.addAll(plotDice);
+
+        sortedRegularDice.addAll(sortedPlotDice.stream().skip(1).collect(Collectors.toList()));
+
+        return sortedRegularDice.stream().skip(diceKept).collect(Collectors.toList());
+    }
+
+    @Override
     public List<Integer> getPlotDice() {
         return plotDice;
     }
 
+    @Override
+    public OptionalInt getPickedPlotDie() {
+        Multiset<Integer> sortedPlotDice = TreeMultiset.create(Comparator.reverseOrder());
+        sortedPlotDice.addAll(plotDice);
+
+        return sortedPlotDice.stream().limit(1).mapToInt(Integer::intValue).findFirst();
+    }
+
+    @Override
+    public List<Integer> getDegradedPlotDice() {
+        Multiset<Integer> sortedRegularDice = TreeMultiset.create(Comparator.reverseOrder());
+        sortedRegularDice.addAll(regularDice);
+
+        Multiset<Integer> sortedPlotDice = TreeMultiset.create(Comparator.reverseOrder());
+        sortedPlotDice.addAll(plotDice);
+
+        sortedRegularDice.addAll(sortedPlotDice.stream().skip(1).collect(Collectors.toList()));
+
+        return sortedPlotDice.stream().skip(1).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Integer> getAllPickedDice() {
+        final ArrayList<Integer> picked = new ArrayList<>(getPickedRegularDice());
+        getPickedPlotDie().ifPresent(picked::add);
+        picked.addAll(getKeptDice());
+        return picked;
+    }
+
+    @Override
+    public List<Integer> getAllDroppedDice() {
+        final ArrayList<Integer> dropped = new ArrayList<>(getDroppedRegularDice());
+        dropped.addAll(getDegradedPlotDice());
+        return dropped;
+    }
+
+    @Override
     public List<Integer> getKeptDice() {
         return keptDice;
     }
 
-    public List<Integer> getFlatBonus() {
+    @Override
+    public List<Integer> getFlatBonuses() {
         return flatBonus;
-    }
-
-    public RollResult addResult(int result) {
-        dice.add(result);
-        if (cleanUnnecessary) {
-            dice.sort(Comparator.reverseOrder());
-            dice = dice.subList(0, Math.min(keepHowMany, dice.size()));
-        }
-        if (result == 1) {
-            doom++;
-        }
-        return this;
-    }
-
-    public RollResult addPlotResult(int i) {
-        plotDice.add(i);
-        if (cleanUnnecessary) {
-            plotDice.sort(Comparator.reverseOrder());
-        }
-        return this;
-    }
-
-    public RollResult addKeptResult(int i) {
-        keptDice.add(i);
-        if (cleanUnnecessary) {
-            keptDice.sort(Comparator.reverseOrder());
-        }
-        if (i == 1) {
-            doom++;
-        }
-        return this;
-    }
-
-    public RollResult addFlatBonus(int i) {
-        flatBonus.add(i);
-        flatBonus.sort(Comparator.reverseOrder());
-        if (i == 1) {
-            doom++;
-        }
-        return this;
-    }
-
-    public int getTotal() {
-        int sum = 0;
-        ArrayList<Integer> diceCopy = new ArrayList<>(dice);
-        diceCopy.sort(Comparator.reverseOrder());
-        sum += diceCopy.stream().limit(Math.min(keepHowMany, dice.size())).mapToInt(sortedResult -> sortedResult).sum();
-        sum += plotDice.stream().mapToInt(value -> value).sum();
-        sum += keptDice.stream().mapToInt(kd -> kd).sum();
-        sum += flatBonus.stream().mapToInt(f -> f).sum();
-        return sum;
-    }
-
-    public RollResult copy() {
-        return new RollResult(new ArrayList<>(dice), new ArrayList<>(plotDice), new ArrayList<>(keptDice), new ArrayList<>(flatBonus), keepHowMany, doom, true);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        RollResult that = (RollResult) o;
-        return
-                doom == that.doom &&
-                        keepHowMany == that.keepHowMany &&
-                        Objects.equals(dice, that.dice) &&
-                        Objects.equals(plotDice, that.plotDice) &&
-                        Objects.equals(keptDice, that.keptDice) &&
-                        Objects.equals(flatBonus, that.flatBonus);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(dice, plotDice, keptDice, flatBonus, keepHowMany);
-    }
-
-    public int getDoom() {
-        return doom;
-    }
-
-    public List<Integer> getDropped() {
-        ArrayList<Integer> sortedResults = new ArrayList<>(dice);
-        sortedResults.sort(Comparator.reverseOrder());
-        return IntStream.range(Math.min(sortedResults.size(), keepHowMany), sortedResults.size()).mapToObj(sortedResults::get).collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    public List<Integer> getPickedDice() {
-        ArrayList<Integer> sortedResults = new ArrayList<>(dice);
-        sortedResults.sort(Comparator.reverseOrder());
-        return sortedResults.subList(0, Math.min(keepHowMany, dice.size()));
-
     }
 }
