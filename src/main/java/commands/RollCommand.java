@@ -111,7 +111,7 @@ public class RollCommand implements CommandExecutor {
      * @param author The player that rolled a 1
      * @return The EmbedBuilder that shows the change in plot points for the player
      */
-    public static EmbedBuilder addOnePlotPointAndGenerateEmbed(User author) {
+    public static EmbedBuilder addOnePlotPointAndGenerateEmbed(User author) throws IOException {
         if (SheetsHandler.getPlotPoints(author).isPresent()) {
             int oldPP = SheetsHandler.getPlotPoints(author).get();
             final int newPP = oldPP + 1;
@@ -135,7 +135,7 @@ public class RollCommand implements CommandExecutor {
      * @param author          The player who made the roll
      * @return The EmbedBuilder showing the change in plot points
      */
-    public static EmbedBuilder deductPlotPoints(int plotPointsSpent, User author) {
+    public static EmbedBuilder deductPlotPoints(int plotPointsSpent, User author) throws IOException {
         final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(author);
         if (plotPoints.isPresent()) {
             final int newPlotPints = plotPoints.get() - plotPointsSpent;

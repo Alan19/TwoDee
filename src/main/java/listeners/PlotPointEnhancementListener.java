@@ -95,7 +95,11 @@ public class PlotPointEnhancementListener implements EventListener {
         Optional<Integer> oldPP = SheetsHandler.getPlotPoints(user);
         if (oldPP.isPresent()) {
             final int newPP = oldPP.get() - toAdd;
-            SheetsHandler.setPlotPoints(user, newPP);
+            try {
+                SheetsHandler.setPlotPoints(user, newPP);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             new MessageBuilder()
                     .setEmbed(
                             new EmbedBuilder()

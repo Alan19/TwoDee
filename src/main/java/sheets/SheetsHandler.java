@@ -12,7 +12,6 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
-import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import org.javacord.api.entity.user.User;
 import players.PartyHandler;
@@ -125,27 +124,18 @@ public class SheetsHandler {
      *
      * @param user  The user to modify
      * @param count The new number of plot points the user has
-     * @return If the cell for plot points linked to that user exists
      */
-    public static boolean setPlotPoints(User user, int count) {
+    public static void setPlotPoints(User user, int count) throws IOException {
         final Optional<ValueRange> rangeOptional = getPlotPointRange(user);
         if (rangeOptional.isPresent()) {
             final ValueRange plotPointRange = rangeOptional.get();
             plotPointRange.setValues(Collections.singletonList(Collections.singletonList(String.valueOf(count))));
             final Optional<String> spreadsheetID = getSpreadsheetForPartyMember(user);
             if (spreadsheetID.isPresent()) {
-                try {
-                    UpdateValuesResponse result = instance.service.spreadsheets().values().update(spreadsheetID.get(), plotPointRange.getRange(), plotPointRange)
-                            .setValueInputOption("RAW")
-                            .execute();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                instance.service.spreadsheets().values().update(spreadsheetID.get(), plotPointRange.getRange(), plotPointRange)
+                        .setValueInputOption("RAW")
+                        .execute();
             }
-            return true;
-        }
-        else {
-            return false;
         }
     }
 
