@@ -2,7 +2,6 @@ package logic;
 
 import com.vdurmont.emoji.EmojiParser;
 import org.javacord.api.entity.emoji.Emoji;
-import org.javacord.api.entity.emoji.KnownCustomEmoji;
 import org.javacord.api.entity.message.Message;
 
 import java.util.ArrayList;
@@ -11,6 +10,7 @@ import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+//TODO Merge this with the listener?
 public class PlotPointEnhancementHelper {
 
     private static final TreeMap<Integer, String> ONE_TO_FOUR_EMOJI_MAP = new TreeMap<>();
@@ -35,23 +35,19 @@ public class PlotPointEnhancementHelper {
      */
     public static CompletableFuture<Void> removeEnhancementEmojis(Message message) {
         //Store all of the futures for allOf
-        //Remove 1 to 10
+        //Remove 1 to 4
         ArrayList<CompletableFuture<Void>> completableFutures = PlotPointEnhancementHelper.getOneToFourEmojiMap()
                 .values()
                 .stream()
                 .map(message::removeReactionsByEmoji)
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        //Remove 11 and 12 and add to ArrayList by transforming them into CompletableFutures
-        message.getServer().map(server -> message.removeReactionsByEmoji(server.getCustomEmojiById("525867366303793182").get(), server.getCustomEmojiById("525867383890509864").get())).ifPresent(completableFutures::add);
-
+        // TODO Make this less hacky
         //Remove Cancel Emoji
         CompletableFuture<Void> cancelEmojiFuture = message.removeReactionsByEmoji("\uD83C\uDDFD");
         completableFutures.add(cancelEmojiFuture);
 
-        CompletableFuture[] castedFutures = new CompletableFuture[completableFutures.size()];
-        castedFutures = completableFutures.toArray(castedFutures);
-        return CompletableFuture.allOf(castedFutures);
+        return CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[0]));
     }
 
     public static SortedMap<Integer, String> getOneToFourEmojiMap() {
@@ -69,10 +65,6 @@ public class PlotPointEnhancementHelper {
         if (emoji.isUnicodeEmoji() && emoji.asUnicodeEmoji().isPresent()) {
             return ONE_TO_FOUR_EMOJI_MAP.containsValue(emoji.asUnicodeEmoji().get());
         }
-        else if (emoji.isKnownCustomEmoji() && emoji.asKnownCustomEmoji().isPresent()) {
-            String trimmedEmoji = trimCustomEmoji(emoji.asKnownCustomEmoji().get());
-            return ONE_TO_FOUR_EMOJI_MAP.containsValue(trimmedEmoji);
-        }
         return false;
     }
 
@@ -82,11 +74,6 @@ public class PlotPointEnhancementHelper {
 
     public static boolean isEmojiEnhancementEmoji(Emoji emoji) {
         return isEmojiCancelEmoji(emoji) || isEmojiNumberEmoji(emoji);
-    }
-
-    public static String trimCustomEmoji(KnownCustomEmoji emoji) {
-        String tag = emoji.asKnownCustomEmoji().get().getMentionTag();
-        return tag.substring(2, tag.length() - 1);
     }
 
 }

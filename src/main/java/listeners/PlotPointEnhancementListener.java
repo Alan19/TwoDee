@@ -3,15 +3,14 @@ package listeners;
 import doom.DoomHandler;
 import logic.PlotPointEnhancementHelper;
 import logic.RandomColor;
-import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.emoji.Emoji;
 import org.javacord.api.entity.message.Message;
-import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.Reaction;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.reaction.ReactionAddEvent;
+import org.javacord.api.listener.message.reaction.ReactionAddListener;
 import sheets.SheetsHandler;
 
 import java.io.FileInputStream;
@@ -23,54 +22,55 @@ import java.util.Properties;
 /**
  * Listener that listens for a user using plot point enhancement
  */
-public class PlotPointEnhancementListener implements EventListener {
+public class PlotPointEnhancementListener implements ReactionAddListener {
 
-    private final DiscordApi api;
-
-    public PlotPointEnhancementListener(DiscordApi api) {
-        this.api = api;
-    }
+    public static final String CANCEL_EMOJI = "\uD83C\uDDFD";
+    public static final String STAR_EMOJI = "\uD83C\uDF1F";
 
     @Override
-    public void startListening() {
-        api.addReactionAddListener(event -> {
-            //Do nothing if the bot is the one who reacts
-            if (event.getUser().map(User::isYourself).orElse(false)) {
-                return;
-            }
-            //Check if bot has made the react on the post already
+    public void onReactionAdd(ReactionAddEvent event) {
+        //Do nothing if the bot is the one who reacts
+        if (!event.getUser().map(User::isYourself).orElse(false)) {
             event.getReaction().ifPresent(reaction -> {
+                //Check if bot has made the react on the post already
                 if (reaction.containsYou()) {
                     event.requestMessage().thenAcceptAsync(message -> {
-                        if (reaction.getEmoji().equalsEmoji("\uD83C\uDDFD")) {
+                        if (reaction.getEmoji().equalsEmoji(CANCEL_EMOJI)) {
                             PlotPointEnhancementHelper.removeEnhancementEmojis(message);
                         }
                         else if (PlotPointEnhancementHelper.isEmojiNumberEmoji(reaction.getEmoji())) {
                             enhanceRoll(event, reaction, message);
                             //Wipe reactions and then add star emoji to show that it was enhanced with plot points
                             PlotPointEnhancementHelper.removeEnhancementEmojis(message);
-                            message.addReaction("\uD83C\uDF1F");
-
+                            message.addReaction(STAR_EMOJI);
                         }
                     });
                 }
             });
-        });
+        }
     }
 
+    /**
+     * Enhances a roll by deducting the appropriate number of plot / doom points from the user
+     *
+     * @param event    The reaction event that contains the reaction being used
+     * @param reaction The reaction that provides the user that added the reaction
+     * @param message  The message to be enhanced
+     */
     private void enhanceRoll(ReactionAddEvent event, Reaction reaction, Message message) {
         //Get user roll value and add to that based on reaction. Then deduct plot points.
         int rollVal = Integer.parseInt(message.getEmbeds().get(0).getFields().get(6).getValue());
         Emoji emoji = reaction.getEmoji();
-        int toAdd = getAddAmount(emoji);
-        User user = event.getUser().get();
-        String gameMasterID = getGameMaster();
-        if (user.getIdAsString().equals(gameMasterID)) {
-            sendDoomPointEnhancementMessage(toAdd, rollVal, event.getChannel(), user);
-        }
-        else {
-            sendPlotPointEnhancementMessage(event.getChannel(), rollVal, toAdd, user);
-        }
+        Optional<Integer> toAdd = getAddAmount(emoji);
+        toAdd.ifPresent(count -> {
+            if (getGameMaster().equals(event.getUserIdAsString())) {
+                event.getApi().getUserById(event.getUserId()).thenAccept(user -> sendDoomPointEnhancementMessage(user, message.getChannel(), rollVal, count));
+            }
+            else {
+                event.getApi().getUserById(event.getUserId()).thenAccept(user -> sendPlotPointEnhancementMessage(user, message.getChannel(), rollVal, count));
+            }
+        });
+
     }
 
     private String getGameMaster() {
@@ -86,12 +86,12 @@ public class PlotPointEnhancementListener implements EventListener {
     /**
      * Subtracts plot point from player to enhance a roll
      *
+     * @param user    The user object that reacted to the roll
      * @param channel The channel the message was reacted to
      * @param rollVal The original roll value
      * @param toAdd   The number of points to add to the roll value
-     * @param user    The user object that reacted to the roll
      */
-    private void sendPlotPointEnhancementMessage(TextChannel channel, int rollVal, int toAdd, User user) {
+    private void sendPlotPointEnhancementMessage(User user, TextChannel channel, int rollVal, int toAdd) {
         Optional<Integer> oldPP = SheetsHandler.getPlotPoints(user);
         if (oldPP.isPresent()) {
             final int newPP = oldPP.get() - toAdd;
@@ -100,63 +100,46 @@ public class PlotPointEnhancementListener implements EventListener {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            new MessageBuilder()
-                    .setEmbed(
-                            new EmbedBuilder()
-                                    .setAuthor(user)
-                                    .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))
-                                    .addField("Plot Points", oldPP + " → " + newPP)
-                                    .setColor(RandomColor.getRandomColor())
-                    ).send(channel);
+            final EmbedBuilder enhanceRollEmbed = new EmbedBuilder()
+                    .setAuthor(user)
+                    .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))
+                    .addField("Plot Points", oldPP.get() + " → " + newPP)
+                    .setColor(RandomColor.getRandomColor());
+            channel.sendMessage(enhanceRollEmbed);
         }
     }
 
     /**
      * Helper method to help DM enhance rolls with doom points and send an embed with the new value
      *
-     * @param toAdd   The amount of points to add to the roll
-     * @param rollVal The original value of the roll
      * @param channel The channel the message was sent from
+     * @param rollVal The original value of the roll
+     * @param toAdd   The amount of points to add to the roll
      */
-    private void sendDoomPointEnhancementMessage(int toAdd, int rollVal, TextChannel channel, User user) {
+    private void sendDoomPointEnhancementMessage(User user, TextChannel channel, int rollVal, int toAdd) {
         int oldDoom = DoomHandler.getDoom();
         DoomHandler.addDoom(toAdd * -1);
         int newDoom = DoomHandler.getDoom();
-        new MessageBuilder()
-                .setEmbed(
-                        new EmbedBuilder()
-                                .setColor(RandomColor.getRandomColor())
-                                .setAuthor(user)
-                                .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))
-                                .addField("Doom Points", oldDoom + " → " + newDoom))
-                .send(channel);
+        final EmbedBuilder doomExpenditureEmbed = new EmbedBuilder()
+                .setColor(RandomColor.getRandomColor())
+                .setAuthor(user)
+                .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))
+                .addField("Doom Points", oldDoom + " → " + newDoom);
+        channel.sendMessage(doomExpenditureEmbed);
     }
 
     /**
      * Helper method to get the number of points to add to a roll
      *
      * @param emoji The emoji the user reacted to
-     * @return The number of points to add
+     * @return The number of points to add as an optional
      */
-    private int getAddAmount(Emoji emoji) {
-        int toAdd = 0;
-        if (emoji.isCustomEmoji()) {
-            String trimmedEmoji = PlotPointEnhancementHelper.trimCustomEmoji(emoji.asKnownCustomEmoji().get());
-            for (Map.Entry<Integer, String> emojiEntry : PlotPointEnhancementHelper.getOneToFourEmojiMap().entrySet()) {
-                if (emojiEntry.getValue().equals(trimmedEmoji)) {
-                    toAdd = emojiEntry.getKey();
-                }
+    private Optional<Integer> getAddAmount(Emoji emoji) {
+        for (Map.Entry<Integer, String> intToEmojiEntry : PlotPointEnhancementHelper.getOneToFourEmojiMap().entrySet()) {
+            if (emoji.equalsEmoji(intToEmojiEntry.getValue())) {
+                return Optional.of(intToEmojiEntry).map(Map.Entry::getKey);
             }
         }
-        else {
-            String unicodeEmoji = emoji.asUnicodeEmoji().get();
-            for (Map.Entry<Integer, String> emojiEntry :
-                    PlotPointEnhancementHelper.getOneToFourEmojiMap().entrySet()) {
-                if (emojiEntry.getValue().equals(unicodeEmoji)) {
-                    toAdd = emojiEntry.getKey();
-                }
-            }
-        }
-        return toAdd;
+        return Optional.empty();
     }
 }

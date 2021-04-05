@@ -46,8 +46,7 @@ public class TwoDee {
                 cmdHandler.registerCommand(new EnhancementToggleCommand());
 
                 //Create listeners
-                PlotPointEnhancementListener enhancementListener = new PlotPointEnhancementListener(api);
-                enhancementListener.startListening();
+                api.addListener(new PlotPointEnhancementListener());
                 DeleteStatsListener deleteStatsListener = new DeleteStatsListener(api);
                 deleteStatsListener.startListening();
 
