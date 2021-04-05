@@ -183,7 +183,7 @@ public class DoomHandler {
 
         public DoomConfigs() {
             doomPools = new HashMap<>();
-            activePool = "";
+            activePool = "Doom!";
         }
 
         public Map<String, Integer> getDoomPools() {
