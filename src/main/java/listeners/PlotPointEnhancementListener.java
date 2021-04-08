@@ -64,10 +64,10 @@ public class PlotPointEnhancementListener implements ReactionAddListener {
         Optional<Integer> toAdd = getAddAmount(emoji);
         toAdd.ifPresent(count -> {
             if (getGameMaster().equals(event.getUserIdAsString())) {
-                event.getApi().getUserById(event.getUserId()).thenAccept(user -> sendDoomPointEnhancementMessage(user, message.getChannel(), rollVal, count));
+                event.requestUser().thenAccept(user -> sendDoomPointEnhancementMessage(user, message.getChannel(), rollVal, count));
             }
             else {
-                event.getApi().getUserById(event.getUserId()).thenAccept(user -> sendPlotPointEnhancementMessage(user, message.getChannel(), rollVal, count));
+                event.requestUser().thenAccept(user -> sendPlotPointEnhancementMessage(user, message.getChannel(), rollVal, count));
             }
         });
 
