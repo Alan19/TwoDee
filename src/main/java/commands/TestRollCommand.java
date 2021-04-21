@@ -20,7 +20,6 @@ public class TestRollCommand implements CommandExecutor {
         //Variables containing roll information, disable opportunities and plot point costs
         final PoolProcessor poolProcessor = new PoolProcessor(messageContent, author);
         poolProcessor.getDicePool().setOpportunities(false);
-        poolProcessor.getDicePool().setPlotPointDiscount(Integer.MAX_VALUE);
         if (poolProcessor.getErrorEmbed() != null) {
             new MessageBuilder().setEmbed(poolProcessor.getErrorEmbed()).send(channel);
         }

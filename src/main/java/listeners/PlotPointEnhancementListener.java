@@ -95,11 +95,7 @@ public class PlotPointEnhancementListener implements ReactionAddListener {
         Optional<Integer> oldPP = SheetsHandler.getPlotPoints(user);
         if (oldPP.isPresent()) {
             final int newPP = oldPP.get() - toAdd;
-            try {
-                SheetsHandler.setPlotPoints(user, newPP);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            SheetsHandler.setPlotPoints(user, newPP);
             final EmbedBuilder enhanceRollEmbed = new EmbedBuilder()
                     .setAuthor(user)
                     .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))

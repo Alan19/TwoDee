@@ -12,6 +12,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import org.javacord.api.entity.user.User;
 import players.PartyHandler;
@@ -23,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 public class SheetsHandler {
     private static final String APPLICATION_NAME = "Skill Lookup";
@@ -120,23 +122,35 @@ public class SheetsHandler {
     }
 
     /**
-     * Sets the number of plot points for a user
+     * Sets the plot point count for a user
      *
-     * @param user  The user to modify
-     * @param count The new number of plot points the user has
+     * @param user  The user whose plot point count is being modified
+     * @param count The new number of plot points for the user
+     * @return A completable future that will return the new number of plot points once it is completed
      */
-    public static void setPlotPoints(User user, int count) throws IOException {
-        final Optional<ValueRange> rangeOptional = getPlotPointRange(user);
-        if (rangeOptional.isPresent()) {
-            final ValueRange plotPointRange = rangeOptional.get();
-            plotPointRange.setValues(Collections.singletonList(Collections.singletonList(String.valueOf(count))));
-            final Optional<String> spreadsheetID = getSpreadsheetForPartyMember(user);
-            if (spreadsheetID.isPresent()) {
-                instance.service.spreadsheets().values().update(spreadsheetID.get(), plotPointRange.getRange(), plotPointRange)
-                        .setValueInputOption("RAW")
-                        .execute();
-            }
+    public static CompletableFuture<Optional<Integer>> setPlotPoints(User user, int count) {
+        final Optional<ValueRange> userPlotPointRangeOptional = getPlotPointRange(user);
+        final Optional<String> partyMemberSpreadsheetID = getSpreadsheetForPartyMember(user);
+        if (partyMemberSpreadsheetID.isPresent() && userPlotPointRangeOptional.isPresent()) {
+            CompletableFuture.supplyAsync(() -> {
+                final ValueRange userPlotPointRange = userPlotPointRangeOptional.get();
+                userPlotPointRange.setValues(Collections.singletonList(Collections.singletonList(String.valueOf(count))));
+                try {
+                    final UpdateValuesResponse plotPointsCellUpdateRequest = instance.service.spreadsheets()
+                            .values()
+                            .update(partyMemberSpreadsheetID.get(), userPlotPointRange.getRange(), userPlotPointRange)
+                            .setIncludeValuesInResponse(true)
+                            .setValueInputOption("RAW")
+                            .execute();
+                    final int updatedPlotPointCount = Integer.parseInt((String) plotPointsCellUpdateRequest.getUpdatedData().getValues().get(0).get(0));
+                    return Optional.of(updatedPlotPointCount);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return Optional.empty();
+            });
         }
+        return CompletableFuture.completedFuture(Optional.empty());
     }
 
     /**
