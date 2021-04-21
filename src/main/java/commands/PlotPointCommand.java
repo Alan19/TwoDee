@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * This class adds plot points, subtracts plot points, and sets plot points for players. This class will also keep
@@ -48,8 +49,8 @@ public class PlotPointCommand implements CommandExecutor {
             else if ("addall".equals(arg)) {
                 command = CommandType.ADDALL;
             }
-            else if (arg instanceof Integer) {
-                amount = (int) arg;
+            else if (arg instanceof Long) {
+                amount = Math.toIntExact((long) arg);
             }
             else if (arg instanceof User) {
                 targets.add(((User) arg));
@@ -86,7 +87,7 @@ public class PlotPointCommand implements CommandExecutor {
             setPlotPointsAndSendSummary(targets, amount, channel);
         }
         else if (commandType == CommandType.ADDALL) {
-            addPlotPointsAndSendSummary(PartyHandler.getPartyMembers(party, channel.getApi()), amount, channel);
+            addPlotPointsToPartyAndSendSummary(PartyHandler.getPartyMembers(party, channel.getApi()), amount, channel);
         }
         else {
             if (author.asUser().isPresent()) {
@@ -123,14 +124,41 @@ public class PlotPointCommand implements CommandExecutor {
      */
     private void addPlotPointsAndSendSummary(List<User> targets, int amount, TextChannel channel) {
         List<Triple<User, Integer, Integer>> changes = new ArrayList<>();
-        for (User target : targets) {
-            final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(target);
-            final Optional<Integer> newPlotPoints = addPlotPoints(target, amount, channel);
-            if (plotPoints.isPresent() && newPlotPoints.isPresent()) {
-                changes.add(Triple.of(target, plotPoints.get(), newPlotPoints.get()));
-            }
-        }
+        targets.forEach(target -> modifyUserPlotPoints(amount, channel, changes, target));
         channel.sendMessage(generateEmbed(changes, channel));
+    }
+
+    /**
+     * Adds plot points to an entire party
+     *
+     * @param targets The list of users in the party
+     * @param amount  The number of plot points to add
+     * @param channel The channel the command was sent in
+     */
+    private void addPlotPointsToPartyAndSendSummary(List<CompletableFuture<User>> targets, int amount, TextChannel channel) {
+        List<Triple<User, Integer, Integer>> changes = new ArrayList<>();
+        List<CompletableFuture<Void>> list = new ArrayList<>();
+        for (CompletableFuture<User> userCompletableFuture : targets) {
+            list.add(userCompletableFuture.thenComposeAsync(user -> CompletableFuture.runAsync(() -> modifyUserPlotPoints(amount, channel, changes, user))));
+        }
+        final CompletableFuture<Void> afterUpdateFuture = CompletableFuture.allOf(list.toArray(new CompletableFuture[]{}));
+        afterUpdateFuture.thenAcceptAsync(unused -> channel.sendMessage(generateEmbed(changes, channel)));
+    }
+
+    /**
+     * Modifies the plot points for a user and add the change in plot points it was successful
+     *
+     * @param amount  The number of plot points to add
+     * @param channel The channel the message was sent in
+     * @param changes The list of changes in the plot points
+     * @param user    The user to modify the plot points of
+     */
+    private void modifyUserPlotPoints(int amount, TextChannel channel, List<Triple<User, Integer, Integer>> changes, User user) {
+        final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(user);
+        final Optional<Integer> newPlotPoints = addPlotPoints(user, amount, channel);
+        if (plotPoints.isPresent() && newPlotPoints.isPresent()) {
+            changes.add(Triple.of(user, plotPoints.get(), newPlotPoints.get()));
+        }
     }
 
     /**
@@ -202,7 +230,7 @@ public class PlotPointCommand implements CommandExecutor {
      * @return An embed containing the changes in a user(s)'s plot points. If there is more than 1 user, add the changes as fields. Otherwise, set the author of the embed as the user and the description as the change in plot points.
      */
     private EmbedBuilder generateEmbed(List<Triple<User, Integer, Integer>> plotPointChanges, Channel channel) {
-        EmbedBuilder builder = new EmbedBuilder().setDescription("Plot Points!").setColor(RandomColor.getRandomColor());
+        EmbedBuilder builder = new EmbedBuilder().setTitle("Plot Points!").setColor(RandomColor.getRandomColor());
         if (plotPointChanges.size() == 1) {
             final String description = plotPointChanges.get(0).getMiddle() + " → " + plotPointChanges.get(0).getRight();
             builder.setAuthor(plotPointChanges.get(0).getLeft()).setDescription(description);

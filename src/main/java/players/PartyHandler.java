@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class PartyHandler {
     private static final PartyHandler instance = new PartyHandler();
@@ -30,19 +31,10 @@ public class PartyHandler {
      * @param api       The Discord API
      * @return A list of User objects that represents the characters in a party
      */
-    public static List<User> getPartyMembers(String partyName, DiscordApi api) {
-        List<User> foundUsers = new ArrayList<>();
-        for (Party party : instance.parties.getParties()) {
-            if (party.getName().equals(partyName)) {
-                for (PartyMember partyMember : party.getMembers()) {
-                    long discordId = partyMember.getDiscordId();
-                    CompletableFuture<User> userCompletableFuture = api.getUserById(discordId);
-                    userCompletableFuture.thenAccept(foundUsers::add);
-                }
-                break;
-            }
-        }
-        return foundUsers;
+    public static List<CompletableFuture<User>> getPartyMembers(String partyName, DiscordApi api) {
+        List<CompletableFuture<User>> completableFutures;
+        completableFutures = instance.parties.getParties().stream().filter(party -> party.getName().equals(partyName)).findFirst().map(party -> party.getMembers().stream().mapToLong(PartyMember::getDiscordId).mapToObj(api::getUserById).collect(Collectors.toList())).orElse(new ArrayList<>());
+        return completableFutures;
     }
 
     public static List<Party> getParties() {

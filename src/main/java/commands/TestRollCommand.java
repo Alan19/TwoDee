@@ -10,7 +10,6 @@ import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;
 
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 public class TestRollCommand implements CommandExecutor {
@@ -31,15 +30,7 @@ public class TestRollCommand implements CommandExecutor {
             final CompletableFuture<Message> sentMessageFuture = new MessageBuilder()
                     .setEmbed(diceRoller.generateResults(message.getAuthor()))
                     .send(channel);
-
-
-            sentMessageFuture.thenAcceptAsync(sentMessage -> {
-                try {
-                    RollCommand.handleMessageSideEffects(message, dicePool, diceRoller, sentMessage);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+            sentMessageFuture.thenAcceptAsync(sentMessage -> RollCommand.handleMessageSideEffects(message, dicePool, diceRoller, sentMessage));
         }
     }
 }

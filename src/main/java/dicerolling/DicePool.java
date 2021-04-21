@@ -63,9 +63,8 @@ public class DicePool {
         return plotPointDiscount;
     }
 
-    public DicePool setPlotPointDiscount(int num) {
+    public void setPlotPointDiscount(int num) {
         plotPointDiscount = num;
-        return this;
     }
 
     public boolean enableOpportunities() {
