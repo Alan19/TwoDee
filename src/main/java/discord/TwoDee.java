@@ -6,6 +6,7 @@ import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.DeleteStatsListener;
 import listeners.PlotPointEnhancementListener;
 import org.javacord.api.DiscordApiBuilder;
+import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.util.logging.ExceptionLogger;
 
@@ -24,14 +25,13 @@ public class TwoDee {
             Properties prop = new Properties();
             prop.load(new FileInputStream("resources/bot.properties"));
             String token = prop.getProperty("token");
-            new DiscordApiBuilder().setToken(token).login().thenAccept(api -> {
+            new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).login().thenAccept(api -> {
                 //Send startup messsage
                 new MessageBuilder()
                         .setContent(getStartupMessage())
                         .send(api.getTextChannelById("484544303247523840").get());
                 // Print the invite url of your bot
                 System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
-
                 //Create command handler
                 CommandHandler cmdHandler = new JavacordHandler(api);
                 cmdHandler.registerCommand(new StatisticsCommand());
@@ -43,6 +43,7 @@ public class TwoDee {
                 cmdHandler.registerCommand(new PlotPointCommand());
                 cmdHandler.registerCommand(new EmojiPurgeCommand());
                 cmdHandler.registerCommand(new EnhancementToggleCommand());
+                cmdHandler.registerCommand(new ReplenishCommand());
 
                 //Create listeners
                 api.addListener(new PlotPointEnhancementListener());

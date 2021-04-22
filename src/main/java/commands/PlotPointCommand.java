@@ -46,9 +46,6 @@ public class PlotPointCommand implements CommandExecutor {
             else if ("set".equals(arg)) {
                 command = CommandType.SET;
             }
-            else if ("addall".equals(arg)) {
-                command = CommandType.ADDALL;
-            }
             else if (arg instanceof Long) {
                 amount = Math.toIntExact((long) arg);
             }
@@ -62,7 +59,7 @@ public class PlotPointCommand implements CommandExecutor {
         else {
             targets = message.getMentionedUsers();
         }
-        executeCommand(command, targets, amount, author, party, channel);
+        executeCommand(command, targets, amount, author, channel);
     }
 
     /**
@@ -72,10 +69,9 @@ public class PlotPointCommand implements CommandExecutor {
      * @param targets     The users to affect with the command
      * @param amount      The number of plot points to add or set
      * @param author      The author of the message containing the command
-     * @param party       The party to add plot points to (if any)
      * @param channel     The channel the command was sent from
      */
-    private void executeCommand(CommandType commandType, List<User> targets, int amount, MessageAuthor author, String party, TextChannel channel) {
+    private void executeCommand(CommandType commandType, List<User> targets, int amount, MessageAuthor author, TextChannel channel) {
         if (commandType == CommandType.ADD) {
             addPlotPointsAndSendSummary(targets, amount, channel, author);
         }
@@ -84,9 +80,6 @@ public class PlotPointCommand implements CommandExecutor {
         }
         else if (commandType == CommandType.SET) {
             setPlotPointsAndSendSummary(targets, amount, channel, author);
-        }
-        else if (commandType == CommandType.ADDALL) {
-            addPlotPointsToPartyAndSendSummary(PartyHandler.getPartyMembers(party, channel.getApi()), amount, channel, author);
         }
         else {
             if (author.asUser().isPresent()) {
@@ -127,24 +120,6 @@ public class PlotPointCommand implements CommandExecutor {
         List<Triple<User, Integer, Integer>> changes = new ArrayList<>();
         targets.forEach(target -> addUserPlotPoints(amount, channel, changes, target));
         channel.sendMessage(PlotPointHandler.generateEmbed(changes, channel, author));
-    }
-
-    /**
-     * Adds plot points to an entire party
-     *
-     * @param targets The list of users in the party
-     * @param amount  The number of plot points to add
-     * @param channel The channel the command was sent in
-     * @param author  The author that invoked the command
-     */
-    private void addPlotPointsToPartyAndSendSummary(List<CompletableFuture<User>> targets, int amount, TextChannel channel, MessageAuthor author) {
-        List<Triple<User, Integer, Integer>> changes = new ArrayList<>();
-        List<CompletableFuture<Void>> list = new ArrayList<>();
-        for (CompletableFuture<User> userCompletableFuture : targets) {
-            list.add(userCompletableFuture.thenComposeAsync(user -> CompletableFuture.runAsync(() -> addUserPlotPoints(amount, channel, changes, user))));
-        }
-        final CompletableFuture<Void> afterUpdateFuture = CompletableFuture.allOf(list.toArray(new CompletableFuture[]{}));
-        afterUpdateFuture.thenAcceptAsync(unused -> channel.sendMessage(PlotPointHandler.generateEmbed(changes, channel, author)));
     }
 
     /**

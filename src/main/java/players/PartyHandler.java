@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -43,6 +44,10 @@ public class PartyHandler {
 
     public static List<Party> getParties() {
         return instance.parties.getParties();
+    }
+
+    public static Optional<Party> getPartyByName(String name) {
+        return getParties().stream().filter(party -> party.getName().equals(name)).findFirst();
     }
 
     static class PartyConfig {

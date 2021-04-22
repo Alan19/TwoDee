@@ -18,10 +18,22 @@ public class Party {
     @Expose
     private long channel;
 
+    @SerializedName("roleID")
+    @Expose
+    private long roleID;
+
     public Party(String name, List<PartyMember> members) {
         super();
         this.name = name;
         this.members = members;
+    }
+
+    public long getRoleID() {
+        return roleID;
+    }
+
+    public void setRoleID(long roleID) {
+        this.roleID = roleID;
     }
 
     public String getName() {
