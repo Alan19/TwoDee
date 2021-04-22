@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class ReplenishCommand implements CommandExecutor {
-    @Command(aliases = {"~replenish", "~sr"}, description = "Adds plot points to all party members", privateMessages = false, usage = "~replenish <roleping>... [amount]")
+    @Command(aliases = {"~replenish", "~sr", "~p addall"}, description = "Adds plot points to all party members of the specified party", privateMessages = false, usage = "~replenish <roleping> [amount]")
     public void replenishPlotPoints(DiscordApi api, TextChannel channel, Message message, MessageAuthor author, Object[] parameters) {
         final List<Role> parties = new ArrayList<>(message.getMentionedRoles());
         // Add party roles mentioned by strings to parties
@@ -32,7 +32,7 @@ public class ReplenishCommand implements CommandExecutor {
         // If there is a number, run the replenish function using the parties and that number as the amount to replenish
         Arrays.stream(parameters)
                 .filter(o -> o instanceof Long).findFirst()
-                .ifPresent(pointsToReplenish -> replenishParties(parties, Math.toIntExact((long) pointsToReplenish), channel, author));
+                .ifPresent(pointsToReplenish -> replenishParties(parties.get(0), Math.toIntExact((long) pointsToReplenish), channel, author));
     }
 
     /**
@@ -40,16 +40,15 @@ public class ReplenishCommand implements CommandExecutor {
      * <p>
      * The embed will list players that the bot cannot successfully edit
      *
-     * @param parties The parties to add plot points to
+     * @param party   The party to add plot points to
      * @param points  The number of plot point to add ot each player
      * @param channel The channel the message was sent from
      * @param author  The author of the message
      */
-    private void replenishParties(List<Role> parties, int points, TextChannel channel, MessageAuthor author) {
+    private void replenishParties(Role party, int points, TextChannel channel, MessageAuthor author) {
         List<Triple<User, Integer, Integer>> plotPointChanges = new ArrayList<>();
         List<User> uneditablePlayers = new ArrayList<>();
-        final List<CompletableFuture<Optional<Integer>>> replenishmentFutures = parties.stream()
-                .flatMap(role -> role.getUsers().stream())
+        final List<CompletableFuture<Optional<Integer>>> replenishmentFutures = party.getUsers().stream()
                 .filter(user -> SheetsHandler.getPlotPoints(user).isPresent())
                 .map(user -> addPlotPointsToUser(points, plotPointChanges, uneditablePlayers, user))
                 .collect(Collectors.toList());
