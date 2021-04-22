@@ -129,10 +129,10 @@ public class SheetsHandler {
      * @return A completable future that will return the new number of plot points once it is completed
      */
     public static CompletableFuture<Optional<Integer>> setPlotPoints(User user, int count) {
-        final Optional<ValueRange> userPlotPointRangeOptional = getPlotPointRange(user);
-        final Optional<String> partyMemberSpreadsheetID = getSpreadsheetForPartyMember(user);
-        if (partyMemberSpreadsheetID.isPresent() && userPlotPointRangeOptional.isPresent()) {
-            CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
+            final Optional<ValueRange> userPlotPointRangeOptional = getPlotPointRange(user);
+            final Optional<String> partyMemberSpreadsheetID = getSpreadsheetForPartyMember(user);
+            if (partyMemberSpreadsheetID.isPresent() && userPlotPointRangeOptional.isPresent()) {
                 final ValueRange userPlotPointRange = userPlotPointRangeOptional.get();
                 userPlotPointRange.setValues(Collections.singletonList(Collections.singletonList(String.valueOf(count))));
                 try {
@@ -146,24 +146,36 @@ public class SheetsHandler {
                     return Optional.of(updatedPlotPointCount);
                 } catch (IOException e) {
                     e.printStackTrace();
+                    sneakyThrow(e);
                 }
                 return Optional.empty();
-            });
-        }
-        return CompletableFuture.completedFuture(Optional.empty());
+            }
+            return Optional.empty();
+        });
     }
 
     /**
-     * Gets the plot point cap for the user
+     * A functon used to throw an exception. Used in completable futures to allow exceptions to be handled in exceptonally
      *
-     * @param user The user to check the cap of
-     * @return An optional containing the plot point cap of the user, or Optional.empty() if the cell cannot be retrieved
+     * @throws T The exception to throw
      */
-    public static Optional<Integer> getPlotPointSoftCap(User user) {
+    @SuppressWarnings("all")
+    public static <R, T extends Throwable> R sneakyThrow(Throwable t) throws T {
+        throw (T) t;
+    }
+
+
+    /**
+     * Gets the current bleed value of a player
+     *
+     * @param user The user to check the bleed value of of
+     * @return An optional containing the bleed value of the user, or Optional.empty() if the cell cannot be retrieved
+     */
+    public static Optional<Integer> getPlayerBleed(User user) {
         final Optional<String> spreadsheetForUser = getSpreadsheetForPartyMember(user);
         if (spreadsheetForUser.isPresent()) {
             try {
-                return Optional.of(instance.service.spreadsheets().values().get(spreadsheetForUser.get(), "MaxPlotPoints").execute()).map(valueRange -> Integer.parseInt((String) valueRange.getValues().get(0).get(0)));
+                return Optional.of(instance.service.spreadsheets().values().get(spreadsheetForUser.get(), "PlotPointBleed").execute()).map(valueRange -> Integer.parseInt((String) valueRange.getValues().get(0).get(0)));
             } catch (IOException e) {
                 e.printStackTrace();
             }

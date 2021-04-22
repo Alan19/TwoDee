@@ -33,7 +33,11 @@ public class PartyHandler {
      */
     public static List<CompletableFuture<User>> getPartyMembers(String partyName, DiscordApi api) {
         List<CompletableFuture<User>> completableFutures;
-        completableFutures = instance.parties.getParties().stream().filter(party -> party.getName().equals(partyName)).findFirst().map(party -> party.getMembers().stream().mapToLong(PartyMember::getDiscordId).mapToObj(api::getUserById).collect(Collectors.toList())).orElse(new ArrayList<>());
+        completableFutures = instance.parties.getParties().stream()
+                .filter(party -> party.getName().equals(partyName))
+                .findFirst()
+                .map(party -> party.getMembers().stream().mapToLong(PartyMember::getDiscordId).mapToObj(api::getUserById).collect(Collectors.toList()))
+                .orElse(new ArrayList<>());
         return completableFutures;
     }
 

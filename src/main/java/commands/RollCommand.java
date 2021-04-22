@@ -56,21 +56,13 @@ public class RollCommand implements CommandExecutor {
             if (dicePool.enableOpportunities() && diceRoller.getDoom() >= 1) {
                 sentMessage.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
                 if (author.asUser().isPresent()) {
-                    try {
-                        channel.sendMessage(addOnePlotPointAndGenerateEmbed(author.asUser().get()));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    channel.sendMessage(addOnePlotPointAndGenerateEmbed(author.asUser().get()));
                 }
                 EmbedBuilder doomEmbed = DoomHandler.addDoom(diceRoller.getDoom());
                 channel.sendMessage(doomEmbed);
             }
             if (plotPointsSpent != 0 && author.asUser().isPresent()) {
-                try {
-                    channel.sendMessage(deductPlotPoints(plotPointsSpent, author.asUser().get()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                channel.sendMessage(deductPlotPoints(plotPointsSpent, author.asUser().get()));
             }
         }
         if (!dicePool.getDifficulty().equals("")) {
@@ -116,7 +108,7 @@ public class RollCommand implements CommandExecutor {
      * @param author The player that rolled a 1
      * @return The EmbedBuilder that shows the change in plot points for the player
      */
-    public static EmbedBuilder addOnePlotPointAndGenerateEmbed(User author) throws IOException {
+    public static EmbedBuilder addOnePlotPointAndGenerateEmbed(User author) {
         if (SheetsHandler.getPlotPoints(author).isPresent()) {
             int oldPP = SheetsHandler.getPlotPoints(author).get();
             final int newPP = oldPP + 1;
@@ -140,7 +132,7 @@ public class RollCommand implements CommandExecutor {
      * @param author          The player who made the roll
      * @return The EmbedBuilder showing the change in plot points
      */
-    public static EmbedBuilder deductPlotPoints(int plotPointsSpent, User author) throws IOException {
+    public static EmbedBuilder deductPlotPoints(int plotPointsSpent, User author) {
         final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(author);
         if (plotPoints.isPresent()) {
             final int newPlotPints = plotPoints.get() - plotPointsSpent;
