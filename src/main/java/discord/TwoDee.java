@@ -41,7 +41,6 @@ public class TwoDee {
                 cmdHandler.registerCommand(new StopCommand());
                 cmdHandler.registerCommand(new HelpCommand(cmdHandler));
                 cmdHandler.registerCommand(new PlotPointCommand());
-                cmdHandler.registerCommand(new CalendarCommand());
                 cmdHandler.registerCommand(new EmojiPurgeCommand());
                 cmdHandler.registerCommand(new EnhancementToggleCommand());
 
