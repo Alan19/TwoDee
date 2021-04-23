@@ -50,7 +50,7 @@ public class ReplenishCommand implements CommandExecutor {
         List<User> uneditablePlayers = new ArrayList<>();
         final List<CompletableFuture<Optional<Integer>>> replenishmentFutures = party.getUsers().stream()
                 .filter(user -> SheetsHandler.getPlotPoints(user).isPresent())
-                .map(user -> addPlotPointsToUser(points, plotPointChanges, uneditablePlayers, user))
+                .map(user -> PlotPointHandler.addPlotPointsToUser(points, plotPointChanges, uneditablePlayers, user))
                 .collect(Collectors.toList());
         CompletableFuture.allOf(replenishmentFutures.toArray(new CompletableFuture[]{}))
                 .thenAccept(unused -> sendReplenishmentResultEmbed(channel, author, plotPointChanges, uneditablePlayers));
@@ -72,32 +72,6 @@ public class ReplenishCommand implements CommandExecutor {
             replenishmentEmbed.setDescription("I was unable to edit the plot points of:\n - " + uneditablePlayers.stream().map(user -> PlotPointHandler.getUsernameInChannel(user, channel)).collect(Collectors.joining("\n - ")));
         }
         channel.sendMessage(replenishmentEmbed);
-    }
-
-    /**
-     * Generates a CompletableFuture that adds plot points to players, and updates the list of changes and the list of uneditable players
-     *
-     * @param points            The number of plot points to add to each the player
-     * @param plotPointChanges  The list of changes in plot points
-     * @param uneditablePlayers The list of uneditable players
-     * @param user              The player to edit the plot points for
-     * @return A CompletableFuture representing the completion of the addition of plot points and side effects
-     */
-    private CompletableFuture<Optional<Integer>> addPlotPointsToUser(int points, List<Triple<User, Integer, Integer>> plotPointChanges, List<User> uneditablePlayers, User user) {
-        final Optional<Integer> oldPlotPointCount = SheetsHandler.getPlotPoints(user);
-        if (oldPlotPointCount.isPresent()) {
-            final int newPlotPointCount = oldPlotPointCount.get() + points;
-            return SheetsHandler.setPlotPoints(user, newPlotPointCount)
-                    .thenApply(integer -> {
-                        integer.ifPresent(newPoints -> plotPointChanges.add(Triple.of(user, oldPlotPointCount.get(), newPlotPointCount)));
-                        return integer;
-                    })
-                    .exceptionally(throwable -> {
-                        uneditablePlayers.add(user);
-                        return Optional.empty();
-                    });
-        }
-        return CompletableFuture.completedFuture(Optional.empty());
     }
 
 }

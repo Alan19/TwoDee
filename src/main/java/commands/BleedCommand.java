@@ -66,15 +66,7 @@ public class BleedCommand implements CommandExecutor {
         final Optional<Integer> playerBleed = SheetsHandler.getPlayerBleed(user);
         if (oldPlotPointCount.isPresent() && playerBleed.isPresent()) {
             final int newPlotPointCount = oldPlotPointCount.get() - playerBleed.get();
-            return SheetsHandler.setPlotPoints(user, newPlotPointCount)
-                    .thenApply(integer -> {
-                        integer.ifPresent(newPoints -> plotPointChanges.add(Triple.of(user, oldPlotPointCount.get(), newPlotPointCount)));
-                        return integer;
-                    })
-                    .exceptionally(throwable -> {
-                        uneditablePlayers.add(user);
-                        return Optional.empty();
-                    });
+            return PlotPointHandler.setPlotPointsAndLog(plotPointChanges, uneditablePlayers, user, oldPlotPointCount.get(), newPlotPointCount);
         }
         return CompletableFuture.completedFuture(Optional.empty());
     }

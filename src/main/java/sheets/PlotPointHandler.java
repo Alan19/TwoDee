@@ -50,25 +50,6 @@ public class PlotPointHandler {
     }
 
     /**
-     * Adds plot points to one user
-     *
-     * @param user    The user to add plot points to
-     * @param number  The number of plot points to add
-     * @param channel The channel the message was sent from
-     * @return The new number of plot points the user has
-     */
-    public static Optional<Integer> addPlotPoints(User user, int number, TextChannel channel) {
-        final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(user);
-        if (plotPoints.isPresent()) {
-            int oldPP = plotPoints.get();
-            final int newPP = oldPP + number;
-            setPlotPoints(user, newPP, channel);
-            return SheetsHandler.getPlotPoints(user);
-        }
-        return Optional.empty();
-    }
-
-    /**
      * Gets the display name of the user in a channel
      *
      * @param user    The user to check the nickname of
@@ -90,9 +71,39 @@ public class PlotPointHandler {
     public static EmbedBuilder generateEmbed(List<Triple<User, Integer, Integer>> plotPointChanges, Channel channel, MessageAuthor author) {
         EmbedBuilder builder = new EmbedBuilder().setTitle("Plot Points!").setColor(RandomColor.getRandomColor());
         builder.setAuthor(author);
-            for (Triple<User, Integer, Integer> changes : plotPointChanges) {
-                builder.addField(getUsernameInChannel(changes.getLeft(), channel), changes.getMiddle() + " → " + changes.getRight());
-            }
+        for (Triple<User, Integer, Integer> changes : plotPointChanges) {
+            builder.addField(getUsernameInChannel(changes.getLeft(), channel), changes.getMiddle() + " → " + changes.getRight());
+        }
         return builder;
+    }
+
+    public static CompletableFuture<Optional<Integer>> setPlotPointsAndLog(List<Triple<User, Integer, Integer>> plotPointChanges, List<User> uneditablePlayers, User user, int oldPlotPointCount, int newPlotPointCount) {
+        return SheetsHandler.setPlotPoints(user, newPlotPointCount)
+                .thenApply(integer -> {
+                    integer.ifPresent(newPoints -> plotPointChanges.add(Triple.of(user, oldPlotPointCount, newPlotPointCount)));
+                    return integer;
+                })
+                .exceptionally(throwable -> {
+                    uneditablePlayers.add(user);
+                    return Optional.empty();
+                });
+    }
+
+    /**
+     * Generates a CompletableFuture that adds plot points to players, and updates the list of changes and the list of uneditable players
+     *
+     * @param points            The number of plot points to add to each the player
+     * @param plotPointChanges  The list of changes in plot points
+     * @param uneditablePlayers The list of uneditable players
+     * @param user              The player to edit the plot points for
+     * @return A CompletableFuture representing the completion of the addition of plot points and side effects
+     */
+    public static CompletableFuture<Optional<Integer>> addPlotPointsToUser(int points, List<Triple<User, Integer, Integer>> plotPointChanges, List<User> uneditablePlayers, User user) {
+        final Optional<Integer> oldPlotPointCount = SheetsHandler.getPlotPoints(user);
+        if (oldPlotPointCount.isPresent()) {
+            final int newPlotPointCount = oldPlotPointCount.get() + points;
+            return setPlotPointsAndLog(plotPointChanges, uneditablePlayers, user, oldPlotPointCount.get(), newPlotPointCount);
+        }
+        return CompletableFuture.completedFuture(Optional.empty());
     }
 }

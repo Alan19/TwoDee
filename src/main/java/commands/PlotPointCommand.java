@@ -118,24 +118,13 @@ public class PlotPointCommand implements CommandExecutor {
      */
     private void addPlotPointsAndSendSummary(List<User> targets, int amount, TextChannel channel, MessageAuthor author) {
         List<Triple<User, Integer, Integer>> changes = new ArrayList<>();
-        targets.forEach(target -> addUserPlotPoints(amount, channel, changes, target));
-        channel.sendMessage(PlotPointHandler.generateEmbed(changes, channel, author));
-    }
-
-    /**
-     * Modifies the plot points for a user and add the change in plot points it was successful
-     *
-     * @param amount  The number of plot points to add
-     * @param channel The channel the message was sent in
-     * @param changes The list of changes in the plot points
-     * @param user    The user to modify the plot points of
-     */
-    private void addUserPlotPoints(int amount, TextChannel channel, List<Triple<User, Integer, Integer>> changes, User user) {
-        final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(user);
-        final Optional<Integer> newPlotPoints = PlotPointHandler.addPlotPoints(user, amount, channel);
-        if (plotPoints.isPresent() && newPlotPoints.isPresent()) {
-            changes.add(Triple.of(user, plotPoints.get(), newPlotPoints.get()));
-        }
+        // TODO Log errors
+        final List<CompletableFuture<Optional<Integer>>> plotPointUpdateFuture = targets.stream()
+                .filter(user -> SheetsHandler.getPlotPoints(user).isPresent())
+                .map(user -> PlotPointHandler.addPlotPointsToUser(amount, changes, new ArrayList<>(), user))
+                .collect(Collectors.toList());
+        CompletableFuture.allOf(plotPointUpdateFuture.toArray(new CompletableFuture[]{}))
+                .thenApply(unused -> channel.sendMessage(PlotPointHandler.generateEmbed(changes, channel, author)));
     }
 
     /**
