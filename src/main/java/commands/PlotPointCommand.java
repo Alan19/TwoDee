@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * track of doom points
  */
 public class PlotPointCommand implements CommandExecutor {
-    @Command(aliases = {"~p", "~pp", "~plot", "~plotpoints"}, description = "Modifies the plot points of a user", privateMessages = false, usage = "~p add|sub|set|addall|addhere party|usermention [number]")
+    @Command(aliases = {"~p", "~pp", "~plot", "~plotpoints"}, description = "Modifies the plot points of a user", privateMessages = false, usage = "~p add|sub|set <usermention> [number]")
     public void processCommandType(Object[] params, MessageAuthor author, TextChannel channel, Server server, Message message) {
         List<User> targets = new ArrayList<>();
         CommandType command = CommandType.GET;
@@ -98,14 +98,11 @@ public class PlotPointCommand implements CommandExecutor {
      */
     private void setPlotPointsAndSendSummary(List<User> playersToModify, int amount, TextChannel channel, MessageAuthor author) {
         List<Triple<User, Integer, Integer>> changes = new ArrayList<>();
-        CompletableFuture<Void> modifyPlayerPlotPointsFuture = CompletableFuture.allOf(playersToModify.stream()
+        final List<CompletableFuture<Optional<Integer>>> afterPlotPointUpdateFuture = playersToModify.stream()
                 .filter(user -> SheetsHandler.getPlotPoints(user).isPresent())
-                .map(user -> PlotPointHandler.setPlotPoints(user, amount, channel)
-                        .thenApply(integer -> {
-                            changes.add(Triple.of(user, SheetsHandler.getPlotPoints(user).get(), amount));
-                            return integer;
-                        })).collect(Collectors.toList()).toArray(new CompletableFuture[]{}));
-        modifyPlayerPlotPointsFuture.thenAcceptAsync(unused -> channel.sendMessage(PlotPointHandler.generateEmbed(changes, channel, author)));
+                .map(user -> PlotPointHandler.setPlotPointsAndLog(changes, new ArrayList<>(), user, amount, SheetsHandler.getPlotPoints(user).get() + amount))
+                .collect(Collectors.toList());
+        CompletableFuture.allOf(afterPlotPointUpdateFuture.toArray(new CompletableFuture[]{})).thenAcceptAsync(unused -> channel.sendMessage(PlotPointHandler.generateEmbed(changes, channel, author)));
     }
 
     /**
