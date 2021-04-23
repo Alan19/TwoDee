@@ -44,6 +44,7 @@ public class TwoDee {
                 cmdHandler.registerCommand(new EmojiPurgeCommand());
                 cmdHandler.registerCommand(new EnhancementToggleCommand());
                 cmdHandler.registerCommand(new ReplenishCommand());
+                cmdHandler.registerCommand(new BleedCommand());
 
                 //Create listeners
                 api.addListener(new PlotPointEnhancementListener());

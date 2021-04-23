@@ -90,15 +90,9 @@ public class PlotPointHandler {
     public static EmbedBuilder generateEmbed(List<Triple<User, Integer, Integer>> plotPointChanges, Channel channel, MessageAuthor author) {
         EmbedBuilder builder = new EmbedBuilder().setTitle("Plot Points!").setColor(RandomColor.getRandomColor());
         builder.setAuthor(author);
-        if (plotPointChanges.size() == 1) {
-            final String description = plotPointChanges.get(0).getMiddle() + " → " + plotPointChanges.get(0).getRight();
-            builder.setAuthor(plotPointChanges.get(0).getLeft()).setDescription(description);
-        }
-        else {
             for (Triple<User, Integer, Integer> changes : plotPointChanges) {
                 builder.addField(getUsernameInChannel(changes.getLeft(), channel), changes.getMiddle() + " → " + changes.getRight());
             }
-        }
         return builder;
     }
 }
