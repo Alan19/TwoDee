@@ -10,16 +10,19 @@ import dicerolling.SuccessCalculatorEmbed;
 import doom.DoomHandler;
 import logic.PlotPointEnhancementHelper;
 import logic.RandomColor;
+import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import sheets.PlotPointHandler;
 import sheets.SheetsHandler;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
@@ -53,16 +56,22 @@ public class RollCommand implements CommandExecutor {
         }
         //Players have to spend plot points and gain doom points on opportunities
         else {
+            CompletableFuture<Optional<Integer>> opportunityFuture = CompletableFuture.completedFuture(Optional.empty());
             if (dicePool.enableOpportunities() && diceRoller.getDoom() >= 1) {
                 sentMessage.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
                 if (author.asUser().isPresent()) {
-                    channel.sendMessage(addOnePlotPointAndGenerateEmbed(author.asUser().get()));
+                    ArrayList<Triple<User, Integer, Integer>> plotPointChanges = new ArrayList<>();
+                    opportunityFuture = PlotPointHandler.addPlotPointsToUser(1, plotPointChanges, new ArrayList<>(), author.asUser().get());
+                    EmbedBuilder opportunityEmbed = new EmbedBuilder()
+                            .setTitle("An opportunity!")
+                            .setDescription(plotPointChanges.get(0).getMiddle() + " → " + plotPointChanges.get(0).getRight());
+                    channel.sendMessage(opportunityEmbed);
                 }
                 EmbedBuilder doomEmbed = DoomHandler.addDoom(diceRoller.getDoom());
                 channel.sendMessage(doomEmbed);
             }
             if (plotPointsSpent != 0 && author.asUser().isPresent()) {
-                channel.sendMessage(deductPlotPoints(plotPointsSpent, author.asUser().get()));
+                opportunityFuture.thenAccept(newPlotPoints -> channel.sendMessage(deductPlotPoints(plotPointsSpent, author.asUser().get())));
             }
         }
         if (!dicePool.getDifficulty().equals("")) {
