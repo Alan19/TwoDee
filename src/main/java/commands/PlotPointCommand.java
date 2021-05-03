@@ -10,8 +10,6 @@ import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
-import players.Party;
-import players.PartyHandler;
 import sheets.PlotPointHandler;
 import sheets.SheetsHandler;
 
@@ -32,7 +30,6 @@ public class PlotPointCommand implements CommandExecutor {
         List<User> targets = new ArrayList<>();
         CommandType command = CommandType.GET;
         int amount = 1;
-        String party = "";
         for (Object arg : params) {
             if ("add".equals(arg)) {
                 command = CommandType.ADD;
@@ -48,9 +45,6 @@ public class PlotPointCommand implements CommandExecutor {
             }
             else if (arg instanceof Long) {
                 amount = Math.toIntExact((long) arg);
-            }
-            else if (PartyHandler.getParties().stream().map(Party::getName).anyMatch(s -> s.equals(arg))) {
-                party = (String) arg;
             }
         }
         if (message.getMentionedUsers().isEmpty() && author.asUser().isPresent()) {
@@ -100,7 +94,7 @@ public class PlotPointCommand implements CommandExecutor {
         List<Triple<User, Integer, Integer>> changes = new ArrayList<>();
         final List<CompletableFuture<Optional<Integer>>> afterPlotPointUpdateFuture = playersToModify.stream()
                 .filter(user -> SheetsHandler.getPlotPoints(user).isPresent())
-                .map(user -> PlotPointHandler.setPlotPointsAndLog(changes, new ArrayList<>(), user, amount, SheetsHandler.getPlotPoints(user).get() + amount))
+                .map(user -> PlotPointHandler.setPlotPointsAndLog(changes, new ArrayList<>(), user, SheetsHandler.getPlotPoints(user).get(), amount))
                 .collect(Collectors.toList());
         CompletableFuture.allOf(afterPlotPointUpdateFuture.toArray(new CompletableFuture[]{})).thenAcceptAsync(unused -> channel.sendMessage(PlotPointHandler.generateEmbed(changes, channel, author)));
     }
