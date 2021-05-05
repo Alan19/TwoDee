@@ -24,6 +24,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class RollCommand implements CommandExecutor {
     /**
@@ -49,9 +50,17 @@ public class RollCommand implements CommandExecutor {
             final CompletableFuture<Message> sentMessageFuture = new MessageBuilder()
                     .setEmbed(diceRoller.generateResults(message.getAuthor()))
                     .send(channel);
+            sentMessageFuture.thenAcceptAsync(sentMessage -> {
+                handleMessageSideEffects(message, dicePool, diceRoller, sentMessage);
+                if (dicePool.enableEnhancements()) {
+                    sentMessage.getApi().getThreadPool().getScheduler().schedule(() -> {
+                        PlotPointEnhancementHelper.removeEnhancementEmojis(sentMessage);
+                        final EmbedBuilder embedWithoutFooter = sentMessage.getEmbeds().get(0).toBuilder().setFooter("");
+                        sentMessage.edit(embedWithoutFooter);
+                    }, 60, TimeUnit.SECONDS);
+                }
+            });
 
-
-            sentMessageFuture.thenAcceptAsync(sentMessage -> handleMessageSideEffects(message, dicePool, diceRoller, sentMessage));
         }
     }
 

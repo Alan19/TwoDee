@@ -41,7 +41,7 @@ public class DiceRoller {
      */
     public EmbedBuilder generateResults(MessageAuthor author) {
         //Build embed
-        return new EmbedBuilder()
+        final EmbedBuilder rollResultEmbed = new EmbedBuilder()
                 .setDescription("Here's the result for" + createDicePoolString(dicePool))
                 .setTitle(TwoDee.getRollTitleMessage())
                 .setAuthor(author)
@@ -54,6 +54,10 @@ public class DiceRoller {
                 .addField("Dropped", formatRegularDiceResults(rollResult.getAllDroppedDice(), false), true)
                 .addField("Total", String.valueOf(rollResult.getTotal()), true)
                 .addField("Tier Hit", rollResult.getTierHit(), true);
+        if (dicePool.enableEnhancements()) {
+            rollResultEmbed.setFooter("Enhance this roll with plot points in the next 60 seconds by clicking on the reactions below!");
+        }
+        return rollResultEmbed;
     }
 
     /**
