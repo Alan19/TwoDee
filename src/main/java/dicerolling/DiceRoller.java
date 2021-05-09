@@ -20,6 +20,9 @@ public class DiceRoller {
     public DiceRoller(DicePool dicePool) {
         this.dicePool = dicePool;
         rollResult = new RollResult(dicePool.getNumberOfKeptDice());
+        if (!dicePool.getPlotDice().isEmpty()) {
+            dicePool.enableEnhancement(false);
+        }
         Random random = new Random();
         rollDice(random, dicePool);
     }
