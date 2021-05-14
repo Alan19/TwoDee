@@ -71,11 +71,11 @@ public class PoolProcessor {
             else if (param.matches("-opp=(true|false)")) {
                 dicePool.setOpportunities(Boolean.parseBoolean(param.substring(5)));
             }
-            else if (param.matches("-nd=(d|kd|pd)")) {
+            else if (param.matches("-nd=(d|kd|pd|cd)")) {
                 nextDiceType = param.substring(4);
             }
             //Any type of dice
-            else if (param.matches("\\d*([kp])?d\\d+")) {
+            else if (param.matches("\\d*([kpc])?d\\d+")) {
                 addDiceToPool(nextDiceFacetMod, param);
                 //Reset facet modifier
                 nextDiceFacetMod = 0;

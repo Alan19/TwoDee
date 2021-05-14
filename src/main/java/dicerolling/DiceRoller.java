@@ -74,7 +74,8 @@ public class DiceRoller {
         dicePool.getRegularDice().forEach(integer -> dicePoolString.append(" d").append(integer));
         dicePool.getPlotDice().forEach(integer -> dicePoolString.append(" pd").append(integer));
         dicePool.getKeptDice().forEach(integer -> dicePoolString.append(" kd").append(integer));
-        dicePool.getFlatBonuses().stream().map(integer -> (integer > 0) ? ("+" + integer) : integer).forEach(dicePoolString::append);
+        dicePool.getChaosDice().forEach(integer -> dicePoolString.append(" cd").append(integer));
+        dicePool.getFlatBonuses().stream().map(integer -> (integer > 0) ? (" +" + integer) : integer).forEach(dicePoolString::append);
         return dicePoolString.toString();
     }
 
@@ -101,6 +102,7 @@ public class DiceRoller {
         rollDie(random, dicePool.getRegularDice());
         rollKeptDie(random, dicePool.getKeptDice());
         rollPlotDice(random, dicePool.getPlotDice());
+        rollChaosDice(random, dicePool.getChaosDice());
         addFlatBonus(dicePool.getFlatBonuses());
     }
 
@@ -123,6 +125,18 @@ public class DiceRoller {
         plotDice.stream()
                 .mapToInt(die -> plotDice.size() <= 1 ? Math.max(random.nextInt(die) + 1, die / 2) : random.nextInt(die) + 1)
                 .forEach(rollResult::addPlotDice);
+    }
+
+    /**
+     * Rolls all chaos die. Chaos die are effectively kept dice, but instead inflict a penalty.
+     *
+     * @param random    The random number generator
+     * @param chaosDice The list of chaos die
+     */
+    private void rollChaosDice(Random random, List<Integer> chaosDice) {
+        chaosDice.stream()
+                .mapToInt(chaosDie -> (random.nextInt(chaosDie) + 1) * -1)
+                .forEach(rollResult::addKeptDice);
     }
 
     /**

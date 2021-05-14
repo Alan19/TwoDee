@@ -116,6 +116,7 @@ public class GenerateStatistics implements StatisticsState {
         rollResultOccurrences = processNormalDice(rollResultOccurrences);
         rollResultOccurrences = processPlotDice(rollResultOccurrences);
         rollResultOccurrences = processKeptDice(rollResultOccurrences);
+        rollResultOccurrences = processChaosDice(rollResultOccurrences);
         rollResultOccurrences = processFlatBonus(rollResultOccurrences);
         return rollResultOccurrences;
     }
@@ -147,6 +148,30 @@ public class GenerateStatistics implements StatisticsState {
             }
             else {
                 newMap.forEach((key, value) -> IntStream.rangeClosed(1, keptDice)
+                        .mapToObj(key::addKeptDice)
+                        .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + value : value)));
+            }
+            newMap = tempMap;
+        }
+        return newMap;
+    }
+
+    private HashMap<PoolResult, Long> processChaosDice(HashMap<PoolResult, Long> rollResultOccurrences) {
+        HashMap<PoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
+        // Loop through all of the kept dice
+        for (Integer keptDice : dicePool.getChaosDice()) {
+            HashMap<PoolResult, Long> tempMap = new HashMap<>();
+            // Create n PoolResult Objects with each possible outcomes of the dice
+            // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
+            if (newMap.isEmpty()) {
+                IntStream.rangeClosed(1, keptDice)
+                        .map(operand -> operand * -1)
+                        .mapToObj(i -> new FastRollResult(dicePool.getNumberOfKeptDice()).addKeptDice(i))
+                        .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
+            }
+            else {
+                newMap.forEach((key, value) -> IntStream.rangeClosed(1, keptDice)
+                        .map(operand -> operand * -1)
                         .mapToObj(key::addKeptDice)
                         .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + value : value)));
             }

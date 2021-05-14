@@ -9,6 +9,7 @@ public class DicePool {
     private List<Integer> plotDice = new ArrayList<>();
     private List<Integer> keptDice = new ArrayList<>();
     private List<Integer> flatBonuses = new ArrayList<>();
+    private List<Integer> chaosDice = new ArrayList<>();
     //Configs
     private int keepHowMany = 2;
     private boolean enableEnhancementEmojis = true;
@@ -35,6 +36,10 @@ public class DicePool {
 
     public List<Integer> getFlatBonuses() {
         return flatBonuses;
+    }
+
+    public List<Integer> getChaosDice() {
+        return chaosDice;
     }
 
     public int getNumberOfKeptDice() {
@@ -71,6 +76,11 @@ public class DicePool {
         return enableOpportunities;
     }
 
+    public DicePool addChaosDie(int dice) {
+        chaosDice.add(dice);
+        return this;
+    }
+
     public DicePool addDice(int dice) {
         if (dice > minFacets) {
             regularDice.add(dice);
@@ -103,6 +113,9 @@ public class DicePool {
                 break;
             case "kd":
                 addKeptDice(dice);
+                break;
+            case "cd":
+                addChaosDie(dice);
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + diceType);
