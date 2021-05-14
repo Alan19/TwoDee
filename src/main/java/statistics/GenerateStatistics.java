@@ -113,18 +113,10 @@ public class GenerateStatistics implements StatisticsState {
     private HashMap<PoolResult, Long> generateResultsMap() {
         HashMap<PoolResult, Long> rollResultOccurrences = new HashMap<>();
         //Create n roll result objects for each face of the die
-        if (!dicePool.getRegularDice().isEmpty()) {
-            rollResultOccurrences = processNormalDice(rollResultOccurrences);
-        }
-        if (!dicePool.getPlotDice().isEmpty()) {
-            rollResultOccurrences = processPlotDice(rollResultOccurrences);
-        }
-        if (!dicePool.getKeptDice().isEmpty()) {
-            rollResultOccurrences = processKeptDice(rollResultOccurrences);
-        }
-        if (!dicePool.getFlatBonuses().isEmpty()) {
-            rollResultOccurrences = processFlatBonus(rollResultOccurrences);
-        }
+        rollResultOccurrences = processNormalDice(rollResultOccurrences);
+        rollResultOccurrences = processPlotDice(rollResultOccurrences);
+        rollResultOccurrences = processKeptDice(rollResultOccurrences);
+        rollResultOccurrences = processFlatBonus(rollResultOccurrences);
         return rollResultOccurrences;
     }
 
