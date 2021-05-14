@@ -20,13 +20,13 @@ public class FastRollResult implements PoolResult {
     private final int doomGenerated;
     private final int diceKept;
 
-    public FastRollResult() {
+    public FastRollResult(int numberOfDiceKept) {
         regularDice = TreeMultiset.create(Comparator.reverseOrder());
         plotDice = TreeMultiset.create(Comparator.reverseOrder());
         keptDice = TreeMultiset.create(Comparator.reverseOrder());
         flatBonus = 0;
         doomGenerated = 0;
-        diceKept = 2;
+        diceKept = numberOfDiceKept;
     }
 
     /**

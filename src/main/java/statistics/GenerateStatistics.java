@@ -32,7 +32,7 @@ public class GenerateStatistics implements StatisticsState {
     @Override
     public void process(StatisticsContext context) {
         //Generate the roll result to occurrence HashMap
-        HashMap<PoolResult, Long> results = generateResultsHash();
+        HashMap<PoolResult, Long> results = generateResultsMap();
         final int[] resultStream = results.keySet().stream().mapToInt(PoolResult::getTotal).toArray();
         final int minRoll = Arrays.stream(resultStream).min().orElse(0);
         final int maxRoll = Arrays.stream(resultStream).max().orElse(0);
@@ -110,107 +110,112 @@ public class GenerateStatistics implements StatisticsState {
      *
      * @return A Hashmap of all of the possible results mapped to the number of times it occurs
      */
-    private HashMap<PoolResult, Long> generateResultsHash() {
+    private HashMap<PoolResult, Long> generateResultsMap() {
         HashMap<PoolResult, Long> rollResultOccurrences = new HashMap<>();
-        rollResultOccurrences.put(new FastRollResult(), 1L);
         //Create n roll result objects for each face of the die
-        rollResultOccurrences = processNormalDice(rollResultOccurrences);
-        rollResultOccurrences = processPlotDice(rollResultOccurrences);
-        rollResultOccurrences = processKeptDice(rollResultOccurrences);
-        rollResultOccurrences = processFlatBonus(rollResultOccurrences);
+        if (!dicePool.getRegularDice().isEmpty()) {
+            rollResultOccurrences = processNormalDice(rollResultOccurrences);
+        }
+        if (!dicePool.getPlotDice().isEmpty()) {
+            rollResultOccurrences = processPlotDice(rollResultOccurrences);
+        }
+        if (!dicePool.getKeptDice().isEmpty()) {
+            rollResultOccurrences = processKeptDice(rollResultOccurrences);
+        }
+        if (!dicePool.getFlatBonuses().isEmpty()) {
+            rollResultOccurrences = processFlatBonus(rollResultOccurrences);
+        }
         return rollResultOccurrences;
     }
 
     private HashMap<PoolResult, Long> processFlatBonus(HashMap<PoolResult, Long> rollResultOccurrences) {
-        if (!dicePool.getFlatBonuses().isEmpty()) {
-            HashMap<PoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
-            // Loop through all of the kept dice
-            for (Integer flatBonus : dicePool.getFlatBonuses()) {
-                HashMap<PoolResult, Long> tempMap = new HashMap<>();
-                // Create n PoolResultObjects with each possible outcomes of the dice
-                for (Map.Entry<PoolResult, Long> entry : rollResultOccurrences.entrySet()) {
-                    // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
-                    PoolResult fastRollResult = entry.getKey().addFlatBonus(flatBonus);
-                    tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + entry.getValue() : entry.getValue());
-                }
-                newMap = tempMap;
-            }
-            return newMap;
+        HashMap<PoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
+        // Loop through all of the kept dice
+        for (Integer flatBonus : dicePool.getFlatBonuses()) {
+            HashMap<PoolResult, Long> tempMap = new HashMap<>(newMap);
+            // Create n PoolResultObjects with each possible outcomes of the dice
+            // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
+            newMap.forEach((key, value) -> tempMap.compute(key.addFlatBonus(flatBonus), (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + value : value));
+            newMap = tempMap;
         }
-        else {
-            return rollResultOccurrences;
-        }
+        return newMap;
     }
 
     private HashMap<PoolResult, Long> processKeptDice(HashMap<PoolResult, Long> rollResultOccurrences) {
-        if (!dicePool.getKeptDice().isEmpty()) {
-            HashMap<PoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
-            // Loop through all of the kept dice
-            for (Integer keptDice : dicePool.getKeptDice()) {
-                HashMap<PoolResult, Long> tempMap = new HashMap<>();
-                // Create n PoolResultObjects with each possible outcomes of the dice
-                for (Map.Entry<PoolResult, Long> entry : rollResultOccurrences.entrySet()) {
-                    for (int i = 1; i <= keptDice; i++) {
-                        // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
-                        PoolResult fastRollResult = entry.getKey().addKeptDice(i);
-                        newMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + entry.getValue() : entry.getValue());
-                    }
-                }
-                newMap = tempMap;
+        HashMap<PoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
+        // Loop through all of the kept dice
+        for (Integer keptDice : dicePool.getKeptDice()) {
+            HashMap<PoolResult, Long> tempMap = new HashMap<>();
+            // Create n PoolResult Objects with each possible outcomes of the dice
+            // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
+            if (newMap.isEmpty()) {
+                IntStream.rangeClosed(1, keptDice)
+                        .mapToObj(i -> new FastRollResult(dicePool.getNumberOfKeptDice()).addKeptDice(i))
+                        .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
             }
-            return newMap;
+            else {
+                newMap.forEach((key, value) -> IntStream.rangeClosed(1, keptDice)
+                        .mapToObj(key::addKeptDice)
+                        .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + value : value)));
+            }
+            newMap = tempMap;
         }
-        else {
-            return rollResultOccurrences;
-        }
+        return newMap;
     }
 
     private HashMap<PoolResult, Long> processPlotDice(HashMap<PoolResult, Long> rollResultOccurrences) {
-        if (!dicePool.getPlotDice().isEmpty()) {
-            HashMap<PoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
-            // Loop through all of the plot dice
-            for (Integer plotDice : dicePool.getPlotDice()) {
-                HashMap<PoolResult, Long> tempMap = new HashMap<>();
-                // Create n PoolResultObjects with each possible outcomes of the dice
-                for (Map.Entry<PoolResult, Long> entry : rollResultOccurrences.entrySet()) {
-                    for (int i = 1; i <= plotDice; i++) {
-                        // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
-                        final int rolledValue = dicePool.getPlotDice().size() > 1 ? i : Math.max(i, plotDice / 2);
-                        PoolResult fastRollResult = entry.getKey().addPlotDice(rolledValue);
-                        tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + entry.getValue() : entry.getValue());
-                    }
-                }
-                newMap = tempMap;
+        HashMap<PoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
+        // Loop through all of the kept dice
+        for (Integer plotDice : dicePool.getPlotDice()) {
+            HashMap<PoolResult, Long> tempMap = new HashMap<>();
+            // Create n PoolResult Objects with each possible outcomes of the dice
+            // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
+            if (newMap.isEmpty()) {
+                IntStream.rangeClosed(1, plotDice)
+                        .mapToObj(i -> new FastRollResult(dicePool.getNumberOfKeptDice()).addPlotDice(getPlotDieValue(plotDice, i)))
+                        .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
             }
-            return newMap;
+            else {
+                newMap.forEach((key, value) -> IntStream.rangeClosed(1, plotDice)
+                        .mapToObj(i -> key.addPlotDice(getPlotDieValue(plotDice, i)))
+                        .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + value : value)));
+            }
+            newMap = tempMap;
         }
-        else {
-            return rollResultOccurrences;
-        }
+        return newMap;
+    }
+
+    /**
+     * Gets the value of a rolled plot die
+     *
+     * @param plotDice The number of facets in the plot die
+     * @param i        The number rolled
+     * @return The result of a plot die, which has a minimum of half its facets if there is only one plot die being rolled
+     */
+    private int getPlotDieValue(Integer plotDice, int i) {
+        return dicePool.getPlotDice().size() > 1 ? i : Math.max(i, plotDice / 2);
     }
 
     private HashMap<PoolResult, Long> processNormalDice(HashMap<PoolResult, Long> rollResultOccurrences) {
-        if (!dicePool.getRegularDice().isEmpty()) {
-            HashMap<PoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
-            // Loop through all of the kept dice
-            for (Integer regularDice : dicePool.getRegularDice()) {
-                HashMap<PoolResult, Long> tempMap = new HashMap<>();
-                for (Map.Entry<PoolResult, Long> entry : newMap.entrySet()) {
-                    // Create n PoolResult Objects with each possible outcomes of the dice
-                    for (int i = 1; i <= regularDice; i++) {
-                        // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
-                        PoolResult fastRollResult = entry.getKey().addRegularDice(i);
-                        tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + entry.getValue() : entry.getValue());
-                    }
-                }
-                newMap = tempMap;
-
+        HashMap<PoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
+        // Loop through all of the kept dice
+        for (Integer regularDice : dicePool.getRegularDice()) {
+            HashMap<PoolResult, Long> tempMap = new HashMap<>();
+            // Create n PoolResult Objects with each possible outcomes of the dice
+            // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
+            if (newMap.isEmpty()) {
+                IntStream.rangeClosed(1, regularDice)
+                        .mapToObj(i -> new FastRollResult(dicePool.getNumberOfKeptDice()).addRegularDice(i))
+                        .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
             }
-            return newMap;
+            else {
+                newMap.forEach((key, value) -> IntStream.rangeClosed(1, regularDice)
+                        .mapToObj(key::addRegularDice)
+                        .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + value : value)));
+            }
+            newMap = tempMap;
         }
-        else {
-            return rollResultOccurrences;
-        }
+        return newMap;
     }
 
 }
