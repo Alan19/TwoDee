@@ -1,18 +1,18 @@
-package players;
+package roles;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class PartyMember {
+public class Player {
     @SerializedName("discord_id")
     @Expose
-    private long discordId;
+    private final long discordId;
 
     @SerializedName("sheet_id")
     @Expose
-    private String sheetId;
+    private final String sheetId;
 
-    public PartyMember(Integer discordId, String sheetId) {
+    public Player(Integer discordId, String sheetId) {
         this.discordId = discordId;
         this.sheetId = sheetId;
     }
@@ -21,15 +21,8 @@ public class PartyMember {
         return discordId;
     }
 
-    public void setDiscordId(Integer discordId) {
-        this.discordId = discordId;
-    }
-
     public String getSheetId() {
         return sheetId;
     }
 
-    public void setSheetId(String sheetId) {
-        this.sheetId = sheetId;
-    }
 }

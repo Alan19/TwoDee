@@ -16,13 +16,11 @@ import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import roles.Storytellers;
 import sheets.PlotPointHandler;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -84,17 +82,11 @@ public class RollCommand implements CommandExecutor {
      * @param sentMessage The message with the embed containing the roll result
      */
     public static void handleMessageSideEffects(Message userMessage, DicePool dicePool, DiceRoller diceRoller, Message sentMessage) {
-        Properties prop = new Properties();
-        try (FileInputStream stream = new FileInputStream("resources/bot.properties")) {
-            prop.load(stream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         final int plotPointsSpent = dicePool.getPlotPointsSpent() - dicePool.getPlotPointDiscount();
         MessageAuthor author = userMessage.getAuthor();
         TextChannel channel = userMessage.getChannel();
         //DMs use doom points as plot points and 1s do not increase the doom pool
-        if (author.getIdAsString().equals(prop.getProperty("gameMaster", ""))) {
+        if (author.asUser().isPresent() && Storytellers.isUserStoryteller(author.asUser().get())) {
             if (plotPointsSpent != 0) {
                 EmbedBuilder doomEmbed = DoomHandler.addDoom(plotPointsSpent * -1);
                 channel.sendMessage(doomEmbed);
