@@ -34,6 +34,7 @@ public class TestRollCommand implements CommandExecutor {
                     .send(channel);
             sentMessageFuture.thenAcceptAsync(sentMessage -> {
                 RollCommand.handleMessageSideEffects(message, dicePool, diceRoller, sentMessage);
+                RollCommand.attachRerollReaction(message, dicePool, diceRoller, sentMessage, channel);
                 if (dicePool.enableEnhancements()) {
                     sentMessage.getApi().getThreadPool().getScheduler().schedule(() -> {
                         PlotPointEnhancementHelper.removeEnhancementEmojis(sentMessage);
