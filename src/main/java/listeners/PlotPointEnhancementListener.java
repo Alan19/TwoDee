@@ -11,13 +11,11 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.reaction.ReactionAddEvent;
 import org.javacord.api.listener.message.reaction.ReactionAddListener;
+import roles.Storytellers;
 import sheets.SheetsHandler;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 
 /**
  * Listener that listens for a user using plot point enhancement
@@ -63,7 +61,7 @@ public class PlotPointEnhancementListener implements ReactionAddListener {
         Emoji emoji = reaction.getEmoji();
         Optional<Integer> toAdd = getAddAmount(emoji);
         toAdd.ifPresent(count -> {
-            if (getGameMaster().equals(event.getUserIdAsString())) {
+            if (Storytellers.isMessageAuthorStoryteller(message.getAuthor())) {
                 event.requestUser().thenAccept(user -> sendDoomPointEnhancementMessage(user, message.getChannel(), rollVal, count));
             }
             else {
@@ -71,16 +69,6 @@ public class PlotPointEnhancementListener implements ReactionAddListener {
             }
         });
 
-    }
-
-    private String getGameMaster() {
-        Properties props = new Properties();
-        try {
-            props.load(new FileInputStream("resources/bot.properties"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return props.getProperty("gameMaster");
     }
 
     /**

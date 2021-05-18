@@ -92,13 +92,13 @@ public class PlotPointHandler {
     /**
      * Generates a CompletableFuture that adds plot points to players, and updates the list of changes and the list of uneditable players
      *
+     * @param user              The player to edit the plot points for
      * @param points            The number of plot points to add to each the player
      * @param plotPointChanges  The list of changes in plot points
      * @param uneditablePlayers The list of uneditable players
-     * @param user              The player to edit the plot points for
      * @return A CompletableFuture representing the completion of the addition of plot points and side effects
      */
-    public static CompletableFuture<Optional<Integer>> addPlotPointsToUser(int points, List<Triple<User, Integer, Integer>> plotPointChanges, List<User> uneditablePlayers, User user) {
+    public static CompletableFuture<Optional<Integer>> addPlotPointsToUser(User user, int points, List<Triple<User, Integer, Integer>> plotPointChanges, List<User> uneditablePlayers) {
         final Optional<Integer> oldPlotPointCount = SheetsHandler.getPlotPoints(user);
         if (oldPlotPointCount.isPresent()) {
             final int newPlotPointCount = oldPlotPointCount.get() + points;

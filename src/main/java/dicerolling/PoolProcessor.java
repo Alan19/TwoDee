@@ -4,6 +4,7 @@ import commands.EnhancementToggleCommand;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import roles.Storytellers;
 import sheets.SheetsHandler;
 
 import java.io.FileInputStream;
@@ -19,7 +20,7 @@ public class PoolProcessor {
     private Map<String, Integer> skillMap;
     private EmbedBuilder errorEmbed;
 
-    public PoolProcessor(String command, MessageAuthor author) {
+    public PoolProcessor(MessageAuthor author, String command) {
         this.command = command;
         this.author = author;
         preprocess();
@@ -69,7 +70,7 @@ public class PoolProcessor {
                 dicePool.enableEnhancement(Boolean.parseBoolean(param.substring(9)));
             }
             else if (param.matches("-opp=(true|false)")) {
-                dicePool.setOpportunities(Boolean.parseBoolean(param.substring(5)));
+                dicePool.setOpportunitiesEnabled(Boolean.parseBoolean(param.substring(5)));
             }
             else if (param.matches("-nd=(d|kd|pd|cd)")) {
                 nextDiceType = param.substring(4);
@@ -114,6 +115,7 @@ public class PoolProcessor {
 
     /**
      * Checks whether a player should be allowed to enhance their roll or not
+     * TODO Change to check if there's a plot die
      *
      * @param author The player who is rolling
      * @return true if the player is on the override list and enhancements are disabled or if the player is not on the override list and enhancements are enabled, false if enhancement is disabled and the player is not on the override list or if enhancements are enabled and the player is on the override list
@@ -130,9 +132,8 @@ public class PoolProcessor {
                     .map(Optional::get)
                     .collect(Collectors.toCollection(ArrayList::new));
 
-            //Gamemasters can always enhance
-            Optional<User> gameMasterOptional = author.getApi().getCachedUserById(prop.getProperty("gameMaster"));
-            if (gameMasterOptional.isPresent() && author.asUser().isPresent() && gameMasterOptional.get().equals(author.asUser().get())) {
+            //Storytellers can always enhance
+            if (Storytellers.isMessageAuthorStoryteller(author)) {
                 return true;
             }
             return (author.asUser().isPresent() && overrideUsers.contains(author.asUser().get())) != defaultOption.equals(EnhancementToggleCommand.ON);

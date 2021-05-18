@@ -3,6 +3,7 @@ package roles;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.javacord.api.DiscordApi;
+import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
 
@@ -33,5 +34,9 @@ public class Storytellers {
 
     public static boolean isUserStoryteller(User user) {
         return getStorytellerRoles(user.getApi()).stream().anyMatch(role -> role.getUsers().contains(user));
+    }
+
+    public static boolean isMessageAuthorStoryteller(MessageAuthor author) {
+        return author.asUser().isPresent() && isUserStoryteller(author.asUser().get());
     }
 }

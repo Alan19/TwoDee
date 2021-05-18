@@ -45,7 +45,7 @@ public class ReplenishCommand implements CommandExecutor {
         List<User> uneditablePlayers = new ArrayList<>();
         final List<CompletableFuture<Optional<Integer>>> replenishmentFutures = party.getUsers().stream()
                 .filter(user -> SheetsHandler.getPlotPoints(user).isPresent())
-                .map(user -> PlotPointHandler.addPlotPointsToUser(points, plotPointChanges, uneditablePlayers, user))
+                .map(user -> PlotPointHandler.addPlotPointsToUser(user, points, plotPointChanges, uneditablePlayers))
                 .collect(Collectors.toList());
         CompletableFuture.allOf(replenishmentFutures.toArray(new CompletableFuture[]{}))
                 .thenAccept(unused -> sendReplenishmentResultEmbed(channel, author, plotPointChanges, uneditablePlayers));

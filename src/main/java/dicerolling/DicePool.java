@@ -12,10 +12,10 @@ public class DicePool {
     private List<Integer> chaosDice = new ArrayList<>();
     //Configs
     private int keepHowMany = 2;
-    private boolean enableEnhancementEmojis = true;
+    private boolean isEnhancementEnabled = true;
     private String difficulty = "";
     private int plotPointDiscount = 0;
-    private boolean enableOpportunities = true;
+    private boolean areOpportunitiesEnabled = true;
     private int minFacets = 0;
 
     public List<Integer> getRegularDice() {
@@ -51,8 +51,8 @@ public class DicePool {
         return this;
     }
 
-    public boolean enableEnhancements() {
-        return enableEnhancementEmojis;
+    public boolean isEnhancementEnabled() {
+        return isEnhancementEnabled;
     }
 
     public String getDifficulty() {
@@ -72,8 +72,8 @@ public class DicePool {
         plotPointDiscount = num;
     }
 
-    public boolean enableOpportunities() {
-        return enableOpportunities;
+    public boolean areOpportunitiesEnabled() {
+        return areOpportunitiesEnabled;
     }
 
     public DicePool addChaosDie(int dice) {
@@ -98,8 +98,8 @@ public class DicePool {
         return this;
     }
 
-    public DicePool setOpportunities(boolean enable) {
-        enableOpportunities = enable;
+    public DicePool setOpportunitiesEnabled(boolean enable) {
+        areOpportunitiesEnabled = enable;
         return this;
     }
 
@@ -129,7 +129,7 @@ public class DicePool {
     }
 
     public DicePool enableEnhancement(boolean enable) {
-        enableEnhancementEmojis = enable;
+        isEnhancementEnabled = enable;
         return this;
     }
 

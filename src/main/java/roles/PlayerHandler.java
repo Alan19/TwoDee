@@ -15,9 +15,10 @@ public class PlayerHandler {
 
     private PlayerHandler() {
         try {
-            players = new Gson().fromJson(new BufferedReader(new FileReader("resources/parties.json")), TypeToken.getParameterized(ArrayList.class, Player.class).getType());
+            players = new Gson().fromJson(new BufferedReader(new FileReader("resources/players.json")), TypeToken.getParameterized(ArrayList.class, Player.class).getType());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            players = new ArrayList<>();
         }
     }
 
