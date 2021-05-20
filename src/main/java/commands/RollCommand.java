@@ -26,6 +26,38 @@ import java.util.concurrent.TimeUnit;
 
 public class RollCommand implements CommandExecutor {
     /**
+     * Rolls a dice pool and sends the output to the channel the message was sent in
+     * <p>
+     * Performs side effects based on the dice pool, sender, and if the roll is a reroll
+     *
+     * @param channel  The channel the command was sent from
+     * @param message  The message for the command
+     * @param dicePool The dice pool to be rolled
+     * @param isReroll Whether the roll is a reroll
+     */
+    private static void rollPoolAndSend(TextChannel channel, Message message, DicePool dicePool, boolean isReroll) {
+        DiceRoller diceRoller = new DiceRoller(dicePool);
+        final CompletableFuture<Message> sentMessageFuture = new MessageBuilder()
+                .setEmbed(diceRoller.generateResults(message.getAuthor()))
+                .send(channel);
+        sentMessageFuture.thenAcceptAsync(sentMessage -> {
+            if (!isReroll) {
+                handlePlotPointChanges(message, dicePool.getPlotPointsSpent(), dicePool.getPlotPointDiscount());
+            }
+            if (!Storytellers.isMessageAuthorStoryteller(message.getAuthor()) && dicePool.areOpportunitiesEnabled()) {
+                handleOpportunities(message.getAuthor(), sentMessage, channel, dicePool.areOpportunitiesEnabled(), diceRoller.getDoom());
+            }
+            if (dicePool.isEnhancementEnabled()) {
+                PlotPointEnhancementHelper.addPlotPointEnhancementEmojis(sentMessage);
+                queueReactionRemoval(sentMessage);
+            }
+            if (!isReroll) {
+                attachRerollReaction(message, dicePool, diceRoller, sentMessage, channel);
+            }
+        });
+    }
+
+    /**
      * Re-rolls the previous roll. Plot points spent by the player are not spent again, plot and doom points from opportunites are reverted before the re-roll.
      *
      * @param channel  The channel the reroll is in
@@ -51,32 +83,24 @@ public class RollCommand implements CommandExecutor {
         rollPoolAndSend(channel, message, dicePool, false);
     }
 
-    private static void rollPoolAndSend(TextChannel channel, Message message, DicePool dicePool, boolean isReroll) {
-        DiceRoller diceRoller = new DiceRoller(dicePool);
-        final CompletableFuture<Message> sentMessageFuture = new MessageBuilder()
-                .setEmbed(diceRoller.generateResults(message.getAuthor()))
-                .send(channel);
-        sentMessageFuture.thenAcceptAsync(sentMessage -> {
-            if (!isReroll) {
-                handlePlotPointChanges(message, dicePool.getPlotPointsSpent(), dicePool.getPlotPointDiscount());
-            }
-            if (!Storytellers.isMessageAuthorStoryteller(message.getAuthor()) && dicePool.areOpportunitiesEnabled()) {
-                handleOpportunities(message.getAuthor(), sentMessage, channel, dicePool.areOpportunitiesEnabled(), diceRoller.getDoom());
-            }
-            if (dicePool.isEnhancementEnabled()) {
-                PlotPointEnhancementHelper.addPlotPointEnhancementEmojis(sentMessage);
-                queueReactionRemoval(sentMessage);
-            }
-            if (!isReroll) {
-                attachRerollReaction(message, dicePool, diceRoller, sentMessage, channel);
-            }
-        });
-    }
-
+    /**
+     * Deletes the reactions from a message after 60 seconds
+     *
+     * @param sentMessage The message containing the embed for the roll
+     */
     private static void queueReactionRemoval(Message sentMessage) {
         sentMessage.getApi().getThreadPool().getScheduler().schedule(() -> PlotPointEnhancementHelper.removeEnhancementEmojis(sentMessage), 60, TimeUnit.SECONDS);
     }
 
+    /**
+     * Adds plot points and doom points when rolling a 1
+     *
+     * @param author                  The author that made the roll
+     * @param rollEmbedMessage        The message with the embed for the roll
+     * @param channel                 The channel the roll was made in
+     * @param areOpportunitiesEnabled Whether opportunities are enabled
+     * @param doomGenerated           The amount of doom generated
+     */
     private static void handleOpportunities(MessageAuthor author, Message rollEmbedMessage, TextChannel channel, boolean areOpportunitiesEnabled, int doomGenerated) {
         // Send embed for plot points and doom if there's an opportunity
         if (areOpportunitiesEnabled && doomGenerated >= 1) {
@@ -93,6 +117,13 @@ public class RollCommand implements CommandExecutor {
         }
     }
 
+    /**
+     * Sends an embed for spending plot points on a roll
+     *
+     * @param message     The message of the command
+     * @param pointsSpent The number of plot points spent
+     * @param discount    The discount on the roll
+     */
     private static void handlePlotPointChanges(Message message, int pointsSpent, int discount) {
         final int plotPointsSpent = pointsSpent - discount;
         MessageAuthor author = message.getAuthor();
@@ -113,12 +144,31 @@ public class RollCommand implements CommandExecutor {
         }
     }
 
+    /**
+     * Attach the reroll reaction and attach a listener that lasts for 60 seconds (same as the other reacts)
+     *
+     * @param userMessage The message containing the roll command
+     * @param dicePool    The dice pool for rolling
+     * @param diceRoller  The dice roller object containing the result of the roll
+     * @param sentMessage The message that contains the embed with the roll result
+     * @param channel     The channel the message was sent from
+     */
     public static void attachRerollReaction(Message userMessage, DicePool dicePool, DiceRoller diceRoller, Message sentMessage, TextChannel channel) {
         sentMessage.addReaction(EmojiParser.parseToUnicode(":repeat:")).thenAccept(unused -> sentMessage.addReactionAddListener(event -> {
             onRerollReact(userMessage, dicePool, diceRoller, sentMessage, channel, event);
         }).removeAfter(60, TimeUnit.SECONDS));
     }
 
+    /**
+     * When a user reacts to the repeat reaction,
+     *
+     * @param userMessage The message the user sent to roll dice
+     * @param dicePool    The dice pool for the roll
+     * @param diceRoller  The dice roller object containing the results of the roll
+     * @param sentMessage The message with an embed containing result of the roll
+     * @param channel     The channel the message was sent in
+     * @param event       The reaction event
+     */
     private static void onRerollReact(Message userMessage, DicePool dicePool, DiceRoller diceRoller, Message sentMessage, TextChannel channel, ReactionAddEvent event) {
         if (event.getUser().map(user -> !user.isYourself()).orElse(false) && event.getReaction().map(reaction -> reaction.getEmoji().equalsEmoji(EmojiParser.parseToUnicode(":repeat:"))).orElse(false)) {
             PlotPointEnhancementHelper.removeEnhancementEmojis(sentMessage)

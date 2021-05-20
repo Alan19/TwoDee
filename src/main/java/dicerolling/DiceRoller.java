@@ -20,6 +20,7 @@ public class DiceRoller {
     public DiceRoller(DicePool dicePool) {
         this.dicePool = dicePool;
         rollResult = new RollResult(dicePool.getNumberOfKeptDice());
+        // Disable enhancement by default if there is plot dice in the pool
         if (!dicePool.getPlotDice().isEmpty()) {
             dicePool.enableEnhancement(false);
         }
