@@ -10,7 +10,6 @@ import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
-import players.PartyHandler;
 import sheets.PlotPointHandler;
 import sheets.SheetsHandler;
 
@@ -25,10 +24,6 @@ public class ReplenishCommand implements CommandExecutor {
     @Command(aliases = {"~replenish", "~sr", "~p addall"}, description = "Adds plot points to all party members of the specified party", privateMessages = false, usage = "~replenish <roleping> [amount]")
     public void replenishPlotPoints(DiscordApi api, TextChannel channel, Message message, MessageAuthor author, Object[] parameters) {
         final List<Role> parties = new ArrayList<>(message.getMentionedRoles());
-        // Add party roles mentioned by strings to parties
-        Arrays.stream(parameters)
-                .filter(partyName -> partyName instanceof String)
-                .forEach(partyName -> PartyHandler.getPartyByName((String) partyName).flatMap(party -> api.getRoleById(party.getRoleID())).ifPresent(parties::add));
         // If there is a number, run the replenish function using the parties and that number as the amount to replenish
         Arrays.stream(parameters)
                 .filter(o -> o instanceof Long).findFirst()
@@ -50,7 +45,7 @@ public class ReplenishCommand implements CommandExecutor {
         List<User> uneditablePlayers = new ArrayList<>();
         final List<CompletableFuture<Optional<Integer>>> replenishmentFutures = party.getUsers().stream()
                 .filter(user -> SheetsHandler.getPlotPoints(user).isPresent())
-                .map(user -> PlotPointHandler.addPlotPointsToUser(points, plotPointChanges, uneditablePlayers, user))
+                .map(user -> PlotPointHandler.addPlotPointsToUser(user, points, plotPointChanges, uneditablePlayers))
                 .collect(Collectors.toList());
         CompletableFuture.allOf(replenishmentFutures.toArray(new CompletableFuture[]{}))
                 .thenAccept(unused -> sendReplenishmentResultEmbed(channel, author, plotPointChanges, uneditablePlayers));

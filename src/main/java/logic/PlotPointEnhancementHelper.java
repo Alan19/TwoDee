@@ -3,6 +3,7 @@ package logic;
 import com.vdurmont.emoji.EmojiParser;
 import org.javacord.api.entity.emoji.Emoji;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import java.util.ArrayList;
 import java.util.SortedMap;
@@ -42,11 +43,10 @@ public class PlotPointEnhancementHelper {
                 .map(message::removeReactionsByEmoji)
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        // TODO Make this less hacky
         //Remove Cancel Emoji
-        CompletableFuture<Void> cancelEmojiFuture = message.removeReactionsByEmoji("\uD83C\uDDFD");
-        completableFutures.add(cancelEmojiFuture);
-
+        completableFutures.add(message.removeReactionsByEmoji("\uD83C\uDDFD", EmojiParser.parseToUnicode(":repeat:")));
+        final EmbedBuilder embedWithoutFooter = message.getEmbeds().get(0).toBuilder().setFooter("");
+        message.edit(embedWithoutFooter);
         return CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[0]));
     }
 

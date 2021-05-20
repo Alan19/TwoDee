@@ -10,13 +10,11 @@ import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
-import players.PartyHandler;
 import sheets.PlotPointHandler;
 import sheets.SheetsHandler;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -26,13 +24,8 @@ public class BleedCommand implements CommandExecutor {
     @Command(aliases = {"~b", "~bleed"}, description = "Applies plot point bleed to a party", privateMessages = false, usage = "~b <roleping>")
     public void executeBleed(DiscordApi api, Message message, MessageAuthor author, TextChannel channel, Object[] parameters) {
         final List<Role> parties = new ArrayList<>(message.getMentionedRoles());
-        // Add party roles mentioned by strings to parties
-        Arrays.stream(parameters)
-                .filter(partyName -> partyName instanceof String)
-                .forEach(partyName -> PartyHandler.getPartyByName((String) partyName).flatMap(party -> api.getRoleById(party.getRoleID())).ifPresent(parties::add));
         // If there is a number, run the replenish function using the parties and that number as the amount to replenish
         bleedParty(parties.get(0), channel, author);
-
     }
 
     /**

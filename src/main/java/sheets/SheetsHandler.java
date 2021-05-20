@@ -15,8 +15,8 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import org.javacord.api.entity.user.User;
-import players.PartyHandler;
-import players.PartyMember;
+import roles.Player;
+import roles.PlayerHandler;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -190,10 +190,9 @@ public class SheetsHandler {
      * @return The spreadsheet ID for the character sheet of the user, or empty if the user does not have a linked character sheet
      */
     private static Optional<String> getSpreadsheetForPartyMember(User user) {
-        return PartyHandler.getParties().stream()
-                .flatMap(party -> party.getMembers().stream())
-                .filter(partyMember -> user.getId() == partyMember.getDiscordId())
-                .map(PartyMember::getSheetId)
+        return PlayerHandler.getInstance().getPlayers().stream()
+                .filter(player -> user.getId() == player.getDiscordId())
+                .map(Player::getSheetId)
                 .findFirst();
     }
 }

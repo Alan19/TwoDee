@@ -20,6 +20,7 @@ public class DiceRoller {
     public DiceRoller(DicePool dicePool) {
         this.dicePool = dicePool;
         rollResult = new RollResult(dicePool.getNumberOfKeptDice());
+        // Disable enhancement by default if there is plot dice in the pool
         if (!dicePool.getPlotDice().isEmpty()) {
             dicePool.enableEnhancement(false);
         }
@@ -57,7 +58,7 @@ public class DiceRoller {
                 .addField("Dropped", formatRegularDiceResults(rollResult.getAllDroppedDice(), false), true)
                 .addField("Total", String.valueOf(rollResult.getTotal()), true)
                 .addField("Tier Hit", rollResult.getTierHit(), true);
-        if (dicePool.enableEnhancements()) {
+        if (dicePool.isEnhancementEnabled()) {
             rollResultEmbed.setFooter("Enhance this roll with plot points in the next 60 seconds by clicking on the reactions below!");
         }
         return rollResultEmbed;

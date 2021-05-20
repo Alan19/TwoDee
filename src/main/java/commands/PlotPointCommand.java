@@ -112,7 +112,7 @@ public class PlotPointCommand implements CommandExecutor {
         // TODO Log errors
         final List<CompletableFuture<Optional<Integer>>> plotPointUpdateFuture = targets.stream()
                 .filter(user -> SheetsHandler.getPlotPoints(user).isPresent())
-                .map(user -> PlotPointHandler.addPlotPointsToUser(amount, changes, new ArrayList<>(), user))
+                .map(user -> PlotPointHandler.addPlotPointsToUser(user, amount, changes, new ArrayList<>()))
                 .collect(Collectors.toList());
         CompletableFuture.allOf(plotPointUpdateFuture.toArray(new CompletableFuture[]{}))
                 .thenApply(unused -> channel.sendMessage(PlotPointHandler.generateEmbed(changes, channel, author)));
