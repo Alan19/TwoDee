@@ -16,6 +16,7 @@ import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.reaction.ReactionAddEvent;
+import org.javacord.api.util.logging.ExceptionLogger;
 import roles.Storytellers;
 import sheets.PlotPointHandler;
 
@@ -37,9 +38,7 @@ public class RollCommand implements CommandExecutor {
      */
     private static void rollPoolAndSend(TextChannel channel, Message message, DicePool dicePool, boolean isReroll) {
         DiceRoller diceRoller = new DiceRoller(dicePool);
-        final CompletableFuture<Message> sentMessageFuture = new MessageBuilder()
-                .setEmbed(diceRoller.generateResults(message.getAuthor()))
-                .send(channel);
+        final CompletableFuture<Message> sentMessageFuture = channel.sendMessage(diceRoller.generateResults(message.getAuthor())).exceptionally(ExceptionLogger.get());
         sentMessageFuture.thenAcceptAsync(sentMessage -> {
             if (!isReroll) {
                 handlePlotPointChanges(message, dicePool.getPlotPointsSpent(), dicePool.getPlotPointDiscount());
@@ -67,16 +66,31 @@ public class RollCommand implements CommandExecutor {
      */
     private static void reroll(TextChannel channel, Message message, DicePool dicePool, int doom) {
         // Revert opportunities and plot point spending
-        final EmbedBuilder doomEmbed = DoomHandler.addDoom(doom * -1);
-        final int changeInPlotPoints = doom * -1 + dicePool.getPlotPointsSpent() - dicePool.getPlotPointDiscount();
-        if (changeInPlotPoints != 0) {
-            final ArrayList<Triple<User, Integer, Integer>> plotPointChanges = new ArrayList<>();
-            PlotPointHandler.addPlotPointsToUser(message.getUserAuthor().get(), changeInPlotPoints, plotPointChanges, new ArrayList<>()).thenAccept(integer -> channel.sendMessage(PlotPointHandler.generateEmbed(plotPointChanges, channel, message.getAuthor()))).join();
-        }
-        if (doom * -1 != 0) {
-            channel.sendMessage(doomEmbed).join();
+        if (dicePool.areOpportunitiesEnabled()) {
+            final EmbedBuilder doomEmbed = DoomHandler.addDoom(doom * -1);
+            final int changeInPlotPoints = doom * -1 + dicePool.getPlotPointsSpent() - dicePool.getPlotPointDiscount();
+            if (changeInPlotPoints != 0) {
+                final ArrayList<Triple<User, Integer, Integer>> plotPointChanges = new ArrayList<>();
+                PlotPointHandler.addPlotPointsToUser(message.getUserAuthor().get(), changeInPlotPoints, plotPointChanges, new ArrayList<>()).thenAccept(integer -> channel.sendMessage(PlotPointHandler.generateEmbed(plotPointChanges, channel, message.getAuthor()))).join();
+            }
+            if (doom * -1 != 0) {
+                channel.sendMessage(doomEmbed).join();
+            }
         }
         rollPoolAndSend(channel, message, dicePool, true);
+    }
+
+    /**
+     * Attach the reroll reaction and attach a listener that lasts for 60 seconds (same as the other reacts)
+     *
+     * @param userMessage The message containing the roll command
+     * @param dicePool    The dice pool for rolling
+     * @param diceRoller  The dice roller object containing the result of the roll
+     * @param sentMessage The message that contains the embed with the roll result
+     * @param channel     The channel the message was sent from
+     */
+    public static void attachRerollReaction(Message userMessage, DicePool dicePool, DiceRoller diceRoller, Message sentMessage, TextChannel channel) {
+        sentMessage.addReaction(EmojiParser.parseToUnicode(":repeat:")).thenAccept(unused -> sentMessage.addReactionAddListener(event -> onRerollReact(userMessage, dicePool, diceRoller, sentMessage, channel, event)).removeAfter(60, TimeUnit.SECONDS));
     }
 
     public static void rollPoolAndSend(TextChannel channel, Message message, DicePool dicePool) {
@@ -145,21 +159,6 @@ public class RollCommand implements CommandExecutor {
     }
 
     /**
-     * Attach the reroll reaction and attach a listener that lasts for 60 seconds (same as the other reacts)
-     *
-     * @param userMessage The message containing the roll command
-     * @param dicePool    The dice pool for rolling
-     * @param diceRoller  The dice roller object containing the result of the roll
-     * @param sentMessage The message that contains the embed with the roll result
-     * @param channel     The channel the message was sent from
-     */
-    public static void attachRerollReaction(Message userMessage, DicePool dicePool, DiceRoller diceRoller, Message sentMessage, TextChannel channel) {
-        sentMessage.addReaction(EmojiParser.parseToUnicode(":repeat:")).thenAccept(unused -> sentMessage.addReactionAddListener(event -> {
-            onRerollReact(userMessage, dicePool, diceRoller, sentMessage, channel, event);
-        }).removeAfter(60, TimeUnit.SECONDS));
-    }
-
-    /**
      * When a user reacts to the repeat reaction,
      *
      * @param userMessage The message the user sent to roll dice
@@ -171,11 +170,8 @@ public class RollCommand implements CommandExecutor {
      */
     private static void onRerollReact(Message userMessage, DicePool dicePool, DiceRoller diceRoller, Message sentMessage, TextChannel channel, ReactionAddEvent event) {
         if (event.getUser().map(user -> !user.isYourself()).orElse(false) && event.getReaction().map(reaction -> reaction.getEmoji().equalsEmoji(EmojiParser.parseToUnicode(":repeat:"))).orElse(false)) {
-            PlotPointEnhancementHelper.removeEnhancementEmojis(sentMessage)
-                    .thenAccept(reactionsRemoved -> {
-                        reroll(channel, userMessage, dicePool, diceRoller.getDoom());
-                        event.addReactionsToMessage(EmojiParser.parseToUnicode(":bulb:"));
-                    });
+            event.addReactionsToMessage(EmojiParser.parseToUnicode(":bulb:"));
+            PlotPointEnhancementHelper.removeEnhancementEmojis(sentMessage).thenAccept(reactionsRemoved -> reroll(channel, userMessage, dicePool, diceRoller.getDoom()));
         }
     }
 

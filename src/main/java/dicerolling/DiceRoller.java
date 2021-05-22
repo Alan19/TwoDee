@@ -46,7 +46,7 @@ public class DiceRoller {
     public EmbedBuilder generateResults(MessageAuthor author) {
         //Build embed
         final EmbedBuilder rollResultEmbed = new EmbedBuilder()
-                .setDescription("Here's the result for" + createDicePoolString(dicePool))
+                .setDescription("Here's the result for " + createDicePoolString(dicePool))
                 .setTitle(TwoDee.getRollTitleMessage())
                 .setAuthor(author)
                 .setColor(RandomColor.getRandomColor())
@@ -71,13 +71,60 @@ public class DiceRoller {
      * @return The dice pool in dice as a string
      */
     private String createDicePoolString(DicePool dicePool) {
-        StringBuilder dicePoolString = new StringBuilder();
-        dicePool.getRegularDice().forEach(integer -> dicePoolString.append(" d").append(integer));
-        dicePool.getPlotDice().forEach(integer -> dicePoolString.append(" pd").append(integer));
-        dicePool.getKeptDice().forEach(integer -> dicePoolString.append(" kd").append(integer));
-        dicePool.getChaosDice().forEach(integer -> dicePoolString.append(" cd").append(integer));
-        dicePool.getFlatBonuses().stream().map(integer -> (integer > 0) ? (" +" + integer) : integer).forEach(dicePoolString::append);
-        return dicePoolString.toString();
+        final int flatModifier = dicePool.getFlatBonuses().stream().mapToInt(value -> value).sum();
+        final String flatModifierString = getFlatModifierString(flatModifier);
+        return formatDiceListForRepeatingDiceOfTheSameType(dicePool.getRegularDice(), DiceType.REGULAR) + " " +
+                formatDiceListForRepeatingDiceOfTheSameType(dicePool.getPlotDice(), DiceType.PLOT_DIE) + " " +
+                formatDiceListForRepeatingDiceOfTheSameType(dicePool.getKeptDice(), DiceType.KEPT_DIE) + " " +
+                formatDiceListForRepeatingDiceOfTheSameType(dicePool.getChaosDice(), DiceType.CHAOS_DIE) + " " +
+                flatModifierString;
+    }
+
+    /**
+     * Adds a + to the front of the flat modifier if it's positive, and make it an empty string if it's 0
+     *
+     * @param flatModifier The value of the flat modifer
+     * @return The flat modifier as a formatted string
+     */
+    private String getFlatModifierString(int flatModifier) {
+        final String flatModifierString;
+        if (flatModifier == 0) {
+            flatModifierString = "";
+        }
+        else if (flatModifier > 0) {
+            flatModifierString = "+" + flatModifier;
+        }
+        else {
+            flatModifierString = String.valueOf(flatModifier);
+        }
+        return flatModifierString;
+    }
+
+    /**
+     * Formats te list of rolled dice of a certain type to group the repeating dice together (4 d12s next to each other in the list becomes 4d12)
+     *
+     * @param diceList The list of dice rolled
+     * @param diceType The type of dice being rolled, which determines the abbreviation in the string
+     * @return A formatted string of the dice being rolled
+     */
+    private String formatDiceListForRepeatingDiceOfTheSameType(List<Integer> diceList, DiceType diceType) {
+        StringBuilder outputString = new StringBuilder();
+        if (!diceList.isEmpty()) {
+            int lastDiceFacets = diceList.get(0);
+            int consecutiveDiceCount = 0;
+            for (int dice : diceList) {
+                if (lastDiceFacets != dice) {
+                    outputString.append(consecutiveDiceCount).append(diceType.getAbbreviation()).append(lastDiceFacets).append(" ");
+                    lastDiceFacets = dice;
+                    consecutiveDiceCount = 1;
+                }
+                else {
+                    consecutiveDiceCount++;
+                }
+            }
+            outputString.append(consecutiveDiceCount).append(diceType.getAbbreviation()).append(lastDiceFacets);
+        }
+        return outputString.toString();
     }
 
     /**
@@ -164,12 +211,4 @@ public class DiceRoller {
                 .forEach(rollResult::addKeptDice);
     }
 
-    /**
-     * Gets the value of a roll
-     *
-     * @return The value of the roll
-     */
-    public int getTotal() {
-        return rollResult.getTotal();
-    }
 }

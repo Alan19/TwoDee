@@ -1,9 +1,10 @@
 package dicerolling;
 
-import statistics.resultvisitors.DifficultyVisitor;
+import com.google.common.collect.Range;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.OptionalInt;
 
 public interface PoolResultWithEmbed extends PoolResult {
@@ -33,28 +34,25 @@ public interface PoolResultWithEmbed extends PoolResult {
      * @return The tiers and extraordinary tier hit by the roll, if any
      */
     default String getTierHit() {
-        DifficultyVisitor difficultyVisitor = new DifficultyVisitor();
+        Pair<String, Range<Integer>> noneRange = Pair.of("None", Range.lessThan(3));
+        Pair<String, Range<Integer>> easyRange = Pair.of("Easy", Range.closedOpen(3, 7));
+        Pair<String, Range<Integer>> averageRange = Pair.of("Average", Range.closedOpen(7, 11));
+        Pair<String, Range<Integer>> hardRange = Pair.of("Hard", Range.closedOpen(11, 15));
+        Pair<String, Range<Integer>> formidableRange = Pair.of("Formidable", Range.closedOpen(15, 19));
+        Pair<String, Range<Integer>> heroicRange = Pair.of("Heroic", Range.closedOpen(19, 23));
+        Pair<String, Range<Integer>> incredibleRange = Pair.of("Incredible", Range.closedOpen(23, 27));
+        Pair<String, Range<Integer>> ridiculousRange = Pair.of("Ridiculous", Range.closedOpen(27, 31));
+        Pair<String, Range<Integer>> impossibleRange = Pair.of("Impossible", Range.atLeast(31));
+        Pair<String, Range<Integer>>[] difficultyRanges = new Pair[]{impossibleRange, ridiculousRange, incredibleRange, heroicRange, formidableRange, hardRange, averageRange, easyRange, noneRange};
         int total = getTotal();
-        if (total < 3) {
-            return "None";
-        }
-        StringBuilder output = new StringBuilder();
-        for (Map.Entry<Integer, String> diffEntry : difficultyVisitor.getDifficultyMap().entrySet()) {
-            if (difficultyVisitor.generateStageDifficulty(diffEntry.getKey() + 1) > total) {
-                output.append(diffEntry.getValue());
-                break;
-            }
-        }
-        if (total < 10) {
-            return String.valueOf(output);
-        }
-        for (Map.Entry<Integer, String> diffEntry : difficultyVisitor.getDifficultyMap().entrySet()) {
-            if (difficultyVisitor.generateStageExtraordinaryDifficulty(diffEntry.getKey() + 1) > total) {
-                output.append(", Extraordinary ").append(diffEntry.getValue());
-                break;
-            }
-        }
-        return String.valueOf(output);
-
+        StringBuilder difficultyString = new StringBuilder();
+        Arrays.stream(difficultyRanges)
+                .filter(difficultyRange -> difficultyRange.getRight().contains(total))
+                .findFirst()
+                .ifPresent(difficultyRange -> difficultyString.append(difficultyRange.getLeft()).append(""));
+        Arrays.stream(difficultyRanges, 0, difficultyRanges.length - 1)
+                .filter(stringRangePair -> stringRangePair.getRight().contains(total - 7))
+                .findFirst().ifPresent(stringRangePair -> difficultyString.append(", Extraordinary ").append(stringRangePair.getLeft()));
+        return difficultyString.toString();
     }
 }
