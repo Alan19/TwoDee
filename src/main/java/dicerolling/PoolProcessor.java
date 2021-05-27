@@ -54,21 +54,29 @@ public class PoolProcessor {
         for (String param : paramArray) {
             if (param.matches("-fsu=[1-9]\\d*")) {
                 nextDiceFacetMod = Integer.parseInt(param.substring(5));
-            } else if (param.matches("-fsd=[1-9]\\d*")) {
+            }
+            else if (param.matches("-fsd=[1-9]\\d*")) {
                 nextDiceFacetMod = Integer.parseInt(param.substring(5)) * -1;
-            } else if (param.matches("-maxf=[1-9]\\d*")) {
+            }
+            else if (param.matches("-maxf=[1-9]\\d*")) {
                 maxFacets = Integer.parseInt(param.substring(4));
-            } else if (param.matches("(-diff=[a-zA-Z]+|-diff)")) {
+            }
+            else if (param.matches("(-diff=[a-zA-Z]+|-diff)")) {
                 processDifficultyLevel(param);
-            } else if (param.matches("-t=[1-9]\\d*")) {
+            }
+            else if (param.matches("-t=[1-9]\\d*")) {
                 dicePool.setNumberOfKeptDice(Integer.parseInt(param.substring(3)));
-            } else if (param.matches("(-pdisc=-?[1-9]\\d*)")) {
+            }
+            else if (param.matches("(-pdisc=-?[1-9]\\d*)")) {
                 processPlotPointDiscount(param);
-            } else if (param.matches("-enh=(true|false)")) {
+            }
+            else if (param.matches("-enh=(true|false)")) {
                 dicePool.enableEnhancement(Boolean.parseBoolean(param.substring(9)));
-            } else if (param.matches("-opp=(true|false)")) {
+            }
+            else if (param.matches("-opp=(true|false)")) {
                 dicePool.setOpportunitiesEnabled(Boolean.parseBoolean(param.substring(5)));
-            } else if (param.matches("-nd=(d|kd|pd|cd)")) {
+            }
+            else if (param.matches("-nd=(d|kd|pd|cd)")) {
                 nextDiceType = param.substring(4);
             }
             //Any type of dice
@@ -215,7 +223,8 @@ public class PoolProcessor {
                 if (skillFacets % maxFacets > 2) {
                     dicePool.addDice(nextDiceType, skillFacets % maxFacets);
                 }
-            } else {
+            }
+            else {
                 dicePool.addDice(nextDiceType, skillFacets);
             }
         }
