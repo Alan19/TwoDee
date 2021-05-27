@@ -2,6 +2,8 @@ package doom;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import java.awt.*;
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class DoomHandler {
+    private static final Logger LOGGER = LogManager.getLogger(DoomHandler.class);
 
     public static final String DOOM = "Doom!";
     private static final DoomHandler instance = new DoomHandler();
@@ -122,7 +125,7 @@ public class DoomHandler {
             new Gson().toJson(instance.doomConfigs, writer);
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Failed to serialize pools", e);
         }
     }
 

@@ -14,6 +14,8 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.user.User;
 import roles.Player;
 import roles.PlayerHandler;
@@ -27,6 +29,8 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class SheetsHandler {
+    private static final Logger LOGGER = LogManager.getLogger(SheetsHandler.class);
+
     private static final String APPLICATION_NAME = "Skill Lookup";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
@@ -45,7 +49,7 @@ public class SheetsHandler {
                     .setApplicationName(APPLICATION_NAME)
                     .build();
         } catch (IOException | GeneralSecurityException e) {
-            System.out.println("Unable to access spreadsheets!");
+            LOGGER.error("Unable to access spreadsheets!", e);
         }
     }
 
@@ -87,7 +91,7 @@ public class SheetsHandler {
                         .forEach(objects -> skills.put((String) objects.get(0), Integer.parseInt(((String) (objects.get(1))).substring(1))));
                 return Optional.of(skills);
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("Failed to get skills", e);
             }
         }
         return Optional.empty();
@@ -105,7 +109,7 @@ public class SheetsHandler {
             try {
                 return Optional.of(instance.service.spreadsheets().values().get(spreadsheetForUser.get(), "PlotPoints").execute());
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("Failed to get plot point range", e);
             }
         }
         return Optional.empty();
@@ -145,7 +149,7 @@ public class SheetsHandler {
                     final int updatedPlotPointCount = Integer.parseInt((String) plotPointsCellUpdateRequest.getUpdatedData().getValues().get(0).get(0));
                     return Optional.of(updatedPlotPointCount);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    LOGGER.error("Failed to set plot points", e);
                     sneakyThrow(e);
                 }
                 return Optional.empty();
@@ -177,7 +181,7 @@ public class SheetsHandler {
             try {
                 return Optional.of(instance.service.spreadsheets().values().get(spreadsheetForUser.get(), "PlotPointBleed").execute()).map(valueRange -> Integer.parseInt((String) valueRange.getValues().get(0).get(0)));
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("Failed to get player bleed", e);
             }
         }
         return Optional.empty();
