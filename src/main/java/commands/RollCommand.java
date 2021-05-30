@@ -68,7 +68,8 @@ public class RollCommand implements CommandExecutor {
         // Revert opportunities and plot point spending
         if (dicePool.areOpportunitiesEnabled()) {
             final EmbedBuilder doomEmbed = DoomHandler.addDoom(doom * -1);
-            final int changeInPlotPoints = doom * -1 + dicePool.getPlotPointsSpent() - dicePool.getPlotPointDiscount();
+            final boolean isThereAnOpportunity = doom > 0;
+            final int changeInPlotPoints = (isThereAnOpportunity ? -1 : 0) + dicePool.getPlotPointsSpent() - dicePool.getPlotPointDiscount();
             if (changeInPlotPoints != 0) {
                 final ArrayList<Triple<User, Integer, Integer>> plotPointChanges = new ArrayList<>();
                 PlotPointHandler.addPlotPointsToUser(message.getUserAuthor().get(), changeInPlotPoints, plotPointChanges, new ArrayList<>()).thenAccept(integer -> channel.sendMessage(PlotPointHandler.generateEmbed(plotPointChanges, channel, message.getAuthor()))).join();
