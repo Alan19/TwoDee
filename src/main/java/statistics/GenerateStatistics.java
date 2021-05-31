@@ -123,15 +123,15 @@ public class GenerateStatistics implements StatisticsState {
 
     private HashMap<PoolResult, Long> processFlatBonus(HashMap<PoolResult, Long> rollResultOccurrences) {
         HashMap<PoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
-        // Loop through all of the kept dice
-        for (Integer flatBonus : dicePool.getFlatBonuses()) {
-            HashMap<PoolResult, Long> tempMap = new HashMap<>(newMap);
-            // Create n PoolResultObjects with each possible outcomes of the dice
-            // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
-            newMap.forEach((key, value) -> tempMap.compute(key.addFlatBonus(flatBonus), (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + value : value));
-            newMap = tempMap;
+        // Sum up all flat bonuses
+        final int flatBonus = dicePool.getFlatBonuses().stream().mapToInt(value -> value).sum();
+        HashMap<PoolResult, Long> tempMap = new HashMap<>();
+        for (Map.Entry<PoolResult, Long> entry : newMap.entrySet()) {
+            PoolResult key = entry.getKey();
+            Long value = entry.getValue();
+            tempMap.put(key.addFlatBonus(flatBonus), value);
         }
-        return newMap;
+        return tempMap;
     }
 
     private HashMap<PoolResult, Long> processKeptDice(HashMap<PoolResult, Long> rollResultOccurrences) {
