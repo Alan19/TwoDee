@@ -80,3 +80,4 @@ You could use more dice.
 Blood for the blood god!
 Skulls for the skull throne!
 One tasteful skull for the skull throne!
+"What level of friendship are you at?", "Out of Body Experiences."
