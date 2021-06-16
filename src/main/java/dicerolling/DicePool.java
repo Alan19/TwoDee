@@ -105,7 +105,7 @@ public class DicePool {
     }
 
     public DicePool addDice(String diceType, int dice) {
-        switch (diceType.toLowerCase(Locale.ROOT)) {
+        switch (diceType) {
             case "d":
                 addDice(dice);
                 break;
