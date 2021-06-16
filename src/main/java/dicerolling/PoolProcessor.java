@@ -45,7 +45,7 @@ public class PoolProcessor {
      * Sets the dice and options for the pool. Allows players to add or subtract facets from skills, set the difficulty calculation embed, set the plot point modifier, and enable enhancement reactions.
      */
     private void preprocess() {
-        String trimmedCommand = command.replaceAll("\\s+", " ");
+        String trimmedCommand = command.replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
         String[] paramArray = trimmedCommand.split(" ");
         int nextDiceFacetMod = 0;
         int maxFacets = 12;
