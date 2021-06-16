@@ -2,6 +2,7 @@ package dicerolling;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class DicePool {
     //Dice Types
@@ -104,7 +105,7 @@ public class DicePool {
     }
 
     public DicePool addDice(String diceType, int dice) {
-        switch (diceType) {
+        switch (diceType.toLowerCase(Locale.ROOT)) {
             case "d":
                 addDice(dice);
                 break;
