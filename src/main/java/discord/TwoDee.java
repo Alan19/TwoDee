@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
+import org.javacord.api.interaction.ApplicationCommand;
 import org.javacord.api.util.logging.ExceptionLogger;
 
 import java.io.BufferedReader;
@@ -34,7 +35,7 @@ public class TwoDee {
                         .setContent(getStartupMessage())
                         .send(api.getTextChannelById("484544303247523840").get());
                 // Print the invite url of your bot
-                LOGGER.info("You can invite the bot by using the following url: " + api.createBotInvite());
+                LOGGER.info(String.format("You can invite the bot by using the following url: %s", api.createBotInvite()));
                 //Create command handler
                 CommandHandler cmdHandler = new JavacordHandler(api);
                 cmdHandler.registerCommand(new StatisticsCommand());
@@ -49,6 +50,7 @@ public class TwoDee {
                 cmdHandler.registerCommand(new ReplenishCommand());
                 cmdHandler.registerCommand(new BleedCommand());
 
+                ApplicationCommand doomCommand = new slashcommands.DoomCommand().createForServer(api.getServerById(468046159781429250L).get()).join();
                 //Create listeners
                 api.addListener(new PlotPointEnhancementListener());
                 DeleteStatsListener deleteStatsListener = new DeleteStatsListener(api);

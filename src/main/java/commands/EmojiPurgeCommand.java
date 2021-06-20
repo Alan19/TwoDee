@@ -89,12 +89,12 @@ public class EmojiPurgeCommand implements CommandExecutor {
         ArrayList<CompletableFuture<Void>> removalFutures = new ArrayList<>();
         /* Remove enhancement reactions from all messages with them, then attach an edit event to all of the promises
         when they are fulfilled and add them to the promise ArrayList */
-        messagesWithEnhancementReacts
-                .stream()
-                .map(PlotPointEnhancementHelper::removeEnhancementEmojis)
-                .forEach(reactionsRemovedFuture -> removalFutures.add(reactionsRemovedFuture.thenAccept(aVoid -> removalFutures.add(progressMessage.edit(generateProgressMessage(messagesToClear, emojis, current.getAndIncrement()))))));
-        /*When all reacts are removed, add a :X: react to allow it to be deleted and then return a Pair as a
-        CompletedFuture*/
+//        messagesWithEnhancementReacts
+//                .stream()
+//                .map(PlotPointEnhancementHelper::removeEnhancementEmojis)
+//                .forEach(reactionsRemovedFuture -> removalFutures.add(reactionsRemovedFuture.thenAccept(aVoid -> removalFutures.add(progressMessage.edit(generateProgressMessage(messagesToClear, emojis, current.getAndIncrement()))))));
+//        /*When all reacts are removed, add a :X: react to allow it to be deleted and then return a Pair as a
+//        CompletedFuture*/
         return CompletableFuture.allOf(removalFutures.toArray(new CompletableFuture[0])).thenCompose(aVoid ->
                 progressMessage
                         .edit(generateProgressMessage(messagesToClear, emojis, current.get()))
