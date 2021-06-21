@@ -69,6 +69,10 @@ public class PlotPointHandler {
      * @return An embed containing the changes in a user(s)'s plot points. If there is more than 1 user, add the changes as fields. Otherwise, set the author of the embed as the user and the description as the change in plot points.
      */
     public static EmbedBuilder generateEmbed(List<Triple<User, Integer, Integer>> plotPointChanges, Channel channel, MessageAuthor author) {
+        return generateEmbed(plotPointChanges, channel, author.asUser().get());
+    }
+
+    public static EmbedBuilder generateEmbed(List<Triple<User, Integer, Integer>> plotPointChanges, Channel channel, User author) {
         EmbedBuilder builder = new EmbedBuilder().setTitle("Plot Points!").setColor(RandomColor.getRandomColor());
         builder.setAuthor(author);
         for (Triple<User, Integer, Integer> changes : plotPointChanges) {

@@ -10,8 +10,9 @@ import org.apache.logging.log4j.Logger;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.interaction.ApplicationCommand;
 import org.javacord.api.util.logging.ExceptionLogger;
+import slashcommands.SlashCommandListener;
+import slashcommands.SlashCommands;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -41,18 +42,18 @@ public class TwoDee {
                 cmdHandler.registerCommand(new StatisticsCommand());
                 cmdHandler.registerCommand(new RollCommand());
                 cmdHandler.registerCommand(new TestRollCommand());
-                cmdHandler.registerCommand(new DoomCommand());
                 cmdHandler.registerCommand(new StopCommand());
                 cmdHandler.registerCommand(new HelpCommand(cmdHandler));
                 cmdHandler.registerCommand(new PlotPointCommand());
                 cmdHandler.registerCommand(new EmojiPurgeCommand());
                 cmdHandler.registerCommand(new EnhancementToggleCommand());
                 cmdHandler.registerCommand(new ReplenishCommand());
-                cmdHandler.registerCommand(new BleedCommand());
-
-                ApplicationCommand doomCommand = new slashcommands.DoomCommand().createForServer(api.getServerById(468046159781429250L).get()).join();
+                SlashCommands.registerDoomCommand(api).join();
+                SlashCommands.registerBleedCommand(api).join();
+                SlashCommands.registerPlotPointCommand(api).join();
                 //Create listeners
                 api.addListener(new PlotPointEnhancementListener());
+                api.addListener(new SlashCommandListener());
                 DeleteStatsListener deleteStatsListener = new DeleteStatsListener(api);
                 deleteStatsListener.startListening();
 
