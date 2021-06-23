@@ -3,7 +3,7 @@ package commands;
 import com.vdurmont.emoji.EmojiParser;
 import de.btobastian.sdcf4j.Command;
 import de.btobastian.sdcf4j.CommandExecutor;
-import logic.RandomColor;
+import util.RandomColor;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;

@@ -26,6 +26,5 @@
             <appender-ref ref="RollingFile" level="DEBUG"/>
             <appender-ref ref="STDOUT" level="DEBUG"/>
         </Logger>
-
     </Loggers>
 </Configuration>

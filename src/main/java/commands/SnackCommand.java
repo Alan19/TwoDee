@@ -1,7 +1,7 @@
 package commands;
 
 import de.btobastian.sdcf4j.Command;
-import logic.RandomColor;
+import util.RandomColor;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;

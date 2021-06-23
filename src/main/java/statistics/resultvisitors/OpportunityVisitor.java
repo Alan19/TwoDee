@@ -2,7 +2,7 @@ package statistics.resultvisitors;
 
 import com.google.common.collect.ImmutableList;
 import dicerolling.PoolResult;
-import logic.EmbedField;
+import util.EmbedField;
 
 import java.util.Comparator;
 import java.util.HashMap;

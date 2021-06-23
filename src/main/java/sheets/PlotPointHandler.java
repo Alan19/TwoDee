@@ -1,6 +1,6 @@
 package sheets;
 
-import logic.RandomColor;
+import util.RandomColor;
 import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.TextChannel;

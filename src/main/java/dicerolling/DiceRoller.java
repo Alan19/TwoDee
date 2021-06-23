@@ -1,7 +1,7 @@
 package dicerolling;
 
 import discord.TwoDee;
-import logic.RandomColor;
+import util.RandomColor;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 

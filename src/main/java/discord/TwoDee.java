@@ -7,6 +7,7 @@ import de.btobastian.sdcf4j.CommandHandler;
 import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.DeleteStatsListener;
 import listeners.PlotPointEnhancementListener;
+import logic.SnackLogic;
 import logic.StopLogic;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -59,16 +60,17 @@ public class TwoDee {
                         cmdHandler.registerCommand(new EmojiPurgeCommand());
                         cmdHandler.registerCommand(new EnhancementToggleCommand());
                         cmdHandler.registerCommand(new ReplenishCommand());
-
-                         */
-
-                        Commander commander = new Commander(api, "~",
-                                StopLogic.getSpec()
-                        );
-                        commander.register();
                         SlashCommands.registerDoomCommand(api).join();
                         SlashCommands.registerBleedCommand(api).join();
                         SlashCommands.registerPlotPointCommand(api).join();
+                         */
+
+                        Commander commander = new Commander(api, "~",
+                                StopLogic.getSpec(),
+                                SnackLogic.getSpec()
+                        );
+                        commander.register();
+
                         //Create listeners
                         api.addListener(new PlotPointEnhancementListener());
                         api.addListener(new SlashCommandListener());

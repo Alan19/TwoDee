@@ -3,7 +3,7 @@ package statistics;
 import dicerolling.DicePool;
 import dicerolling.FastRollResult;
 import dicerolling.PoolResult;
-import logic.EmbedField;
+import util.EmbedField;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import statistics.resultvisitors.*;
 

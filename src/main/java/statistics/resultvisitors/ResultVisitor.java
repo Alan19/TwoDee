@@ -1,6 +1,6 @@
 package statistics.resultvisitors;
 
-import logic.EmbedField;
+import util.EmbedField;
 
 import java.text.DecimalFormat;
 import java.util.List;

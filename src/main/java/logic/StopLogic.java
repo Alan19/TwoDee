@@ -20,6 +20,6 @@ public class StopLogic {
 
     public static void stop(CommandContext context) {
         LOGGER.info("TwoDee is shutting down...");
-        System.exit(1);
+        System.exit(0);
     }
 }

@@ -7,7 +7,7 @@ import dicerolling.DicePool;
 import dicerolling.DiceRoller;
 import dicerolling.PoolProcessor;
 import doom.DoomHandler;
-import logic.PlotPointEnhancementHelper;
+import util.PlotPointEnhancementHelper;
 import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
