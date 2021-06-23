@@ -1,7 +1,9 @@
 package commander;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class CommandSpecBuilder {
     private final String name;
@@ -9,7 +11,7 @@ public class CommandSpecBuilder {
     private String description;
     private String usage;
     private CommandSpec[] children;
-    private Consumer<CommandContext> handler;
+    private Function<CommandContext, Optional<CommandResponse>> handler;
 
     public CommandSpecBuilder(String name) {
         this.name = name;
@@ -31,7 +33,7 @@ public class CommandSpecBuilder {
     }
 
     public CommandSpecBuilder withChildren(CommandSpec... children) {
-        for (CommandSpec child: children) {
+        for (CommandSpec child : children) {
             if (!child.getChildren().isEmpty()) {
                 throw new IllegalArgumentException("Cannot add Children that have Children");
             }
@@ -41,6 +43,14 @@ public class CommandSpecBuilder {
     }
 
     public CommandSpecBuilder withHandler(Consumer<CommandContext> handler) {
+        this.handler = context -> {
+            handler.accept(context);
+            return Optional.empty();
+        };
+        return this;
+    }
+
+    public CommandSpecBuilder withHandler(Function<CommandContext, Optional<CommandResponse>> handler) {
         this.handler = handler;
         return this;
     }

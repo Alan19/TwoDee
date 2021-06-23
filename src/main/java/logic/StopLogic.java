@@ -1,14 +1,17 @@
 package logic;
 
 import commander.CommandContext;
+import commander.CommandResponse;
 import commander.CommandSpec;
 import commander.CommandSpecBuilder;
-import commands.StopCommand;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
 public class StopLogic {
-    private static final Logger LOGGER = LogManager.getLogger(StopCommand.class);
+    private static final Logger LOGGER = LogManager.getLogger(StopLogic.class);
 
     public static CommandSpec getSpec() {
         return CommandSpecBuilder.of("stop")
@@ -18,8 +21,12 @@ public class StopLogic {
                 .build();
     }
 
-    public static void stop(CommandContext context) {
+    public static Optional<CommandResponse> stop(CommandContext context) {
         LOGGER.info("TwoDee is shutting down...");
-        System.exit(0);
+        context.getApi()
+                .getThreadPool()
+                .getScheduler()
+                .schedule(() -> System.exit(0), 5, TimeUnit.SECONDS);
+        return Optional.of(CommandResponse.of("TwoDee is shutting down..."));
     }
 }

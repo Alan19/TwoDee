@@ -50,20 +50,15 @@ public class TwoDee {
                         // Print the invite url of your bot
                         LOGGER.info(String.format("You can invite the bot by using the following url: %s", api.createBotInvite()));
                         //Create command handler
-                        /*CommandHandler cmdHandler = new JavacordHandler(api);
+                        CommandHandler cmdHandler = new JavacordHandler(api);
                         cmdHandler.registerCommand(new StatisticsCommand());
                         cmdHandler.registerCommand(new RollCommand());
                         cmdHandler.registerCommand(new TestRollCommand());
-                        cmdHandler.registerCommand(new StopCommand());
                         cmdHandler.registerCommand(new HelpCommand(cmdHandler));
                         cmdHandler.registerCommand(new PlotPointCommand());
                         cmdHandler.registerCommand(new EmojiPurgeCommand());
                         cmdHandler.registerCommand(new EnhancementToggleCommand());
                         cmdHandler.registerCommand(new ReplenishCommand());
-                        SlashCommands.registerDoomCommand(api).join();
-                        SlashCommands.registerBleedCommand(api).join();
-                        SlashCommands.registerPlotPointCommand(api).join();
-                         */
 
                         Commander commander = new Commander(api, "~",
                                 StopLogic.getSpec(),

@@ -1,12 +1,12 @@
 package commander;
 
 import org.javacord.api.DiscordApi;
-import org.javacord.api.entity.message.component.HighLevelComponent;
+import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.event.interaction.InteractionCreateEvent;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.event.server.ServerJoinEvent;
 import org.javacord.api.interaction.ApplicationCommandBuilder;
-import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
+import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.listener.interaction.InteractionCreateListener;
 import org.javacord.api.listener.message.MessageCreateListener;
 import org.javacord.api.listener.server.ServerJoinListener;
@@ -59,7 +59,12 @@ public class Commander implements MessageCreateListener, InteractionCreateListen
             CommandSpec commandSpec = commandSpecs.get(command);
             if (commandSpec != null) {
                 commandSpec.getHandler()
-                        .accept(new CommandContext(event.getMessage()));
+                        .apply(new CommandContext(api, event.getMessage()))
+                        .ifPresent(commandResponse -> {
+                            MessageBuilder messageBuilder = new MessageBuilder();
+                            commandResponse.handle(messageBuilder::setContent, messageBuilder::setEmbed);
+                            messageBuilder.send(event.getChannel());
+                        });
             }
         }
     }
@@ -70,16 +75,18 @@ public class Commander implements MessageCreateListener, InteractionCreateListen
                 .ifPresent(interaction -> {
                     CommandSpec commandSpec = commandSpecs.get(interaction.getCommandName());
                     if (commandSpec != null) {
-                        interaction.createImmediateResponder()
-                                .setContent("?")
-                                .respond();
+                        InteractionImmediateResponseBuilder responseBuilder = interaction.createImmediateResponder();
                         commandSpec.getHandler()
-                                .accept(new CommandContext(
+                                .apply(new CommandContext(
+                                        api,
                                         null,
                                         event.getInteraction().getUser(),
                                         interaction.getChannel().orElse(null),
                                         interaction.getServer().orElse(null)
-                                ));
+                                ))
+                                .orElseGet(() -> CommandResponse.of("Acknowledged"))
+                                .handle(responseBuilder::setContent, responseBuilder::addEmbed);
+                        responseBuilder.respond();
                     }
                 });
     }

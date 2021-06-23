@@ -4,7 +4,8 @@ import com.google.common.collect.Maps;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.Optional;
+import java.util.function.Function;
 
 public class CommandSpec {
     private final String name;
@@ -12,9 +13,9 @@ public class CommandSpec {
     private final String description;
     private final String usage;
     private final Map<String, CommandSpec> children;
-    private final Consumer<CommandContext> handler;
+    private final Function<CommandContext, Optional<CommandResponse>> handler;
 
-    public CommandSpec(String name, String[] alias, String description, String usage, CommandSpec[] children, Consumer<CommandContext> handler) {
+    public CommandSpec(String name, String[] alias, String description, String usage, CommandSpec[] children, Function<CommandContext, Optional<CommandResponse>> handler) {
         this.name = name;
         this.alias = alias;
         this.description = description;
@@ -45,7 +46,7 @@ public class CommandSpec {
         return usage;
     }
 
-    public Consumer<CommandContext> getHandler() {
+    public Function<CommandContext, Optional<CommandResponse>> getHandler() {
         return handler;
     }
 

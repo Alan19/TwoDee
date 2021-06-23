@@ -1,5 +1,6 @@
 package commander;
 
+import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageAuthor;
@@ -9,13 +10,15 @@ import org.javacord.api.entity.user.User;
 import java.util.Optional;
 
 public class CommandContext {
+    private final DiscordApi api;
     private final Message message;
     private final User user;
     private final MessageAuthor author;
     private final TextChannel channel;
     private final Server server;
 
-    public CommandContext(Message message) {
+    public CommandContext(DiscordApi api, Message message) {
+        this.api = api;
         this.message = message;
         this.user = message.getUserAuthor().orElse(null);
         this.author = message.getAuthor();
@@ -23,7 +26,8 @@ public class CommandContext {
         this.server = message.getServer().orElse(null);
     }
 
-    public CommandContext(Message message, User user, TextChannel channel, Server server) {
+    public CommandContext(DiscordApi api, Message message, User user, TextChannel channel, Server server) {
+        this.api = api;
         this.message = message;
         this.user = user;
         this.author = null;
@@ -49,6 +53,10 @@ public class CommandContext {
 
     public Optional<Server> getServer() {
         return Optional.ofNullable(this.server);
+    }
+
+    public DiscordApi getApi() {
+        return api;
     }
 
     public Optional<String> getDisplayName() {
