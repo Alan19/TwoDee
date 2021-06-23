@@ -30,11 +30,14 @@ public class TwoDee {
             Properties prop = new Properties();
             prop.load(new FileInputStream("resources/bot.properties"));
             String token = prop.getProperty("token");
+            String channel = prop.getProperty("channel", "484544303247523840");
             new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).login().thenAccept(api -> {
                 //Send startup messsage
                 new MessageBuilder()
                         .setContent(getStartupMessage())
-                        .send(api.getTextChannelById("484544303247523840").get());
+                        .send(api.getTextChannelById(channel)
+                                .orElseThrow(() -> new IllegalStateException("Failed to find Channel for Id: " + channel))
+                        );
                 // Print the invite url of your bot
                 LOGGER.info(String.format("You can invite the bot by using the following url: %s", api.createBotInvite()));
                 //Create command handler
@@ -60,7 +63,7 @@ public class TwoDee {
             })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
-        } catch (IOException e) {
+        } catch (Throwable e) {
             LOGGER.error("Failed to start TwoDee", e);
         }
 
