@@ -12,6 +12,7 @@ import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 import sheets.PlotPointHandler;
 import sheets.SheetsHandler;
+import util.UtilFunctions;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -130,7 +131,7 @@ public class PlotPointCommand implements CommandExecutor {
         EmbedBuilder builder = new EmbedBuilder().setTitle("Plot Points!");
         builder.setAuthor(author);
         for (User user : users) {
-            SheetsHandler.getPlotPoints(user).ifPresent(points -> builder.addField(PlotPointHandler.getUsernameInChannel(user, channel), String.valueOf(points)));
+            SheetsHandler.getPlotPoints(user).ifPresent(points -> builder.addField(UtilFunctions.getUsernameInChannel(user, channel), String.valueOf(points)));
         }
         return builder;
     }

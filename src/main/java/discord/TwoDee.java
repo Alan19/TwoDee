@@ -5,10 +5,16 @@ import de.btobastian.sdcf4j.CommandHandler;
 import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.DeleteStatsListener;
 import listeners.PlotPointEnhancementListener;
+import logic.BleedLogic;
+import logic.SnackLogic;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
+import org.javacord.api.interaction.SlashCommandOption;
+import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.util.logging.ExceptionLogger;
+import pw.mihou.velen.interfaces.Velen;
+import pw.mihou.velen.interfaces.VelenCommand;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -26,7 +32,9 @@ public class TwoDee {
             prop.load(new FileInputStream("resources/bot.properties"));
             String token = prop.getProperty("token");
             String channel = prop.getProperty("channel", "484544303247523840");
-            new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).login().thenAccept(api -> {
+            final Velen velen = setupVelen();
+            new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).addListener(velen).login().thenAccept(api -> {
+                velen.registerAllSlashCommands(api);
                 //Send startup messsage
                 new MessageBuilder()
                         .setContent(getStartupMessage())
@@ -35,7 +43,6 @@ public class TwoDee {
                         );
                 // Print the invite url of your bot
                 System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
-                //Create command handler
                 CommandHandler cmdHandler = new JavacordHandler(api);
                 cmdHandler.registerCommand(new StatisticsCommand());
                 cmdHandler.registerCommand(new RollCommand());
@@ -44,10 +51,8 @@ public class TwoDee {
                 cmdHandler.registerCommand(new StopCommand());
                 cmdHandler.registerCommand(new HelpCommand(cmdHandler));
                 cmdHandler.registerCommand(new PlotPointCommand());
-                cmdHandler.registerCommand(new EmojiPurgeCommand());
                 cmdHandler.registerCommand(new EnhancementToggleCommand());
                 cmdHandler.registerCommand(new ReplenishCommand());
-                cmdHandler.registerCommand(new BleedCommand());
 
                 //Create listeners
                 api.addListener(new PlotPointEnhancementListener());
@@ -61,6 +66,15 @@ public class TwoDee {
             e.printStackTrace();
         }
 
+    }
+
+    private static Velen setupVelen() {
+        Velen velen = Velen.builder().setDefaultPrefix(".").build();
+        SnackLogic snackLogic = new SnackLogic();
+        VelenCommand.ofHybrid("snack", "Gives you a snack!", velen, snackLogic, snackLogic);
+        BleedLogic bleedLogic = new BleedLogic();
+        VelenCommand.ofHybrid("bleed", "Applies plot point bleed!", velen, bleedLogic, bleedLogic).addOptions(SlashCommandOption.create(SlashCommandOptionType.MENTIONABLE, "target", "The party to bleed", true), SlashCommandOption.create(SlashCommandOptionType.INTEGER, "modifier", "The bonus or penalty on the bleed", false)).setServerOnly(true, 468046159781429250L).attach();
+        return velen;
     }
 
     //Returns a random dice roll line

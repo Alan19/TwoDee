@@ -3,9 +3,9 @@ package statistics;
 import dicerolling.DicePool;
 import dicerolling.FastRollResult;
 import dicerolling.PoolResult;
-import logic.EmbedField;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import statistics.resultvisitors.*;
+import util.EmbedField;
 
 import java.util.ArrayList;
 import java.util.Arrays;

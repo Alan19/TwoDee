@@ -3,7 +3,6 @@ package commands;
 import com.vdurmont.emoji.EmojiParser;
 import de.btobastian.sdcf4j.Command;
 import de.btobastian.sdcf4j.CommandExecutor;
-import logic.RandomColor;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
@@ -11,6 +10,7 @@ import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.MessageDecoration;
 import statistics.StatisticsContext;
+import util.RandomColor;
 
 import java.util.concurrent.CompletableFuture;
 

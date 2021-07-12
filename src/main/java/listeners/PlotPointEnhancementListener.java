@@ -1,8 +1,6 @@
 package listeners;
 
 import doom.DoomHandler;
-import logic.PlotPointEnhancementHelper;
-import logic.RandomColor;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.emoji.Emoji;
 import org.javacord.api.entity.message.Message;
@@ -13,6 +11,8 @@ import org.javacord.api.event.message.reaction.ReactionAddEvent;
 import org.javacord.api.listener.message.reaction.ReactionAddListener;
 import roles.Storytellers;
 import sheets.SheetsHandler;
+import util.PlotPointEnhancementHelper;
+import util.RandomColor;
 
 import java.util.Map;
 import java.util.Optional;

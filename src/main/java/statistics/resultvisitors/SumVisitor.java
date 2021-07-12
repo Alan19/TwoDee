@@ -1,6 +1,6 @@
 package statistics.resultvisitors;
 
-import logic.EmbedField;
+import util.EmbedField;
 
 import java.util.ArrayList;
 import java.util.List;

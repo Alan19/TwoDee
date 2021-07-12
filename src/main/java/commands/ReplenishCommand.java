@@ -12,6 +12,7 @@ import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
 import sheets.PlotPointHandler;
 import sheets.SheetsHandler;
+import util.UtilFunctions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,7 +65,7 @@ public class ReplenishCommand implements CommandExecutor {
     private void sendReplenishmentResultEmbed(TextChannel channel, MessageAuthor author, List<Triple<User, Integer, Integer>> plotPointChanges, List<User> uneditablePlayers) {
         final EmbedBuilder replenishmentEmbed = PlotPointHandler.generateEmbed(plotPointChanges, channel, author).setTitle("Session Replenishment!");
         if (!uneditablePlayers.isEmpty()) {
-            replenishmentEmbed.setDescription("I was unable to edit the plot points of:\n - " + uneditablePlayers.stream().map(user -> PlotPointHandler.getUsernameInChannel(user, channel)).collect(Collectors.joining("\n - ")));
+            replenishmentEmbed.setDescription("I was unable to edit the plot points of:\n - " + uneditablePlayers.stream().map(user -> UtilFunctions.getUsernameInChannel(user, channel)).collect(Collectors.joining("\n - ")));
         }
         channel.sendMessage(replenishmentEmbed);
     }

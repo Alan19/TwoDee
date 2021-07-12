@@ -1,12 +1,13 @@
 package sheets;
 
-import logic.RandomColor;
 import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import util.RandomColor;
+import util.UtilFunctions;
 
 import java.awt.*;
 import java.util.List;
@@ -29,10 +30,10 @@ public class PlotPointHandler {
     public static CompletableFuture<Optional<Integer>> setPlotPoints(User target, int number, TextChannel channel) {
         Optional<Integer> oldPP = SheetsHandler.getPlotPoints(target);
         if (oldPP.isPresent()) {
-            return SheetsHandler.setPlotPoints(target, number).exceptionally(throwable -> sendErrorEmbed(channel, "I was unable to set the plot points of " + getUsernameInChannel(target, channel)));
+            return SheetsHandler.setPlotPoints(target, number).exceptionally(throwable -> sendErrorEmbed(channel, "I was unable to set the plot points of " + UtilFunctions.getUsernameInChannel(target, channel)));
         }
         else {
-            channel.sendMessage(new EmbedBuilder().setColor(Color.RED).setDescription("I was unable to find the plot points of " + getUsernameInChannel(target, channel)));
+            channel.sendMessage(new EmbedBuilder().setColor(Color.RED).setDescription("I was unable to find the plot points of " + UtilFunctions.getUsernameInChannel(target, channel)));
             return CompletableFuture.completedFuture(Optional.empty());
         }
     }
@@ -50,17 +51,6 @@ public class PlotPointHandler {
     }
 
     /**
-     * Gets the display name of the user in a channel
-     *
-     * @param user    The user to check the nickname of
-     * @param channel The channel to check
-     * @return The display name of the user in a channel, or their name if it's not a server channel
-     */
-    public static String getUsernameInChannel(User user, Channel channel) {
-        return channel.asServerTextChannel().map(serverTextChannel -> user.getDisplayName(serverTextChannel.getServer())).orElseGet(user::getName);
-    }
-
-    /**
      * Returns an embed for changes in plot points
      *
      * @param plotPointChanges A list of triples that represent the change in plot points. The triple contains the user whose plot points are being changed, the old number of plot points, and the new number of plot points.
@@ -72,7 +62,7 @@ public class PlotPointHandler {
         EmbedBuilder builder = new EmbedBuilder().setTitle("Plot Points!").setColor(RandomColor.getRandomColor());
         builder.setAuthor(author);
         for (Triple<User, Integer, Integer> changes : plotPointChanges) {
-            builder.addField(getUsernameInChannel(changes.getLeft(), channel), changes.getMiddle() + " → " + changes.getRight());
+            builder.addField(UtilFunctions.getUsernameInChannel(changes.getLeft(), channel), changes.getMiddle() + " → " + changes.getRight());
         }
         return builder;
     }
@@ -105,5 +95,18 @@ public class PlotPointHandler {
             return setPlotPointsAndLog(plotPointChanges, uneditablePlayers, user, oldPlotPointCount.get(), newPlotPointCount);
         }
         return CompletableFuture.completedFuture(Optional.empty());
+    }
+
+    public static CompletableFuture<Optional<Integer>> addPlotPointsToUser(User user, Integer amount) {
+        final Optional<Integer> oldPlotPointCount = SheetsHandler.getPlotPoints(user);
+        if (oldPlotPointCount.isPresent()) {
+            final int newPlotPointCount = oldPlotPointCount.get() + amount;
+            return SheetsHandler.setPlotPoints(user, newPlotPointCount);
+        }
+        return CompletableFuture.completedFuture(Optional.empty());
+    }
+
+    public static CompletableFuture<PlotPointChangeResult> addPlotPointsToUsers(List<User> users, Integer amount) {
+        return null;
     }
 }
