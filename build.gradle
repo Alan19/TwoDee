@@ -7,7 +7,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 group = 'main'
-version = '6.2.3'
+version = '6.2.4'
 
 description = "A bot for the Facets tabletop RPG"
 
@@ -42,11 +42,6 @@ distZip {
         include 'tokens/*'
         include 'resources/*'
     }
-//    into(project.name+"-"+project.version+"/bin") {
-//        from '.'
-//        include 'tokens/*'
-//        include 'resources/*'
-//    }
 }
 
 
