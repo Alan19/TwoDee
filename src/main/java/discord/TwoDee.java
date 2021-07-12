@@ -5,8 +5,6 @@ import de.btobastian.sdcf4j.CommandHandler;
 import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.DeleteStatsListener;
 import listeners.PlotPointEnhancementListener;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -21,7 +19,6 @@ import java.util.Properties;
 import java.util.Random;
 
 public class TwoDee {
-    private static final Logger LOGGER = LogManager.getLogger(TwoDee.class);
 
     public static void main(String[] args) {
         try {
@@ -37,7 +34,7 @@ public class TwoDee {
                                 .orElseThrow(() -> new IllegalStateException("Failed to find Channel for Id: " + channel))
                         );
                 // Print the invite url of your bot
-                LOGGER.info("You can invite the bot by using the following url: " + api.createBotInvite());
+                System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
                 //Create command handler
                 CommandHandler cmdHandler = new JavacordHandler(api);
                 cmdHandler.registerCommand(new StatisticsCommand());
@@ -61,7 +58,7 @@ public class TwoDee {
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
         } catch (Throwable e) {
-            LOGGER.error("Failed to start TwoDee", e);
+            e.printStackTrace();
         }
 
     }
@@ -77,7 +74,7 @@ public class TwoDee {
             }
             return rollLines.get(new Random().nextInt(rollLines.size()));
         } catch (IOException e) {
-            LOGGER.error("Failed to read roll lines", e);
+            e.printStackTrace();
         }
         return "I'm out of witty lines!";
     }
@@ -93,7 +90,7 @@ public class TwoDee {
             }
             return startupLines.get(new Random().nextInt(startupLines.size()));
         } catch (IOException e) {
-            LOGGER.error("Failed to read start up lines", e);
+            e.printStackTrace();
         }
         return "I'm out of witty lines!";
     }
@@ -109,7 +106,7 @@ public class TwoDee {
             }
             return rollLines.get(new Random().nextInt(rollLines.size()));
         } catch (IOException e) {
-            LOGGER.error("Failed to read emoji removal lines", e);
+            e.printStackTrace();
         }
         return "I'm out of witty lines!";
     }
@@ -125,7 +122,7 @@ public class TwoDee {
             }
             return rollLines.get(new Random().nextInt(rollLines.size()));
         } catch (IOException e) {
-            LOGGER.error("Failed to read server wide emoji removal lines", e);
+            e.printStackTrace();
         }
         return "I'm out of witty lines!";
     }

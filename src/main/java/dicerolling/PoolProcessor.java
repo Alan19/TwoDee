@@ -1,8 +1,6 @@
 package dicerolling;
 
 import commands.EnhancementToggleCommand;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
@@ -16,8 +14,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class PoolProcessor {
-    private static final Logger LOGGER = LogManager.getLogger(PoolProcessor.class);
-
     private final String command;
     private final MessageAuthor author;
     private final DicePool dicePool = new DicePool();
@@ -142,7 +138,7 @@ public class PoolProcessor {
             }
             return (author.asUser().isPresent() && overrideUsers.contains(author.asUser().get())) != defaultOption.equals(EnhancementToggleCommand.ON);
         } catch (IOException e) {
-            LOGGER.error("Failed to get default enhancement option", e);
+            e.printStackTrace();
             return true;
         }
     }
