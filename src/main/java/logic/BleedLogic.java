@@ -38,13 +38,13 @@ public class BleedLogic implements VelenSlashEvent, VelenEvent {
             if (userMatcher.find()) {
                 event.getApi().getUserById(userMatcher.group("id")).thenAccept(foundUser -> {
                     int modifier = args.length > 1 ? UtilFunctions.tryParseInt(args[1]).orElse(0) : 0;
-                    bleedParty(user, event.getChannel(), Collections.singletonList(foundUser), modifier).thenAccept(embed -> event.getChannel().sendMessage(embed));
+                    onBleedCommand(user, event.getChannel(), Collections.singletonList(foundUser), modifier).thenAccept(embed -> event.getChannel().sendMessage(embed));
                 });
             }
             else if (roleMatcher.find()) {
                 event.getApi().getRoleById(roleMatcher.group("id")).ifPresent(role -> {
                     int modifier = args.length > 1 ? UtilFunctions.tryParseInt(args[1]).orElse(0) : 0;
-                    bleedParty(user, event.getChannel(), new ArrayList<>(role.getUsers()), modifier).thenAccept(embed -> event.getChannel().sendMessage(embed));
+                    onBleedCommand(user, event.getChannel(), new ArrayList<>(role.getUsers()), modifier).thenAccept(embed -> event.getChannel().sendMessage(embed));
                 });
             }
         }
@@ -64,36 +64,44 @@ public class BleedLogic implements VelenSlashEvent, VelenEvent {
             else {
                 users.add((User) targets.get());
             }
-            event.respondLater().thenAcceptBoth(bleedParty(event.getUser(), event.getChannel().get(), users, event.getOptionIntValueByName("modifier").orElse(0)), (updater, embed) -> updater.addEmbed(embed).update());
+            event.respondLater().thenAcceptBoth(onBleedCommand(event.getUser(), event.getChannel().get(), users, event.getOptionIntValueByName("modifier").orElse(0)), (updater, embed) -> updater.addEmbed(embed).update());
         }
         else {
             firstResponder.setContent("Invalid role or channel!").respond();
         }
     }
 
-    private CompletableFuture<EmbedBuilder> bleedParty(User sender, TextChannel channel, List<User> users, Integer modifier) {
+    /**
+     * Applies plot point bleed to all specified users
+     *
+     * @param sender   The sender of the message
+     * @param channel  The channel the message was sent in
+     * @param users    The users to apply bleed to
+     * @param modifier The modifier on the bleed
+     * @return A CompletableFuture that contains an embed that records the changes in plot points
+     */
+    private CompletableFuture<EmbedBuilder> onBleedCommand(User sender, TextChannel channel, List<User> users, Integer modifier) {
         List<Triple<User, Integer, Integer>> changes = new ArrayList<>();
         List<User> errors = new ArrayList<>();
-        AtomicInteger bleed = new AtomicInteger(modifier);
+        AtomicInteger bleed = new AtomicInteger();
         final CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(users.stream().map(user -> bleedPlayer(user).thenAccept(change -> {
             if (change.isPresent()) {
                 changes.add(change.get());
-                bleed.addAndGet(change.get().getMiddle() - change.get().getRight());
+                bleed.addAndGet((change.get().getMiddle() - change.get().getRight()));
             }
             else {
                 errors.add(user);
             }
         })).toArray(CompletableFuture[]::new));
-        return voidCompletableFuture.thenApply(unused -> getBleedEmbed(sender, channel, changes, errors, bleed));
+        return voidCompletableFuture.thenApply(unused -> getBleedEmbed(sender, channel, changes, errors, bleed.get(), modifier));
     }
 
-    private EmbedBuilder getBleedEmbed(User sender, TextChannel channel, List<Triple<User, Integer, Integer>> changes, List<User> errors, AtomicInteger bleed) {
-        return new PlotPointChangeResult(changes, errors).generateEmbed(channel)
-                .setAuthor(sender)
-                .setTitle("Post-session Bleed!")
-                .setDescription(MessageFormat.format("What can you do with **{0}** plot point(s)?", bleed));
-    }
-
+    /**
+     * Applies plot point bleed to one player. If the plot points cannot be retrieved, return an empty optional.
+     *
+     * @param user The user to apply bleed to
+     * @return An optional that contains the change in plot points for one player
+     */
     private CompletableFuture<Optional<Triple<User, Integer, Integer>>> bleedPlayer(User user) {
         final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(user);
         final Optional<Integer> playerBleed = SheetsHandler.getPlayerBleed(user);
@@ -103,4 +111,22 @@ public class BleedLogic implements VelenSlashEvent, VelenEvent {
         return CompletableFuture.completedFuture(Optional.empty());
     }
 
+    /**
+     * Generates the embed that contains the information for the bleed
+     *
+     * @param sender   The person who sent the message
+     * @param channel  The channel the message was sent in
+     * @param changes  The changes in plot points as a triple in the format: user, old plot points, new plot points
+     * @param errors   The list of users that had an error when modifying plot points
+     * @param bleed    The total amount of bleed
+     * @param modifier The modifier on the bleed
+     * @return An embed containing the changes in plot points and the total amount of bleed
+     */
+    private EmbedBuilder getBleedEmbed(User sender, TextChannel channel, List<Triple<User, Integer, Integer>> changes, List<User> errors, int bleed, int modifier) {
+        String message = modifier != 0 ? MessageFormat.format("You normally would have {0} plot point(s) to work with, but something happened and you now have **{1}** plot point(s) in bleed!", bleed, bleed + modifier) : MessageFormat.format("What can you do with **{0}** plot point(s)?", bleed);
+        return new PlotPointChangeResult(changes, errors).generateEmbed(channel)
+                .setTitle("Applying post-session bleed!")
+                .setDescription(message)
+                .setFooter("Requested by " + UtilFunctions.getUsernameInChannel(sender, channel), sender.getAvatar());
+    }
 }
