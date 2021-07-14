@@ -1,0 +1,149 @@
+package logic;
+
+import de.btobastian.sdcf4j.CommandExecutor;
+import org.javacord.api.entity.channel.TextChannel;
+import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
+import org.javacord.api.entity.user.User;
+import org.javacord.api.event.message.MessageCreateEvent;
+import org.javacord.api.interaction.*;
+import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
+import org.javacord.api.util.DiscordRegexPattern;
+import pw.mihou.velen.interfaces.*;
+import sheets.PlotPointHandler;
+import sheets.SheetsHandler;
+import util.UtilFunctions;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+
+/**
+ * This class adds plot points, subtracts plot points, and sets plot points for players. This class will also keep
+ * track of doom points
+ */
+public class PlotPointLogic implements CommandExecutor, VelenSlashEvent, VelenEvent {
+
+    public static void registerPlotPointCommand(Velen velen) {
+        PlotPointLogic plotPointLogic = new PlotPointLogic();
+        final List<SlashCommandOption> slashCommandOptions = new ArrayList<>();
+        slashCommandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "add", "Adds to the specified plot point pool(s)", getMentionableOption(), getPlotPointCountOption()));
+        slashCommandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "sub", "Subtracts from the specified plot point pool(s)", getMentionableOption(), getPlotPointCountOption()));
+        slashCommandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "set", "Sets the specified plot point pools to the specified amount", getCountOption().setRequired(true), getMentionableOption()));
+        slashCommandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all plot point pools", getMentionableOption().setDescription("which player to query the plot point pool of")));
+
+        VelenCommand.ofHybrid("plotpoints", "Adjust plot points", velen, plotPointLogic, plotPointLogic).setServerOnly(true, 468046159781429250L).addShortcuts("p", "pp", "plotpoints").addOption(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND_GROUP, "mode", "how to modify the plot point pools", slashCommandOptions)).attach();
+    }
+
+    private static SlashCommandOptionBuilder getMentionableOption() {
+        return new SlashCommandOptionBuilder()
+                .setType(SlashCommandOptionType.USER)
+                .setName("name")
+                .setDescription("the user to target with the command")
+                .setRequired(false);
+    }
+
+    private static SlashCommandOptionBuilder getCountOption() {
+        return new SlashCommandOptionBuilder()
+                .setName("count")
+                .setDescription("the amount to modify the doom pool by")
+                .setType(SlashCommandOptionType.INTEGER)
+                .setRequired(false);
+    }
+
+    private static SlashCommandOptionBuilder getPlotPointCountOption() {
+        return new SlashCommandOptionBuilder()
+                .setName("count")
+                .setDescription("the amount to modify the plot point pool by")
+                .setType(SlashCommandOptionType.INTEGER)
+                .setRequired(false);
+    }
+
+    @Override
+    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
+        if (args.length > 0) {
+            String mode = args[0];
+            User target = user;
+            int count = 1;
+            if (args.length > 1) {
+                final Matcher matcher = DiscordRegexPattern.USER_MENTION.matcher(args[1]);
+                if (matcher.find()) {
+                    target = event.getApi().getUserById(matcher.group("id")).join();
+                }
+                if (args.length > 2) {
+                    count = UtilFunctions.tryParseInt(args[2]).orElse(1);
+                }
+            }
+            executeCommand(mode, target, count, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder));
+        }
+        else {
+            executeCommand("query", user, 0, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder));
+        }
+    }
+
+    @Override
+    public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
+        final Optional<SlashCommandInteractionOption> mode = event.getOptionByName("mode").flatMap(SlashCommandInteractionOptionsProvider::getFirstOption);
+        final Optional<User> mentionedUser = mode.flatMap(SlashCommandInteractionOptionsProvider::getFirstOptionUserValue);
+        final Optional<Integer> count = mode.flatMap(SlashCommandInteractionOptionsProvider::getFirstOptionIntValue);
+        if (event.getChannel().isPresent()) {
+            final CompletableFuture<EmbedBuilder> query = executeCommand(mode.map(SlashCommandInteractionOption::getName).orElse("query"), mentionedUser.orElse(user), count.orElse(1), event.getChannel().get());
+            event.respondLater().thenAcceptBoth(query, (updater, embed) -> updater.addEmbed(embed).update());
+
+        }
+        else {
+            firstResponder.setContent("Unable to find a channel!");
+        }
+    }
+
+    private CompletableFuture<EmbedBuilder> executeCommand(String mode, User target, Integer count, TextChannel channel) {
+        switch (mode) {
+            case "add":
+                return addPointsAndGetEmbed(target, count, channel);
+            case "sub":
+                return addPointsAndGetEmbed(target, count * -1, channel);
+            case "set":
+                return setPointsAndGetEmbed(target, count, channel);
+            default:
+                return getPlotPointEmbed(target, channel);
+        }
+    }
+
+    private CompletableFuture<EmbedBuilder> getPlotPointEmbed(User target, TextChannel channel) {
+        return CompletableFuture.supplyAsync(() -> SheetsHandler.getPlotPoints(target)
+                .map(integer -> new EmbedBuilder().setTitle("Plot Points!").addField(UtilFunctions.getUsernameInChannel(target, channel), String.valueOf(integer)))
+                .orElseGet(() -> new EmbedBuilder().setDescription("Unable to retrieve plot points!")));
+    }
+
+    private CompletableFuture<EmbedBuilder> setPointsAndGetEmbed(User target, Integer count, TextChannel channel) {
+        final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(target);
+        if (plotPoints.isPresent()) {
+            return SheetsHandler.setPlotPoints(target, count).thenApply(integer -> {
+                if (integer.isPresent()) {
+                    return new EmbedBuilder().setTitle("Plot Points!").addField(UtilFunctions.getUsernameInChannel(target, channel), plotPoints.get() + " → " + integer.get());
+                }
+                else {
+                    return new EmbedBuilder().setDescription("Unable to set plot points!");
+                }
+            });
+        }
+        else {
+            return CompletableFuture.completedFuture(new EmbedBuilder().setDescription("Unable to retrieve plot points!"));
+        }
+    }
+
+    private CompletableFuture<EmbedBuilder> addPointsAndGetEmbed(User target, Integer count, TextChannel channel) {
+        final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(target);
+        if (plotPoints.isPresent()) {
+            return PlotPointHandler.addPlotPointsToUser(target, count).thenApply(integer -> integer
+                    .map(newPoints -> new EmbedBuilder().setTitle("Plot Points!").addField(UtilFunctions.getUsernameInChannel(target, channel), plotPoints.get() + " → " + integer.get()))
+                    .orElseGet(() -> new EmbedBuilder().setDescription("Unable to set plot points!")));
+        }
+        else {
+            return CompletableFuture.completedFuture(new EmbedBuilder().setDescription("Unable to retrieve plot points!"));
+        }
+    }
+
+}

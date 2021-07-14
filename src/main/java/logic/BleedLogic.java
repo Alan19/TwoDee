@@ -84,15 +84,22 @@ public class BleedLogic implements VelenSlashEvent, VelenEvent {
         List<Triple<User, Integer, Integer>> changes = new ArrayList<>();
         List<User> errors = new ArrayList<>();
         AtomicInteger bleed = new AtomicInteger();
-        final CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(users.stream().map(user -> bleedPlayer(user).thenAccept(change -> {
-            if (change.isPresent()) {
-                changes.add(change.get());
-                bleed.addAndGet((change.get().getMiddle() - change.get().getRight()));
+        List<CompletableFuture<Void>> list = new ArrayList<>();
+        for (User user : users) {
+            if (SheetsHandler.getPlayerBleed(user).orElse(0) > 0) {
+                CompletableFuture<Void> completableFuture = bleedPlayer(user).thenAccept(change -> {
+                    if (change.isPresent()) {
+                        changes.add(change.get());
+                        bleed.addAndGet((change.get().getMiddle() - change.get().getRight()));
+                    }
+                    else {
+                        errors.add(user);
+                    }
+                });
+                list.add(completableFuture);
             }
-            else {
-                errors.add(user);
-            }
-        })).toArray(CompletableFuture[]::new));
+        }
+        final CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(list.toArray(new CompletableFuture[0]));
         return voidCompletableFuture.thenApply(unused -> getBleedEmbed(sender, channel, changes, errors, bleed.get(), modifier));
     }
 

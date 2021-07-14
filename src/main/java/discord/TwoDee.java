@@ -5,16 +5,13 @@ import de.btobastian.sdcf4j.CommandHandler;
 import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.DeleteStatsListener;
 import listeners.PlotPointEnhancementListener;
-import logic.BleedLogic;
-import logic.SnackLogic;
+import logic.PlotPointLogic;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.interaction.SlashCommandOption;
-import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.util.logging.ExceptionLogger;
 import pw.mihou.velen.interfaces.Velen;
-import pw.mihou.velen.interfaces.VelenCommand;
+import slashcommands.SlashCommandRegister;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -32,7 +29,7 @@ public class TwoDee {
             prop.load(new FileInputStream("resources/bot.properties"));
             String token = prop.getProperty("token");
             String channel = prop.getProperty("channel", "484544303247523840");
-            final Velen velen = setupVelen();
+            final Velen velen = SlashCommandRegister.setupVelen();
             new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).addListener(velen).login().thenAccept(api -> {
                 velen.registerAllSlashCommands(api);
                 //Send startup messsage
@@ -48,9 +45,8 @@ public class TwoDee {
                 cmdHandler.registerCommand(new RollCommand());
                 cmdHandler.registerCommand(new TestRollCommand());
                 cmdHandler.registerCommand(new DoomCommand());
-                cmdHandler.registerCommand(new StopCommand());
                 cmdHandler.registerCommand(new HelpCommand(cmdHandler));
-                cmdHandler.registerCommand(new PlotPointCommand());
+                cmdHandler.registerCommand(new PlotPointLogic());
                 cmdHandler.registerCommand(new EnhancementToggleCommand());
                 cmdHandler.registerCommand(new ReplenishCommand());
 
@@ -66,15 +62,6 @@ public class TwoDee {
             e.printStackTrace();
         }
 
-    }
-
-    private static Velen setupVelen() {
-        Velen velen = Velen.builder().setDefaultPrefix(".").build();
-        SnackLogic snackLogic = new SnackLogic();
-        VelenCommand.ofHybrid("snack", "Gives you a snack!", velen, snackLogic, snackLogic);
-        BleedLogic bleedLogic = new BleedLogic();
-        VelenCommand.ofHybrid("bleed", "Applies plot point bleed!", velen, bleedLogic, bleedLogic).addOptions(SlashCommandOption.create(SlashCommandOptionType.MENTIONABLE, "target", "The party to bleed", true), SlashCommandOption.create(SlashCommandOptionType.INTEGER, "modifier", "The bonus or penalty on the bleed", false)).setServerOnly(true, 468046159781429250L).attach();
-        return velen;
     }
 
     //Returns a random dice roll line

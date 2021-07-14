@@ -7,14 +7,17 @@ import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
-import pw.mihou.velen.interfaces.VelenArguments;
-import pw.mihou.velen.interfaces.VelenEvent;
-import pw.mihou.velen.interfaces.VelenSlashEvent;
+import pw.mihou.velen.interfaces.*;
 import util.RandomColor;
 
 import java.util.List;
 
 public class SnackLogic implements VelenSlashEvent, VelenEvent {
+    public static void setupSnackCommand(Velen velen) {
+        SnackLogic snackLogic = new SnackLogic();
+        VelenCommand.ofHybrid("snack", "Gives you a snack!", velen, snackLogic, snackLogic);
+    }
+
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
         event.getChannel().sendMessage(getSnackEmbed(user));
