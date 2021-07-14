@@ -1,9 +1,6 @@
 package slashcommands;
 
-import logic.BleedLogic;
-import logic.PlotPointLogic;
-import logic.SnackLogic;
-import logic.StopLogic;
+import logic.*;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
 import pw.mihou.velen.interfaces.Velen;
@@ -16,6 +13,8 @@ public class SlashCommandRegister {
         setupBleedCommand(velen);
         setupStopCommand(velen);
         PlotPointLogic.registerPlotPointCommand(velen);
+
+        ReplenishLogic.setupReplenishCommand(velen);
         return velen;
     }
 

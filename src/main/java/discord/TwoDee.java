@@ -48,7 +48,6 @@ public class TwoDee {
                 cmdHandler.registerCommand(new HelpCommand(cmdHandler));
                 cmdHandler.registerCommand(new PlotPointLogic());
                 cmdHandler.registerCommand(new EnhancementToggleCommand());
-                cmdHandler.registerCommand(new ReplenishCommand());
 
                 //Create listeners
                 api.addListener(new PlotPointEnhancementListener());

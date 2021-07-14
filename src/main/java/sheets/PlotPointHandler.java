@@ -10,6 +10,7 @@ import util.RandomColor;
 import util.UtilFunctions;
 
 import java.awt.*;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -106,7 +107,8 @@ public class PlotPointHandler {
         return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    public static CompletableFuture<PlotPointChangeResult> addPlotPointsToUsers(List<User> users, Integer amount) {
+    public static CompletableFuture<PlotPointChangeResult> addPlotPointsToUsers(Collection<User> users, Integer amount) {
+        // TODO Finish this
         return null;
     }
 }
