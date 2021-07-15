@@ -11,7 +11,6 @@ import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
-import org.javacord.api.interaction.callback.InteractionMessageBuilderBase;
 import org.javacord.api.util.DiscordRegexPattern;
 import pw.mihou.velen.interfaces.*;
 import sheets.PlotPointChangeResult;
@@ -70,7 +69,7 @@ public class ReplenishLogic implements VelenSlashEvent, VelenEvent {
             if (matcher.find() && count.isPresent()) {
                 Optional<Role> party = event.getApi().getRoleById(matcher.group("id"));
                 if (party.isPresent()) {
-                    replenishParties(user, party.get(), count.get(), event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder));
+                    replenishParties(user, party.get(), count.get(), event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder.setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, message.getChannel()), user.getAvatar())));
                 }
                 else {
                     event.getChannel().sendMessage("Unable to find role!");
@@ -90,8 +89,8 @@ public class ReplenishLogic implements VelenSlashEvent, VelenEvent {
         final Optional<Role> party = event.getOptionRoleValueByName("party");
         final Optional<Integer> count = event.getOptionIntValueByName("count");
         if (party.isPresent() && count.isPresent() && event.getChannel().isPresent()) {
-            event.respondLater().thenAcceptBoth(replenishParties(user, party.get(), count.get(), event.getChannel().get()), InteractionMessageBuilderBase::addEmbed);
+            event.respondLater().thenAcceptBoth(replenishParties(user, party.get(), count.get(), event.getChannel().get()), (updater, embed) -> updater.addEmbed(embed).update());
         }
-        firstResponder.setContent("Unable to find channel!");
+        firstResponder.setContent("Unable to find channel!").respond();
     }
 }

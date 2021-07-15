@@ -1,15 +1,11 @@
 package dicerolling;
 
-import commands.EnhancementToggleCommand;
 import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
-import org.javacord.api.entity.user.User;
-import roles.Storytellers;
 import sheets.SheetsHandler;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.*;
+import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -46,7 +42,6 @@ public class PoolProcessor {
         int nextDiceFacetMod = 0;
         int maxFacets = 12;
         String nextDiceType = "d";
-        dicePool.enableEnhancement(getDefaultEnhancementOption(author));
         for (String param : paramArray) {
             if (param.matches("-fsu=[1-9]\\d*")) {
                 nextDiceFacetMod = Integer.parseInt(param.substring(5));
@@ -110,36 +105,6 @@ public class PoolProcessor {
                 nextDiceType = "d";
             }
 
-        }
-    }
-
-    /**
-     * Checks whether a player should be allowed to enhance their roll or not
-     * TODO Change to check if there's a plot die
-     *
-     * @param author The player who is rolling
-     * @return true if the player is on the override list and enhancements are disabled or if the player is not on the override list and enhancements are enabled, false if enhancement is disabled and the player is not on the override list or if enhancements are enabled and the player is on the override list
-     */
-    private boolean getDefaultEnhancementOption(MessageAuthor author) {
-        Properties prop = new Properties();
-        try {
-            prop.load(new FileInputStream("resources/bot.properties"));
-            final String overrideList = prop.getProperty(EnhancementToggleCommand.ENHANCEMENT_OVERRIDE, "");
-            final String defaultOption = prop.getProperty(EnhancementToggleCommand.ENHANCEMENT, EnhancementToggleCommand.ON);
-            final ArrayList<User> overrideUsers = Arrays.stream(overrideList.split(","))
-                    .map(s -> author.getApi().getCachedUserById(s))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .collect(Collectors.toCollection(ArrayList::new));
-
-            //Storytellers can always enhance
-            if (Storytellers.isMessageAuthorStoryteller(author)) {
-                return true;
-            }
-            return (author.asUser().isPresent() && overrideUsers.contains(author.asUser().get())) != defaultOption.equals(EnhancementToggleCommand.ON);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return true;
         }
     }
 

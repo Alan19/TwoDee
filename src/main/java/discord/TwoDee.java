@@ -5,7 +5,6 @@ import de.btobastian.sdcf4j.CommandHandler;
 import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.DeleteStatsListener;
 import listeners.PlotPointEnhancementListener;
-import logic.PlotPointLogic;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -46,8 +45,6 @@ public class TwoDee {
                 cmdHandler.registerCommand(new TestRollCommand());
                 cmdHandler.registerCommand(new DoomCommand());
                 cmdHandler.registerCommand(new HelpCommand(cmdHandler));
-                cmdHandler.registerCommand(new PlotPointLogic());
-                cmdHandler.registerCommand(new EnhancementToggleCommand());
 
                 //Create listeners
                 api.addListener(new PlotPointEnhancementListener());

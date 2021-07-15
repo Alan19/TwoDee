@@ -12,6 +12,7 @@ import org.javacord.api.util.DiscordRegexPattern;
 import pw.mihou.velen.interfaces.*;
 import sheets.PlotPointHandler;
 import sheets.SheetsHandler;
+import util.RandomColor;
 import util.UtilFunctions;
 
 import java.util.ArrayList;
@@ -76,10 +77,10 @@ public class PlotPointLogic implements CommandExecutor, VelenSlashEvent, VelenEv
                     count = UtilFunctions.tryParseInt(args[2]).orElse(1);
                 }
             }
-            executeCommand(mode, target, count, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder));
+            executeCommand(mode, target, count, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder.setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, message.getChannel()), user.getAvatar())));
         }
         else {
-            executeCommand("query", user, 0, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder));
+            executeCommand("query", user, 0, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder.setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, message.getChannel()), user.getAvatar())));
         }
     }
 
@@ -99,16 +100,22 @@ public class PlotPointLogic implements CommandExecutor, VelenSlashEvent, VelenEv
     }
 
     private CompletableFuture<EmbedBuilder> executeCommand(String mode, User target, Integer count, TextChannel channel) {
+        CompletableFuture<EmbedBuilder> embed;
         switch (mode) {
             case "add":
-                return addPointsAndGetEmbed(target, count, channel);
+                embed = addPointsAndGetEmbed(target, count, channel);
+                break;
             case "sub":
-                return addPointsAndGetEmbed(target, count * -1, channel);
+                embed = addPointsAndGetEmbed(target, count * -1, channel);
+                break;
             case "set":
-                return setPointsAndGetEmbed(target, count, channel);
+                embed = setPointsAndGetEmbed(target, count, channel);
+                break;
             default:
-                return getPlotPointEmbed(target, channel);
+                embed = getPlotPointEmbed(target, channel);
+                break;
         }
+        return embed.thenApply(builder -> builder.setColor(RandomColor.getRandomColor()));
     }
 
     private CompletableFuture<EmbedBuilder> getPlotPointEmbed(User target, TextChannel channel) {
@@ -139,7 +146,7 @@ public class PlotPointLogic implements CommandExecutor, VelenSlashEvent, VelenEv
         if (plotPoints.isPresent()) {
             return PlotPointHandler.addPlotPointsToUser(target, count).thenApply(integer -> integer
                     .map(newPoints -> new EmbedBuilder().setTitle("Plot Points!").addField(UtilFunctions.getUsernameInChannel(target, channel), plotPoints.get() + " → " + integer.get()))
-                    .orElseGet(() -> new EmbedBuilder().setDescription("Unable to set plot points!")));
+                    .orElseGet(() -> new EmbedBuilder().setDescription("Unable to set plot points for " + UtilFunctions.getUsernameInChannel(target, channel) + " !")));
         }
         else {
             return CompletableFuture.completedFuture(new EmbedBuilder().setDescription("Unable to retrieve plot points!"));

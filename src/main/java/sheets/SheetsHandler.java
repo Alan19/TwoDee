@@ -146,7 +146,6 @@ public class SheetsHandler {
                     return Optional.of(updatedPlotPointCount);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    sneakyThrow(e);
                 }
                 return Optional.empty();
             }

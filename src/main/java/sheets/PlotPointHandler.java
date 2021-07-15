@@ -10,10 +10,12 @@ import util.RandomColor;
 import util.UtilFunctions;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 /**
  * Class to manage modifications to the plot point and bleed cells
@@ -108,7 +110,18 @@ public class PlotPointHandler {
     }
 
     public static CompletableFuture<PlotPointChangeResult> addPlotPointsToUsers(Collection<User> users, Integer amount) {
-        // TODO Finish this
-        return null;
+        List<Triple<User, Integer, Integer>> changes = new ArrayList<>();
+        List<User> errors = new ArrayList<>();
+        final Stream<CompletableFuture<Void>> addPointsFuture = users.stream().map(user -> addPlotPointsToUser(user, amount)
+                .thenAccept(integer -> {
+                    if (integer.isPresent()) {
+                        changes.add(Triple.of(user, integer.get() - amount, integer.get()));
+                    }
+                    else {
+                        errors.add(user);
+                    }
+                }));
+
+        return CompletableFuture.allOf(addPointsFuture.toArray(CompletableFuture[]::new)).thenApply(unused -> new PlotPointChangeResult(changes, errors));
     }
 }
