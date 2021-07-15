@@ -77,10 +77,10 @@ public class PlotPointLogic implements CommandExecutor, VelenSlashEvent, VelenEv
                     count = UtilFunctions.tryParseInt(args[2]).orElse(1);
                 }
             }
-            executeCommand(mode, target, count, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder.setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, message.getChannel()), user.getAvatar())));
+            executeCommand(user, mode, target, count, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder));
         }
         else {
-            executeCommand("query", user, 0, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder.setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, message.getChannel()), user.getAvatar())));
+            executeCommand(user, "query", user, 0, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder));
         }
     }
 
@@ -90,16 +90,16 @@ public class PlotPointLogic implements CommandExecutor, VelenSlashEvent, VelenEv
         final Optional<User> mentionedUser = mode.flatMap(SlashCommandInteractionOptionsProvider::getFirstOptionUserValue);
         final Optional<Integer> count = mode.flatMap(SlashCommandInteractionOptionsProvider::getFirstOptionIntValue);
         if (event.getChannel().isPresent()) {
-            final CompletableFuture<EmbedBuilder> query = executeCommand(mode.map(SlashCommandInteractionOption::getName).orElse("query"), mentionedUser.orElse(user), count.orElse(1), event.getChannel().get());
+            final CompletableFuture<EmbedBuilder> query = executeCommand(user, mode.map(SlashCommandInteractionOption::getName).orElse("query"), mentionedUser.orElse(user), count.orElse(1), event.getChannel().get());
             event.respondLater().thenAcceptBoth(query, (updater, embed) -> updater.addEmbed(embed).update());
 
         }
         else {
-            firstResponder.setContent("Unable to find a channel!");
+            firstResponder.setContent("Unable to find a channel!").respond();
         }
     }
 
-    private CompletableFuture<EmbedBuilder> executeCommand(String mode, User target, Integer count, TextChannel channel) {
+    private CompletableFuture<EmbedBuilder> executeCommand(User sender, String mode, User target, Integer count, TextChannel channel) {
         CompletableFuture<EmbedBuilder> embed;
         switch (mode) {
             case "add":
@@ -115,13 +115,19 @@ public class PlotPointLogic implements CommandExecutor, VelenSlashEvent, VelenEv
                 embed = getPlotPointEmbed(target, channel);
                 break;
         }
-        return embed.thenApply(builder -> builder.setColor(RandomColor.getRandomColor()));
+        return embed.thenApply(builder -> builder.setTitle("Plot Points!")
+                .setColor(RandomColor.getRandomColor())
+                .setFooter("Requested by " + UtilFunctions.getUsernameInChannel(sender, channel), sender.getAvatar()));
     }
 
     private CompletableFuture<EmbedBuilder> getPlotPointEmbed(User target, TextChannel channel) {
         return CompletableFuture.supplyAsync(() -> SheetsHandler.getPlotPoints(target)
-                .map(integer -> new EmbedBuilder().setTitle("Plot Points!").addField(UtilFunctions.getUsernameInChannel(target, channel), String.valueOf(integer)))
-                .orElseGet(() -> new EmbedBuilder().setDescription("Unable to retrieve plot points!")));
+                .map(integer -> new EmbedBuilder().addField(UtilFunctions.getUsernameInChannel(target, channel), String.valueOf(integer)))
+                .orElseGet(this::getUnableToRetrieveEmbed));
+    }
+
+    private EmbedBuilder getUnableToRetrieveEmbed() {
+        return new EmbedBuilder().setDescription("Unable to retrieve plot points!");
     }
 
     private CompletableFuture<EmbedBuilder> setPointsAndGetEmbed(User target, Integer count, TextChannel channel) {
@@ -129,7 +135,7 @@ public class PlotPointLogic implements CommandExecutor, VelenSlashEvent, VelenEv
         if (plotPoints.isPresent()) {
             return SheetsHandler.setPlotPoints(target, count).thenApply(integer -> {
                 if (integer.isPresent()) {
-                    return new EmbedBuilder().setTitle("Plot Points!").addField(UtilFunctions.getUsernameInChannel(target, channel), plotPoints.get() + " → " + integer.get());
+                    return new EmbedBuilder().addField(UtilFunctions.getUsernameInChannel(target, channel), plotPoints.get() + " → " + integer.get());
                 }
                 else {
                     return new EmbedBuilder().setDescription("Unable to set plot points!");
@@ -137,7 +143,7 @@ public class PlotPointLogic implements CommandExecutor, VelenSlashEvent, VelenEv
             });
         }
         else {
-            return CompletableFuture.completedFuture(new EmbedBuilder().setDescription("Unable to retrieve plot points!"));
+            return CompletableFuture.completedFuture(getUnableToRetrieveEmbed());
         }
     }
 
@@ -145,11 +151,11 @@ public class PlotPointLogic implements CommandExecutor, VelenSlashEvent, VelenEv
         final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(target);
         if (plotPoints.isPresent()) {
             return PlotPointHandler.addPlotPointsToUser(target, count).thenApply(integer -> integer
-                    .map(newPoints -> new EmbedBuilder().setTitle("Plot Points!").addField(UtilFunctions.getUsernameInChannel(target, channel), plotPoints.get() + " → " + integer.get()))
-                    .orElseGet(() -> new EmbedBuilder().setDescription("Unable to set plot points for " + UtilFunctions.getUsernameInChannel(target, channel) + " !")));
+                    .map(newPoints -> new EmbedBuilder().addField(UtilFunctions.getUsernameInChannel(target, channel), plotPoints.get() + " → " + integer.get()))
+                    .orElseGet(() -> new EmbedBuilder().setDescription("Unable to set plot points for " + UtilFunctions.getUsernameInChannel(target, channel) + "!")));
         }
         else {
-            return CompletableFuture.completedFuture(new EmbedBuilder().setDescription("Unable to retrieve plot points!"));
+            return CompletableFuture.completedFuture(getUnableToRetrieveEmbed());
         }
     }
 

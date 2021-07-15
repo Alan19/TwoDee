@@ -15,7 +15,7 @@ import java.util.List;
 public class SnackLogic implements VelenSlashEvent, VelenEvent {
     public static void setupSnackCommand(Velen velen) {
         SnackLogic snackLogic = new SnackLogic();
-        VelenCommand.ofHybrid("snack", "Gives you a snack!", velen, snackLogic, snackLogic);
+        VelenCommand.ofHybrid("snack", "Gives you a snack!", velen, snackLogic, snackLogic).setServerOnly(true, 468046159781429250L).attach();
     }
 
     @Override
@@ -32,7 +32,7 @@ public class SnackLogic implements VelenSlashEvent, VelenEvent {
         return new EmbedBuilder()
                 .setColor(RandomColor.getRandomColor())
                 .setAuthor(user)
-                .setTitle("A snack for " + user)
+                .setTitle("A snack for " + user.getName())
                 .setDescription("Here is a cookie!")
                 .setImage("https://upload.wikimedia.org/wikipedia/commons/5/5c/Choc-Chip-Cookie.png");
     }

@@ -1,6 +1,9 @@
 package discord;
 
-import commands.*;
+import commands.HelpCommand;
+import commands.RollCommand;
+import commands.StatisticsCommand;
+import commands.TestRollCommand;
 import de.btobastian.sdcf4j.CommandHandler;
 import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.DeleteStatsListener;
@@ -43,7 +46,6 @@ public class TwoDee {
                 cmdHandler.registerCommand(new StatisticsCommand());
                 cmdHandler.registerCommand(new RollCommand());
                 cmdHandler.registerCommand(new TestRollCommand());
-                cmdHandler.registerCommand(new DoomCommand());
                 cmdHandler.registerCommand(new HelpCommand(cmdHandler));
 
                 //Create listeners

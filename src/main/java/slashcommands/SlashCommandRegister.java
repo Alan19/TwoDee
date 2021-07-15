@@ -7,14 +7,15 @@ import pw.mihou.velen.interfaces.Velen;
 import pw.mihou.velen.interfaces.VelenCommand;
 
 public class SlashCommandRegister {
+
     public static Velen setupVelen() {
         Velen velen = Velen.builder().setDefaultPrefix(".").build();
         SnackLogic.setupSnackCommand(velen);
         setupBleedCommand(velen);
         setupStopCommand(velen);
         PlotPointLogic.registerPlotPointCommand(velen);
-
         ReplenishLogic.setupReplenishCommand(velen);
+        DoomLogic.setupDoomCommand(velen);
         return velen;
     }
 
