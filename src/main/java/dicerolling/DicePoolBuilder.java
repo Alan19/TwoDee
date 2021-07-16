@@ -59,7 +59,8 @@ public class DicePoolBuilder {
             }
             //Skill
             else {
-                final Optional<Integer> skillFacets = skills.flatMap(stringIntegerMap -> stringIntegerMap.containsKey(param) ? Optional.of(stringIntegerMap.get(param)) : Optional.empty());
+                final String lowercaseSkill = param.toLowerCase();
+                final Optional<Integer> skillFacets = skills.flatMap(stringIntegerMap -> stringIntegerMap.containsKey(lowercaseSkill) ? Optional.of(stringIntegerMap.get(lowercaseSkill)) : Optional.empty());
                 if (skillFacets.isPresent()) {
                     regularDice.addAll(splitSkillFacets(skillFacets.get()));
                 }
