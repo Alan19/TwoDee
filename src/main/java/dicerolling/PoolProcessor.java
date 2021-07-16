@@ -1,7 +1,7 @@
 package dicerolling;
 
-import org.javacord.api.entity.message.MessageAuthor;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
+import org.javacord.api.entity.user.User;
 import sheets.SheetsHandler;
 
 import java.util.Locale;
@@ -11,17 +11,17 @@ import java.util.stream.IntStream;
 
 public class PoolProcessor {
     private final String command;
-    private final MessageAuthor author;
+    private final User author;
     private final DicePool dicePool = new DicePool();
     private Map<String, Integer> skillMap;
     private EmbedBuilder errorEmbed;
 
-    public PoolProcessor(MessageAuthor author, String command) {
+    public PoolProcessor(User user, String command) {
         this.command = command;
-        this.author = author;
+        this.author = user;
         preprocess();
         if (dicePool.getRegularDice().isEmpty() && dicePool.getPlotDice().isEmpty() && dicePool.getKeptDice().isEmpty() && dicePool.getFlatBonuses().isEmpty()) {
-            errorEmbed = new EmbedBuilder().setAuthor(author).setTitle("Invalid Dice Pool!").setDescription("There's no dice for me to roll!");
+            errorEmbed = new EmbedBuilder().setAuthor(user).setTitle("Invalid Dice Pool!").setDescription("There's no dice for me to getResults!");
         }
     }
 
@@ -202,7 +202,7 @@ public class PoolProcessor {
     private int retrieveSkill(String skill, String id) {
         //Only pull info the first time
         if (skillMap == null) {
-            skillMap = SheetsHandler.getSkills(author.asUser().get()).get();
+            skillMap = SheetsHandler.getSkills(author).get();
         }
         return skillMap.getOrDefault(skill, -1);
     }

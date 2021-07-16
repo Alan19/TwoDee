@@ -35,7 +35,7 @@ public class StatisticsVisitor implements ResultVisitor {
         DecimalFormat roundToNearestNumber = new DecimalFormat("#");
         embeds.add(new EmbedField("Mean", df.format(mean)));
         embeds.add(new EmbedField("Standard Deviation", df.format(standardDeviation)));
-        embeds.add(new EmbedField("95% of the time, your roll will be between", roundToNearestNumber.format(mean - standardDeviation * 2) + " and " + roundToNearestNumber.format(mean + standardDeviation * 2)));
+        embeds.add(new EmbedField("95% of the time, your getResults will be between", roundToNearestNumber.format(mean - standardDeviation * 2) + " and " + roundToNearestNumber.format(mean + standardDeviation * 2)));
         return embeds;
     }
 }

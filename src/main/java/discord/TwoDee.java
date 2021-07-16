@@ -1,9 +1,7 @@
 package discord;
 
 import commands.HelpCommand;
-import commands.RollCommand;
 import commands.StatisticsCommand;
-import commands.TestRollCommand;
 import de.btobastian.sdcf4j.CommandHandler;
 import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.DeleteStatsListener;
@@ -44,8 +42,6 @@ public class TwoDee {
                 System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
                 CommandHandler cmdHandler = new JavacordHandler(api);
                 cmdHandler.registerCommand(new StatisticsCommand());
-                cmdHandler.registerCommand(new RollCommand());
-                cmdHandler.registerCommand(new TestRollCommand());
                 cmdHandler.registerCommand(new HelpCommand(cmdHandler));
 
                 //Create listeners
@@ -62,7 +58,7 @@ public class TwoDee {
 
     }
 
-    //Returns a random dice roll line
+    //Returns a random dice getResults line
     public static String getRollTitleMessage() {
         try (BufferedReader reader = new BufferedReader(new FileReader("resources/rollLines.txt"))) {
             ArrayList<String> rollLines = new ArrayList<>();
@@ -94,7 +90,7 @@ public class TwoDee {
         return "I'm out of witty lines!";
     }
 
-    //Returns a random emoji removal roll line
+    //Returns a random emoji removal getResults line
     public static String getEmojiRemovalMessage() {
         try (BufferedReader reader = new BufferedReader(new FileReader("resources/emojiRemovalLines.txt"))) {
             ArrayList<String> rollLines = new ArrayList<>();
@@ -110,7 +106,7 @@ public class TwoDee {
         return "I'm out of witty lines!";
     }
 
-    //Returns a random serverwide emoji removal roll line
+    //Returns a random serverwide emoji removal getResults line
     public static String getServerwideEmojiRemovalMessage() {
         try (BufferedReader reader = new BufferedReader(new FileReader("resources/serverWideEmojiRemovalLines.txt"))) {
             ArrayList<String> rollLines = new ArrayList<>();

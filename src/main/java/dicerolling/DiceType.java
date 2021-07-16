@@ -4,7 +4,8 @@ public enum DiceType {
     REGULAR("d"),
     PLOT_DIE("pd"),
     KEPT_DIE("kd"),
-    CHAOS_DIE("cd");
+    CHAOS_DIE("cd"),
+    ENHANCED_DIE("ed");
 
     private final String abbreviation;
 

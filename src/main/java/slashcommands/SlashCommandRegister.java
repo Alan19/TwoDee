@@ -16,6 +16,8 @@ public class SlashCommandRegister {
         PlotPointLogic.registerPlotPointCommand(velen);
         ReplenishLogic.setupReplenishCommand(velen);
         DoomLogic.setupDoomCommand(velen);
+        RollLogic.setupRollCommand(velen);
+        TestLogic.setTestCommand(velen);
         return velen;
     }
 

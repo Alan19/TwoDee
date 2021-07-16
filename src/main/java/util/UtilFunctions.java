@@ -3,7 +3,9 @@ package util;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.user.User;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class UtilFunctions {
     public static Optional<Integer> tryParseInt(String s) {
@@ -23,5 +25,26 @@ public class UtilFunctions {
      */
     public static String getUsernameInChannel(User user, Channel channel) {
         return channel.asServerTextChannel().map(serverTextChannel -> user.getDisplayName(serverTextChannel.getServer())).orElseGet(user::getName);
+    }
+
+    public static <T> CompletableFuture<List<T>> appendOptionalToCompletableFutureList(CompletableFuture<List<T>> listCompletableFuture, CompletableFuture<Optional<T>> element) {
+        return listCompletableFuture.thenCombine(element, (ts, t) -> {
+            t.ifPresent(ts::add);
+            return ts;
+        });
+    }
+
+    public static <T> CompletableFuture<List<T>> appendElementToCompletableFutureList(CompletableFuture<List<T>> listCompletableFuture, T element) {
+        return listCompletableFuture.thenApply(ts -> {
+            ts.add(element);
+            return ts;
+        });
+    }
+
+    public static <T> CompletableFuture<List<T>> appendFutureToCompletableFutureList(CompletableFuture<List<T>> listCompletableFuture, CompletableFuture<T> element) {
+        return listCompletableFuture.thenCombine(element, (ts, t) -> {
+            ts.add(t);
+            return ts;
+        });
     }
 }

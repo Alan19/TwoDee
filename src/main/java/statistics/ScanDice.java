@@ -22,7 +22,7 @@ public class ScanDice implements StatisticsState {
 
     @Override
     public void process(StatisticsContext context) {
-        PoolProcessor poolOptions = new PoolProcessor(author, message);
+        PoolProcessor poolOptions = new PoolProcessor(author.asUser().get(), message);
         if (!poolOptions.validPool()) {
             context.setState(new GenerateNoDiceMessage());
         }

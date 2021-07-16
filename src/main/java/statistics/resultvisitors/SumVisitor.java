@@ -25,7 +25,7 @@ public class SumVisitor implements ResultVisitor {
     @Override
     public List<EmbedField> getEmbedField() {
         EmbedField embedField = new EmbedField();
-        embedField.setTitle("Chance to roll a:");
+        embedField.setTitle("Chance to getResults a:");
         for (Map.Entry<Integer, Long> outcome : diceOutcomes.entrySet()) {
             embedField.appendContent(outcome.getKey() + ": " + generatePercentage(outcome.getValue(), getNumberOfResults(diceOutcomes)) + "\n");
         }
