@@ -21,6 +21,7 @@ import java.util.Optional;
  */
 public class RollLogic implements VelenSlashEvent, VelenEvent {
     public static void setupRollCommand(Velen velen) {
+        // TODO Add desired tier option
         RollLogic rollLogic = new RollLogic();
         final List<SlashCommandOption> rollCommandOptions = getRollCommandOptions();
         rollCommandOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false));
