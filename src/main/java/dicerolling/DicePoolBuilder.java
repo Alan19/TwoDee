@@ -24,9 +24,9 @@ public class DicePoolBuilder {
     private final List<Integer> enhancedDie;
     private final List<Integer> flatBonus;
     private int diceKept = 2;
-    private boolean opportunity = true;
+    private boolean opportunitiesEnabled = true;
     private int discount;
-    private boolean enhanceable;
+    private Optional<Boolean> enhanceable;
     private boolean errored;
 
 
@@ -38,6 +38,7 @@ public class DicePoolBuilder {
         enhancedDie = new ArrayList<>();
         flatBonus = new ArrayList<>();
 
+        enhanceable = Optional.empty();
         final Optional<Map<String, Integer>> skills = SheetsHandler.getSkills(user);
 
         String[] paramArray = pool.split(" ");
@@ -118,22 +119,61 @@ public class DicePoolBuilder {
     }
 
     public DicePoolBuilder withEnhanceable(@SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<Boolean> enhanceable) {
-        boolean defaultEnhanceable = plotDice.isEmpty() && enhancedDie.isEmpty();
-        this.enhanceable = enhanceable.orElse(defaultEnhanceable);
+        this.enhanceable = enhanceable;
         return this;
     }
 
     public DicePoolBuilder withOpportunity(Boolean opportunity) {
-        this.opportunity = opportunity;
+        this.opportunitiesEnabled = opportunity;
         return this;
     }
 
     public Optional<RollResult> getResults() {
         if (!errored) {
-            return Optional.of(new RollResult(regularDice, plotDice, keptDice, chaosDice, enhancedDie, flatBonus, diceKept, discount, opportunity, enhanceable));
+            return Optional.of(new RollResult(this));
         }
         else {
             return Optional.empty();
         }
+    }
+
+    public List<Integer> getRegularDice() {
+        return regularDice;
+    }
+
+    public List<Integer> getPlotDice() {
+        return plotDice;
+    }
+
+    public List<Integer> getChaosDice() {
+        return chaosDice;
+    }
+
+    public List<Integer> getKeptDice() {
+        return keptDice;
+    }
+
+    public List<Integer> getEnhancedDice() {
+        return enhancedDie;
+    }
+
+    public List<Integer> getFlatBonuses() {
+        return flatBonus;
+    }
+
+    public int getDiceKept() {
+        return diceKept;
+    }
+
+    public boolean isOpportunitiesEnabled() {
+        return opportunitiesEnabled;
+    }
+
+    public int getDiscount() {
+        return discount;
+    }
+
+    public boolean isEnhanceable() {
+        return enhanceable.orElseGet(() -> plotDice.size() + enhancedDie.size() <= 0);
     }
 }

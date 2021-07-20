@@ -26,19 +26,29 @@ public class RollResult implements PoolResultWithEmbed {
     private final List<Integer> flatBonus;
     private final String poolString;
     private final int plotPointsSpent;
+    private final DicePoolBuilder builder;
 
-    public RollResult(List<Integer> regularDice, List<Integer> plotDice, List<Integer> keptDice, List<Integer> chaosDice, List<Integer> enhancedDice, List<Integer> flatBonus, int diceKept, int discount, boolean opportunity, boolean enhanceable) {
+    public RollResult(DicePoolBuilder builder) {
+        this.builder = builder;
         final Random random = new Random();
-        this.poolString = createDicePoolString(regularDice, plotDice, keptDice, chaosDice, enhancedDice, flatBonus);
-        this.plotPointsSpent = plotDice.stream().mapToInt(die -> die / 2).sum() - discount;
-        this.regularDice = regularDice.stream().map(die -> random.nextInt(die) + 1).collect(Collectors.toList());
-        this.plotDice = Stream.concat(plotDice.stream(), enhancedDice.stream()).map(die -> (plotDice.size() + enhancedDice.size() > 1) ? random.nextInt(die) + 1 : Math.max(die / 2, random.nextInt(die) + 1)).collect(Collectors.toList());
-        this.keptDice = keptDice.stream().map(die -> random.nextInt(die) + 1).collect(Collectors.toList());
-        this.chaosDice = chaosDice.stream().map(die -> (random.nextInt(die) + 1) * -1).collect(Collectors.toList());
-        this.flatBonus = flatBonus;
-        this.diceKept = diceKept;
-        this.opportunity = opportunity;
-        this.enhanceable = enhanceable;
+        this.poolString = createDicePoolString(builder.getRegularDice(), builder.getPlotDice(), builder.getKeptDice(), builder.getChaosDice(), builder.getEnhancedDice(), builder.getFlatBonuses());
+        this.plotPointsSpent = builder.getPlotDice().stream().mapToInt(die -> die / 2).sum() - builder.getDiscount();
+        this.regularDice = builder.getRegularDice().stream().map(die -> random.nextInt(die) + 1).collect(Collectors.toList());
+        this.plotDice = Stream.concat(builder.getPlotDice().stream(), builder.getEnhancedDice().stream()).map(die -> (builder.getPlotDice().size() + builder.getEnhancedDice().size() > 1) ? random.nextInt(die) + 1 : Math.max(die / 2, random.nextInt(die) + 1)).collect(Collectors.toList());
+        this.keptDice = builder.getKeptDice().stream().map(die -> random.nextInt(die) + 1).collect(Collectors.toList());
+        this.chaosDice = builder.getChaosDice().stream().map(die -> (random.nextInt(die) + 1) * -1).collect(Collectors.toList());
+        this.flatBonus = builder.getFlatBonuses();
+        this.diceKept = builder.getDiceKept();
+        this.opportunity = builder.isOpportunitiesEnabled();
+        this.enhanceable = builder.isEnhanceable();
+    }
+
+    public Optional<RollResult> reroll() {
+        return builder.getResults();
+    }
+
+    public boolean isEnhanceable() {
+        return enhanceable;
     }
 
     public int getPlotPointsSpent() {

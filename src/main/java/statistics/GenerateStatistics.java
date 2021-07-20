@@ -1,7 +1,7 @@
 package statistics;
 
 import dicerolling.BuildablePoolResult;
-import dicerolling.DicePool;
+import dicerolling.DicePoolBuilder;
 import dicerolling.FastRollResult;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import statistics.resultvisitors.*;
@@ -13,24 +13,25 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Generates statistics for a dice pool by calculating the sample set of all possible outcomes. Does this by using a Map of RollResults to number of occurrences. For every die in the pool, and for every facet of that die, map each RollResult in the map to a copy of that object with that die result added.
  */
-public class GenerateStatistics implements StatisticsState {
-    private final DicePool dicePool;
+public class GenerateStatistics {
+    private final DicePoolBuilder dicePool;
+    private final EmbedBuilder result;
 
-    public GenerateStatistics(DicePool dicePool) {
+    public GenerateStatistics(DicePoolBuilder dicePool) {
+        final long totalCombos = Stream.of(dicePool.getRegularDice(), dicePool.getRegularDice(), dicePool.getEnhancedDice(), dicePool.getChaosDice())
+                .flatMapToLong(integers -> integers.stream().mapToLong(value -> value))
+                .reduce(1, (left, right) -> left * right);
+        final EmbedBuilder overloadEmbed = new EmbedBuilder().setDescription("That's way too many dice for me to handle. Try using less dice.");
         this.dicePool = dicePool;
-    }
-
-    /**
-     * Generates a HashMap for the number of occurrences of a result happens in the sample size of a pool
-     *
-     * @param context The StatisticsContext that an embed may be loaded into
-     */
-    @Override
-    public void process(StatisticsContext context) {
+        if (totalCombos < 0) {
+            this.result = overloadEmbed;
+            return;
+        }
         //Generate the getResults result to occurrence HashMap
         HashMap<BuildablePoolResult, Long> results = generateResultsMap();
         final int[] resultStream = results.keySet().stream().mapToInt(BuildablePoolResult::getTotal).toArray();
@@ -61,13 +62,16 @@ public class GenerateStatistics implements StatisticsState {
                         .mapToLong(Map.Entry::getValue)
                         .sum()));
 
-
         if (rollToOccurrences.values().stream().anyMatch(aLong -> aLong < 0) || rollToOpportunities.values().stream().anyMatch(aLong -> aLong < 0)) {
-            context.setState(new GenerateOverloadMessage());
-            return;
+            this.result = overloadEmbed;
         }
-        EmbedBuilder statsEmbed = generateEmbed(rollToOccurrences, rollToOpportunities, results);
-        context.setEmbedBuilder(statsEmbed);
+        else {
+            this.result = generateEmbed(rollToOccurrences, rollToOpportunities, results);
+        }
+    }
+
+    public EmbedBuilder getResult() {
+        return result;
     }
 
     // TODO Rework / remove the visitor pattern
@@ -143,7 +147,7 @@ public class GenerateStatistics implements StatisticsState {
             // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
             if (newMap.isEmpty()) {
                 IntStream.rangeClosed(1, keptDice)
-                        .mapToObj(i -> new FastRollResult(dicePool.getNumberOfKeptDice()).addKeptDice(i))
+                        .mapToObj(i -> new FastRollResult(dicePool.getDiceKept()).addKeptDice(i))
                         .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
             }
             else {
@@ -166,7 +170,7 @@ public class GenerateStatistics implements StatisticsState {
             if (newMap.isEmpty()) {
                 IntStream.rangeClosed(1, keptDice)
                         .map(operand -> operand * -1)
-                        .mapToObj(i -> new FastRollResult(dicePool.getNumberOfKeptDice()).addKeptDice(i))
+                        .mapToObj(i -> new FastRollResult(dicePool.getDiceKept()).addKeptDice(i))
                         .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
             }
             else {
@@ -189,7 +193,7 @@ public class GenerateStatistics implements StatisticsState {
             // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
             if (newMap.isEmpty()) {
                 IntStream.rangeClosed(1, plotDice)
-                        .mapToObj(i -> new FastRollResult(dicePool.getNumberOfKeptDice()).addPlotDice(getPlotDieValue(plotDice, i)))
+                        .mapToObj(i -> new FastRollResult(dicePool.getDiceKept()).addPlotDice(getPlotDieValue(plotDice, i)))
                         .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
             }
             else {
@@ -222,7 +226,7 @@ public class GenerateStatistics implements StatisticsState {
             // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
             if (newMap.isEmpty()) {
                 IntStream.rangeClosed(1, regularDice)
-                        .mapToObj(i -> new FastRollResult(dicePool.getNumberOfKeptDice()).addRegularDice(i))
+                        .mapToObj(i -> new FastRollResult(dicePool.getDiceKept()).addRegularDice(i))
                         .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
             }
             else {

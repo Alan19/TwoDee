@@ -18,6 +18,7 @@ public class SlashCommandRegister {
         DoomLogic.setupDoomCommand(velen);
         RollLogic.setupRollCommand(velen);
         TestLogic.setTestCommand(velen);
+        StatisticsLogic.setupStatisticsCommand(velen);
         return velen;
     }
 
