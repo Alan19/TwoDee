@@ -20,7 +20,7 @@ import java.util.stream.Stream;
  */
 public class GenerateStatistics {
     private final DicePoolBuilder dicePool;
-    private final EmbedBuilder result;
+    private final EmbedBuilder resultEmbed;
 
     public GenerateStatistics(DicePoolBuilder dicePool) {
         final long totalCombos = Stream.of(dicePool.getRegularDice(), dicePool.getRegularDice(), dicePool.getEnhancedDice(), dicePool.getChaosDice())
@@ -29,7 +29,7 @@ public class GenerateStatistics {
         final EmbedBuilder overloadEmbed = new EmbedBuilder().setDescription("That's way too many dice for me to handle. Try using less dice.");
         this.dicePool = dicePool;
         if (totalCombos < 0) {
-            this.result = overloadEmbed;
+            this.resultEmbed = overloadEmbed;
             return;
         }
         //Generate the getResults result to occurrence HashMap
@@ -63,15 +63,15 @@ public class GenerateStatistics {
                         .sum()));
 
         if (rollToOccurrences.values().stream().anyMatch(aLong -> aLong < 0) || rollToOpportunities.values().stream().anyMatch(aLong -> aLong < 0)) {
-            this.result = overloadEmbed;
+            this.resultEmbed = overloadEmbed;
         }
         else {
-            this.result = generateEmbed(rollToOccurrences, rollToOpportunities, results);
+            this.resultEmbed = generateEmbed(rollToOccurrences, rollToOpportunities, results);
         }
     }
 
     public EmbedBuilder getResult() {
-        return result;
+        return resultEmbed;
     }
 
     // TODO Rework / remove the visitor pattern

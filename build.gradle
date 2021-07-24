@@ -16,35 +16,34 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 
-
 repositories {
-     maven { url "https://jitpack.io" }
-     maven { url "https://repo1.maven.org/maven2" }
+    maven { url "https://jitpack.io" }
+    maven { url "https://repo1.maven.org/maven2" }
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
 }
 dependencies {
-    compile group: 'org.codehaus.mojo', name: 'exec-maven-plugin', version:'1.6.0'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.9.6'
-    compile group: 'org.javacord', name: 'javacord', version:'3.3.2'
-    compile group: 'com.google.api-client', name: 'google-api-client', version:'1.30.4'
-    compile group: 'com.google.oauth-client', name: 'google-oauth-client-jetty', version:'1.30.6'
-    compile group: 'com.google.apis', name: 'google-api-services-sheets', version:'v4-rev539-1.25.0'
-    compile group: 'org.apache.commons', name: 'commons-lang3', version:'3.11'
-    compile group: 'de.btobastian.sdcf4j', name: 'sdcf4j-core', version:'v1.0.10'
-    compile group: 'de.btobastian.sdcf4j', name: 'sdcf4j-javacord', version:'v1.0.10'
-    compile group: 'com.vdurmont', name: 'emoji-java', version:'4.0.0'
+    compile group: 'org.codehaus.mojo', name: 'exec-maven-plugin', version: '1.6.0'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.6'
+    compile group: 'org.javacord', name: 'javacord', version: '3.3.3-SNAPSHOT'
+    compile group: 'com.google.api-client', name: 'google-api-client', version: '1.30.4'
+    compile group: 'com.google.oauth-client', name: 'google-oauth-client-jetty', version: '1.30.6'
+    compile group: 'com.google.apis', name: 'google-api-services-sheets', version: 'v4-rev539-1.25.0'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.11'
+    compile group: 'de.btobastian.sdcf4j', name: 'sdcf4j-core', version: 'v1.0.10'
+    compile group: 'de.btobastian.sdcf4j', name: 'sdcf4j-javacord', version: 'v1.0.10'
+    compile group: 'com.vdurmont', name: 'emoji-java', version: '4.0.0'
     compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'pw.mihou:Velen:1.0.9'
+    implementation 'pw.mihou:Velen:2.0.0'
 }
 
 distZip {
-    into(project.name+"-"+project.version) {
+    into(project.name + "-" + project.version) {
         from '.'
         include 'tokens/*'
         include 'resources/*'
     }
 }
-
 
 
 mainClassName = 'discord.TwoDee'

@@ -17,6 +17,7 @@ public class DicePoolBuilder {
     public static final Pattern DICE_PATTERN = Pattern.compile("(?<count>\\d*)(?<type>[kpec]?d)(?<facets>\\d+)");
     public static final Pattern FLAT_BONUS_PATTERN = Pattern.compile("\\+(?<value>[1-9]\\d*)");
     public static final Pattern FLAT_PENALTY_PATTERN = Pattern.compile("-(?<value>[1-9]\\d*)");
+
     private final List<Integer> regularDice;
     private final List<Integer> plotDice;
     private final List<Integer> chaosDice;
@@ -39,6 +40,10 @@ public class DicePoolBuilder {
         flatBonus = new ArrayList<>();
 
         enhanceable = Optional.empty();
+        if (pool.isEmpty()) {
+            errored = true;
+            return;
+        }
         final Optional<Map<String, Integer>> skills = SheetsHandler.getSkills(user);
 
         String[] paramArray = pool.split(" ");

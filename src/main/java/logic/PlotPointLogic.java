@@ -10,7 +10,7 @@ import org.javacord.api.interaction.*;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.util.DiscordRegexPattern;
 import pw.mihou.velen.interfaces.*;
-import sheets.PlotPointHandler;
+import sheets.PlotPointUtils;
 import sheets.SheetsHandler;
 import util.RandomColor;
 import util.UtilFunctions;
@@ -150,7 +150,7 @@ public class PlotPointLogic implements CommandExecutor, VelenSlashEvent, VelenEv
     private CompletableFuture<EmbedBuilder> addPointsAndGetEmbed(User target, Integer count, TextChannel channel) {
         final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(target);
         if (plotPoints.isPresent()) {
-            return PlotPointHandler.addPlotPointsToUser(target, count).thenApply(integer -> integer
+            return PlotPointUtils.addPlotPointsToUser(target, count).thenApply(integer -> integer
                     .map(newPoints -> new EmbedBuilder().addField(UtilFunctions.getUsernameInChannel(target, channel), plotPoints.get() + " → " + integer.get()))
                     .orElseGet(() -> new EmbedBuilder().setDescription("Unable to set plot points for " + UtilFunctions.getUsernameInChannel(target, channel) + "!")));
         }

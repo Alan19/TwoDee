@@ -1,36 +1,29 @@
 package dicerolling;
 
-import com.vdurmont.emoji.EmojiParser;
 import doom.DoomHandler;
-import org.javacord.api.entity.channel.TextChannel;
-import org.javacord.api.entity.message.Message;
+import listeners.RollComponentInteractionListener;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.MessageFlag;
-import org.javacord.api.entity.message.component.ActionRow;
-import org.javacord.api.entity.message.component.Button;
-import org.javacord.api.entity.message.component.LowLevelComponent;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
-import org.javacord.api.event.interaction.MessageComponentCreateEvent;
 import org.javacord.api.event.message.MessageCreateEvent;
-import org.javacord.api.interaction.MessageComponentInteraction;
 import org.javacord.api.interaction.SlashCommandInteraction;
-import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
-import sheets.PlotPointHandler;
+import sheets.PlotPointUtils;
+import util.ComponentUtils;
 import util.RandomColor;
 import util.UtilFunctions;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 public class RollHandlers {
+    //TODO Add doom point integration
+
     /**
      * Creates a completable future of the embeds that have to be sent
      *
@@ -41,12 +34,12 @@ public class RollHandlers {
      */
     public static CompletableFuture<EmbedBuilder[]> getRollEmbeds(String username, User user, RollResult rollResult) {
         CompletableFuture<List<EmbedBuilder>> rollResultEmbeds = CompletableFuture.completedFuture(new ArrayList<>());
-        rollResultEmbeds = UtilFunctions.appendElementToCompletableFutureList(rollResultEmbeds, rollResult.getResultEmbed().setFooter("Requested by " + username, user.getAvatar()).setColor(RandomColor.getRandomColor()));
+        rollResultEmbeds = UtilFunctions.appendElementToCompletableFutureList(rollResultEmbeds, rollResult.getResultEmbed().setAuthor(username, "", user.getAvatar()).setColor(RandomColor.getRandomColor()));
 
         // Add plot point expenditure embeds
         final int plotPointsSpent = rollResult.getPlotPointsSpent();
         if (plotPointsSpent != 0) {
-            final Optional<Integer> plotPointModifyFuture = PlotPointHandler.addPlotPointsToUser(user, plotPointsSpent * -1).join();
+            final Optional<Integer> plotPointModifyFuture = PlotPointUtils.addPlotPointsToUser(user, plotPointsSpent * -1).join();
             final Optional<EmbedBuilder> plotPointSpentEmbed = plotPointModifyFuture.map(integer -> new EmbedBuilder()
                     .setTitle("Using " + plotPointsSpent + " plot points!")
                     .setColor(RandomColor.getRandomColor())
@@ -59,7 +52,7 @@ public class RollHandlers {
         final int doomGenerated = rollResult.getDoomGenerated();
         if (doomGenerated > 0) {
             DoomHandler.addDoom(doomGenerated);
-            final CompletableFuture<Optional<EmbedBuilder>> opportunityFuture = PlotPointHandler.addPlotPointsToUser(user, 1)
+            final CompletableFuture<Optional<EmbedBuilder>> opportunityFuture = PlotPointUtils.addPlotPointsToUser(user, 1)
                     .thenApply(newPlotPoints -> newPlotPoints.map(integer -> new EmbedBuilder()
                             .setTitle("An opportunity!")
                             .setColor(Color.DARK_GRAY)
@@ -71,82 +64,55 @@ public class RollHandlers {
         return rollResultEmbeds.thenApply(embedBuilders -> embedBuilders.toArray(new EmbedBuilder[0]));
     }
 
-    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-    public static void handleSlashCommandRoll(SlashCommandInteraction event, InteractionImmediateResponseBuilder firstResponder, Optional<String> dicePool, Integer discount, Integer diceKept, Optional<Boolean> enhanceable, Boolean opportunity) {
+    /**
+     * Handles a roll made through a slash command
+     *
+     * @param event       The event that contains the user, channel, and responder objects
+     * @param dicePool    The dicepool the user is rolling
+     * @param discount    The plot point discount on the roll
+     * @param diceKept    The number of dice kept
+     * @param enhanceable If there is an enhancement override on the roll
+     * @param opportunity If opportunities are enabled
+     */
+    public static void handleSlashCommandRoll(SlashCommandInteraction event, String dicePool, Integer discount, Integer diceKept, @SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<Boolean> enhanceable, Boolean opportunity) {
         final User user = event.getUser();
-        final Optional<RollResult> resultOptional = dicePool
-                .map(s -> new DicePoolBuilder(user, s).withDiceKept(diceKept).withDiscount(discount).withEnhanceable(enhanceable).withOpportunity(opportunity))
-                .flatMap(DicePoolBuilder::getResults);
+        final Optional<RollResult> resultOptional = new DicePoolBuilder(user, dicePool).withDiceKept(diceKept).withDiscount(discount).withEnhanceable(enhanceable).withOpportunity(opportunity).getResults();
         if (resultOptional.isPresent()) {
             final CompletableFuture<InteractionOriginalResponseUpdater> respondLater = event.respondLater();
             final RollResult rollInfo = resultOptional.get();
             final CompletableFuture<EmbedBuilder[]> rollEmbeds = getRollEmbeds(event.getChannel()
                     .map(channel -> UtilFunctions.getUsernameInChannel(user, channel))
                     .orElseGet(user::getName), user, rollInfo);
-            respondLater.thenAcceptBoth(rollEmbeds, (updater, embedBuilders) -> updater.addEmbeds(embedBuilders).addComponents(getEnhancementRow(true, rollInfo.isEnhanceable())).update().thenAccept(message -> event.getChannel().ifPresent(channel -> channel.addMessageComponentCreateListener(event1 -> handleComponentInteraction(user, rollInfo, message, event1, s -> updater.removeAllComponents().update().thenAccept(message1 -> message1.addReaction(s)))).removeAfter(60, TimeUnit.SECONDS))));
+            // TODO Handle removal of footer
+            respondLater.thenAcceptBoth(rollEmbeds, (updater, embedBuilders) -> updater
+                    .addEmbeds(embedBuilders)
+                    .addComponents(ComponentUtils.createRollComponentRows(true, rollInfo.isEnhanceable()))
+                    .update()
+                    .thenAccept(message -> message.getChannel().addMessageComponentCreateListener(new RollComponentInteractionListener(rollInfo, message.getId())).removeAfter(60, TimeUnit.SECONDS).addRemoveHandler(() -> updater.removeAllComponents().update())));
         }
         else {
-            firstResponder.setContent("Invalid dice pool!").setFlags(MessageFlag.EPHEMERAL).respond();
+            event.createImmediateResponder().setContent("Invalid dice pool!").setFlags(MessageFlag.EPHEMERAL).respond();
         }
     }
 
-    private static void handleComponentInteraction(User user, RollResult rollInfo, Message message, MessageComponentCreateEvent event, Function<String, CompletableFuture<Void>> removeComponentsFunction) {
-        final MessageComponentInteraction componentInteraction = event.getMessageComponentInteraction();
-        final Boolean isMessage = event.getMessageComponentInteraction().getMessage().map(message1 -> message1.getId() == message.getId()).orElse(false);
-        if (isMessage) {
-            final Optional<Integer> enhancementCount = UtilFunctions.tryParseInt(componentInteraction.getCustomId());
-            if (enhancementCount.isPresent()) {
-                componentInteraction.respondLater().thenAccept(updater -> handleEnhancement(user, rollInfo.getTotal(), enhancementCount.get(), updater, removeComponentsFunction));
-            }
-            else {
-                final Optional<RollResult> reroll = rollInfo.reroll();
-                reroll.ifPresent(rollResult -> componentInteraction.respondLater().thenAccept(updater -> handleReroll(user, message.getChannel(), rollResult, updater, removeComponentsFunction)));
-            }
-        }
-    }
-
-    private static void handleReroll(User user, TextChannel channel, RollResult rollResult, InteractionOriginalResponseUpdater updater, Function<String, CompletableFuture<Void>> removeComponentsFunction) {
-        // TODO Handle rollback
-        final CompletableFuture<EmbedBuilder[]> rollEmbeds = getRollEmbeds(UtilFunctions.getUsernameInChannel(user, channel), user, rollResult);
-        rollEmbeds.thenCompose(embedBuilders -> updater.addEmbeds(embedBuilders).addComponents(getEnhancementRow(false, rollResult.isEnhanceable())).update())
-                .thenAccept(message -> channel.addMessageComponentCreateListener(event -> handleComponentInteraction(user, rollResult, message, event, s -> updater.removeAllComponents().update().thenAccept(message1 -> message1.addReaction(s))
-                )).removeAfter(60, TimeUnit.SECONDS))
-                .thenAccept(unused -> removeComponentsFunction.apply(EmojiParser.parseToUnicode(":bulb:")));
-    }
-
-    private static void handleEnhancement(User user, int result, int count, InteractionOriginalResponseUpdater updater, Function<String, CompletableFuture<Void>> removeComponentsFunction) {
-        final CompletableFuture<EmbedBuilder> enhanceEmbedFuture = CompletableFuture.completedFuture(new EmbedBuilder()
-                .setTitle("Enhancing a roll!")
-                .addField("Enhanced Total", result + " → " + (result + count)))
-                .thenCombine(PlotPointHandler.addPlotPointsToUser(user, count * -1), (builder, integer) -> {
-                    integer.ifPresent(newCount -> builder.addField("Plot Points!", (newCount + count) + " → " + newCount));
-                    return builder;
-                });
-        enhanceEmbedFuture.thenAccept(builder -> updater.addEmbed(builder)
-                .update()
-                .thenAccept(message1 -> removeComponentsFunction.apply(EmojiParser.parseToUnicode(":star2:"))));
-    }
-
-    private static ActionRow getEnhancementRow(boolean addReroll, boolean addEnhancement) {
-        List<LowLevelComponent> buttons = new ArrayList<>();
-        if (addEnhancement) {
-            final LowLevelComponent[] enhanceButtons = {Button.primary("1", "1"), Button.primary("2", "2"), Button.primary("3", "3"), Button.primary("4", "4")};
-            buttons.addAll(Arrays.asList(enhanceButtons));
-        }
-        if (addReroll) {
-            buttons.add(Button.secondary("repeat", EmojiParser.parseToUnicode(":repeat:")));
-        }
-        return ActionRow.of(buttons);
-    }
-
+    /**
+     * Handles a roll made through a text command
+     *
+     * @param event   The event that contains the channel the message was sent from
+     * @param user    The user that made the roll
+     * @param builder The dice pool to roll with
+     */
     public static void handleTextCommandRoll(MessageCreateEvent event, User user, DicePoolBuilder builder) {
         if (builder.getResults().isPresent()) {
             RollResult rollResult = builder.getResults().get();
             final CompletableFuture<EmbedBuilder[]> rollEmbeds = getRollEmbeds(UtilFunctions.getUsernameInChannel(user, event.getChannel()), user, rollResult);
-            rollEmbeds.thenAccept(embeds -> new MessageBuilder().addEmbeds(embeds).addComponents(getEnhancementRow(true, rollResult.isEnhanceable())).send(event.getChannel()).thenAccept(message -> message.getChannel().addMessageComponentCreateListener(event1 -> handleComponentInteraction(user, rollResult, message, event1, message::addReaction)).removeAfter(60, TimeUnit.SECONDS)));
+            rollEmbeds.thenAccept(embeds -> new MessageBuilder()
+                    .addEmbeds(embeds)
+                    .addComponents(ComponentUtils.createRollComponentRows(true, rollResult.isEnhanceable())).send(event.getChannel()).thenAccept(message -> message.getChannel().addMessageComponentCreateListener(new RollComponentInteractionListener(rollResult, message.getId())).removeAfter(60, TimeUnit.SECONDS)));
         }
         else {
             event.getChannel().sendMessage("Invalid dice pool!");
         }
     }
+
 }

@@ -16,7 +16,7 @@ import pw.mihou.velen.interfaces.VelenArguments;
 import pw.mihou.velen.interfaces.VelenEvent;
 import pw.mihou.velen.interfaces.VelenSlashEvent;
 import sheets.PlotPointChangeResult;
-import sheets.PlotPointHandler;
+import sheets.PlotPointUtils;
 import sheets.SheetsHandler;
 import util.UtilFunctions;
 
@@ -113,7 +113,7 @@ public class BleedLogic implements VelenSlashEvent, VelenEvent {
         final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(user);
         final Optional<Integer> playerBleed = SheetsHandler.getPlayerBleed(user);
         if (plotPoints.isPresent() && playerBleed.isPresent()) {
-            return PlotPointHandler.addPlotPointsToUser(user, playerBleed.get() * -1).thenApply(integer -> integer.map(value -> Triple.of(user, plotPoints.get(), value)));
+            return PlotPointUtils.addPlotPointsToUser(user, playerBleed.get() * -1).thenApply(integer -> integer.map(value -> Triple.of(user, plotPoints.get(), value)));
         }
         return CompletableFuture.completedFuture(Optional.empty());
     }

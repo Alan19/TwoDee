@@ -14,7 +14,7 @@ import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder
 import org.javacord.api.util.DiscordRegexPattern;
 import pw.mihou.velen.interfaces.*;
 import sheets.PlotPointChangeResult;
-import sheets.PlotPointHandler;
+import sheets.PlotPointUtils;
 import util.UtilFunctions;
 
 import java.util.List;
@@ -41,7 +41,7 @@ public class ReplenishLogic implements VelenSlashEvent, VelenEvent {
      * @return A future that contains the embed with the result for the plot point changes
      */
     private CompletableFuture<EmbedBuilder> replenishParties(User author, Role role, Integer count, TextChannel channel) {
-        return PlotPointHandler.addPlotPointsToUsers(role.getUsers(), count).thenApply(plotPointChangeResult -> getReplenishEmbed(channel, plotPointChangeResult).setFooter("Requested by " + UtilFunctions.getUsernameInChannel(author, channel), author.getAvatar()));
+        return PlotPointUtils.addPlotPointsToUsers(role.getUsers(), count).thenApply(plotPointChangeResult -> getReplenishEmbed(channel, plotPointChangeResult).setFooter("Requested by " + UtilFunctions.getUsernameInChannel(author, channel), author.getAvatar()));
     }
 
     /**

@@ -61,10 +61,10 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
             if (params.length > 2) {
                 count = UtilFunctions.tryParseInt(params[2]).orElse(1);
             }
-            event.getChannel().sendMessage(handleCommand(mode, poolName, count));
+            event.getChannel().sendMessage(handleCommand(mode, poolName, count).setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, event.getChannel()), user.getAvatar()));
         }
         else {
-            event.getChannel().sendMessage(DoomHandler.generateDoomEmbed());
+            event.getChannel().sendMessage(DoomHandler.generateDoomEmbed().setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, event.getChannel()), user.getAvatar()));
         }
     }
 
@@ -93,10 +93,11 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
         if (event.getChannel().isPresent()) {
             final String modeAsString = mode.map(SlashCommandInteractionOption::getName).orElse("query");
             final EmbedBuilder query = handleCommand(modeAsString, poolName.orElseGet(() -> modeAsString.equals("query") ? "" : DoomHandler.getActivePool()), count.orElse(1));
-            firstResponder.addEmbed(query).respond();
+            firstResponder.addEmbed(query.setFooter("Requested by " + UtilFunctions.getUsernameFromSlashEvent(event, user), user.getAvatar())).respond();
         }
         else {
             firstResponder.setContent("Unable to find a channel!").respond();
         }
     }
+
 }

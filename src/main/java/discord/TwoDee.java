@@ -3,7 +3,7 @@ package discord;
 import commands.HelpCommand;
 import de.btobastian.sdcf4j.CommandHandler;
 import de.btobastian.sdcf4j.handler.JavacordHandler;
-import listeners.DeleteStatsListener;
+import listeners.ComponentInteractionListener;
 import listeners.PlotPointEnhancementListener;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
@@ -44,8 +44,8 @@ public class TwoDee {
 
                 //Create listeners
                 api.addListener(new PlotPointEnhancementListener());
-                DeleteStatsListener deleteStatsListener = new DeleteStatsListener(api);
-                deleteStatsListener.startListening();
+                ComponentInteractionListener componentInteractionListener = new ComponentInteractionListener();
+                api.addListener(componentInteractionListener);
 
             })
                     // Log any exceptions that happened

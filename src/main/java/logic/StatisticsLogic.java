@@ -6,6 +6,8 @@ import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.MessageDecoration;
 import org.javacord.api.entity.message.MessageFlag;
+import org.javacord.api.entity.message.component.ActionRow;
+import org.javacord.api.entity.message.component.Button;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
@@ -60,7 +62,7 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
             if (!event.getOptionBooleanValueByName("nonephemeral").orElse(false)) {
                 responseBuilder = responseBuilder.setFlags(MessageFlag.EPHEMERAL);
             }
-            responseBuilder.respond().thenAcceptBoth(result, (updater, statisticsEmbed) -> updater.addEmbeds(statisticsEmbed).update());
+            responseBuilder.respond().thenAcceptBoth(result, (updater, statisticsEmbed) -> updater.addComponents(ActionRow.of(Button.primary("delete-stats", EmojiParser.parseToUnicode(":x:")))).addEmbeds(statisticsEmbed).update());
         }
         else {
             firstResponder.setContent("Dice pool not found!").setFlags(MessageFlag.EPHEMERAL).respond();

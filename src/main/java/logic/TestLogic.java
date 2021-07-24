@@ -34,12 +34,12 @@ public class TestLogic implements VelenEvent, VelenSlashEvent {
 
     @Override
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final Optional<String> dicePool = event.getOptionStringValueByName("dicepool");
+        final String dicePool = event.getOptionStringValueByName("dicepool").orElse("");
         final Integer discount = event.getOptionIntValueByName("discount").orElse(0);
         final Integer diceKept = event.getOptionIntValueByName("dicekept").orElse(2);
         final Optional<Boolean> enhanceable = event.getOptionBooleanValueByName("enhanceable");
 
-        RollHandlers.handleSlashCommandRoll(event, firstResponder, dicePool, discount, diceKept, enhanceable, false);
+        RollHandlers.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false);
     }
 
 }

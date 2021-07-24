@@ -21,7 +21,6 @@ import java.util.Optional;
  */
 public class RollLogic implements VelenSlashEvent, VelenEvent {
     public static void setupRollCommand(Velen velen) {
-        // TODO Add desired tier option
         RollLogic rollLogic = new RollLogic();
         final List<SlashCommandOption> rollCommandOptions = getRollCommandOptions();
         rollCommandOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false));
@@ -30,6 +29,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     }
 
     static List<SlashCommandOption> getRollCommandOptions() {
+        // TODO Add target difficulty option
         List<SlashCommandOption> options = new ArrayList<>();
         options.add(SlashCommandOption.create(SlashCommandOptionType.STRING, "dicepool", "The dice pool to roll with.", true));
         options.add(SlashCommandOption.create(SlashCommandOptionType.INTEGER, "discount", "The number of plot points to discount (negative results in a plot point cost increase).", false));
@@ -52,11 +52,11 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final Boolean opportunity = event.getOptionBooleanValueByName("opportunity").orElse(true);
         final Integer discount = event.getOptionIntValueByName("discount").orElse(0);
-        final Optional<String> dicePool = event.getOptionStringValueByName("dicepool");
+        final String dicePool = event.getOptionStringValueByName("dicepool").orElse("");
         final Integer diceKept = event.getOptionIntValueByName("dicekept").orElse(2);
         final Optional<Boolean> enhanceable = event.getOptionBooleanValueByName("enhanceable");
 
-        RollHandlers.handleSlashCommandRoll(event, firstResponder, dicePool, discount, diceKept, enhanceable, opportunity);
+        RollHandlers.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, opportunity);
     }
 
 }

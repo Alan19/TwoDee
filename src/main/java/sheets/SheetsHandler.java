@@ -72,6 +72,7 @@ public class SheetsHandler {
 
     /**
      * Retrieves all skills on a player
+     * TODO Convert get functions to CompletableFuture
      *
      * @param user The user to lookup
      * @return The skills of a user as a HashMap of skill names to facet count

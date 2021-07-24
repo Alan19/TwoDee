@@ -13,6 +13,7 @@ import util.RandomColor;
 import java.util.List;
 
 public class SnackLogic implements VelenSlashEvent, VelenEvent {
+    // TODO Add more snack types, a footer, and optional recipient argument
     public static void setupSnackCommand(Velen velen) {
         SnackLogic snackLogic = new SnackLogic();
         VelenCommand.ofHybrid("snack", "Gives you a snack!", velen, snackLogic, snackLogic).setServerOnly(true, 468046159781429250L).attach();
