@@ -1,7 +1,6 @@
 package logic;
 
 import dicerolling.DicePoolBuilder;
-import dicerolling.RollHandlers;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
@@ -28,7 +27,7 @@ public class TestLogic implements VelenEvent, VelenSlashEvent {
 
         //Variables containing getResults information
         DicePoolBuilder builder = new DicePoolBuilder(user, dicePool).withOpportunity(false);
-        RollHandlers.handleTextCommandRoll(event, user, builder);
+        RollLogic.handleTextCommandRoll(event, user, builder);
 
     }
 
@@ -39,7 +38,7 @@ public class TestLogic implements VelenEvent, VelenSlashEvent {
         final Integer diceKept = event.getOptionIntValueByName("dicekept").orElse(2);
         final Optional<Boolean> enhanceable = event.getOptionBooleanValueByName("enhanceable");
 
-        RollHandlers.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false);
+        RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false);
     }
 
 }

@@ -13,7 +13,6 @@ import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.util.DiscordRegexPattern;
 import pw.mihou.velen.interfaces.*;
-import sheets.PlotPointChangeResult;
 import sheets.PlotPointUtils;
 import util.UtilFunctions;
 
@@ -21,7 +20,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
-import java.util.stream.Collectors;
 
 public class ReplenishLogic implements VelenSlashEvent, VelenEvent {
     public static void setupReplenishCommand(Velen velen) {
@@ -41,24 +39,7 @@ public class ReplenishLogic implements VelenSlashEvent, VelenEvent {
      * @return A future that contains the embed with the result for the plot point changes
      */
     private CompletableFuture<EmbedBuilder> replenishParties(User author, Role role, Integer count, TextChannel channel) {
-        return PlotPointUtils.addPlotPointsToUsers(role.getUsers(), count).thenApply(plotPointChangeResult -> getReplenishEmbed(channel, plotPointChangeResult).setFooter("Requested by " + UtilFunctions.getUsernameInChannel(author, channel), author.getAvatar()));
-    }
-
-    /**
-     * Create an embed that contains the changes in plot points
-     * <p>
-     * Players whose plot points cannot be modified will be listed in the embed
-     *
-     * @param channel               The channel to send the embed to
-     * @param plotPointChangeResult An object containing the changes in plot points and players that cannot be edited
-     */
-    private EmbedBuilder getReplenishEmbed(TextChannel channel, PlotPointChangeResult plotPointChangeResult) {
-        final EmbedBuilder embed = plotPointChangeResult.generateEmbed(channel).setTitle("Session Replenishment!");
-        if (!plotPointChangeResult.getUnmodifiableUsers().isEmpty()) {
-            embed.setDescription("I was unable to edit the plot points of:\n - " + plotPointChangeResult.getUnmodifiableUsers().stream().map(user -> UtilFunctions.getUsernameInChannel(user, channel)).collect(Collectors.joining("\n - ")));
-        }
-
-        return embed;
+        return PlotPointUtils.addPlotPointsToUsers(role.getUsers(), count).thenApply(plotPointChangeResult -> plotPointChangeResult.getReplenishEmbed(channel).setFooter("Requested by " + UtilFunctions.getUsernameInChannel(author, channel), author.getAvatar()));
     }
 
     @Override
