@@ -137,18 +137,16 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
      * @param result  The roll result object
      */
     public static void handleRollSideEffects(User user, InteractionOriginalResponseUpdater updater, EmbedBuilder[] embeds, RollResult result) {
-        EmbedBuilder[] afterEnhancementEmbed = embeds.clone();
-        afterEnhancementEmbed[0] = embeds[0].setFooter("");
         updater.addEmbeds(embeds)
                 .addComponents(ComponentUtils.createRollComponentRows(true, result.isEnhanceable()))
                 .update()
-                .thenAccept(message -> attachEnhancementListener(user, updater, result, afterEnhancementEmbed, message));
+                .thenAccept(message -> attachEnhancementListener(user, updater, result, message));
     }
 
-    private static void attachEnhancementListener(User user, InteractionOriginalResponseUpdater updater, RollResult result, EmbedBuilder[] afterEnhancementEmbed, Message message) {
-        message.addButtonClickListener(new RollComponentInteractionListener(user, result, afterEnhancementEmbed))
+    private static void attachEnhancementListener(User user, InteractionOriginalResponseUpdater updater, RollResult result, Message message) {
+        message.addButtonClickListener(new RollComponentInteractionListener(user, result))
                 .removeAfter(60, TimeUnit.SECONDS)
-                .addRemoveHandler(() -> updater.removeAllComponents().removeAllEmbeds().addEmbeds(afterEnhancementEmbed).update());
+                .addRemoveHandler(() -> updater.removeAllComponents().update());
     }
 
     /**
@@ -162,17 +160,10 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         if (builder.getResults().isPresent()) {
             RollResult rollResult = builder.getResults().get();
             final CompletableFuture<EmbedBuilder[]> rollEmbeds = getRollEmbeds(UtilFunctions.getUsernameInChannel(user, event.getChannel()), user, rollResult);
-            rollEmbeds.thenAccept(embeds -> {
-                final EmbedBuilder[] afterEnhancementEmbeds = embeds.clone();
-                afterEnhancementEmbeds[0] = embeds[0].setFooter("");
-                new MessageBuilder()
-                        .addEmbeds(embeds)
-                        .addComponents(ComponentUtils.createRollComponentRows(true, rollResult.isEnhanceable())).send(event.getChannel())
-                        .thenAccept(message -> message.addButtonClickListener(new RollComponentInteractionListener(user, rollResult, afterEnhancementEmbeds)).removeAfter(60, TimeUnit.SECONDS).addRemoveHandler(() -> {
-                            embeds[0] = embeds[0].setFooter("");
-                            new MessageUpdater(message).removeAllComponents().setEmbeds(embeds).applyChanges();
-                        }));
-            });
+            rollEmbeds.thenAccept(embeds -> new MessageBuilder()
+                    .addEmbeds(embeds)
+                    .addComponents(ComponentUtils.createRollComponentRows(true, rollResult.isEnhanceable())).send(event.getChannel())
+                    .thenAccept(message -> message.addButtonClickListener(new RollComponentInteractionListener(user, rollResult)).removeAfter(60, TimeUnit.SECONDS).addRemoveHandler(() -> new MessageUpdater(message).applyChanges())));
         }
         else {
             event.getChannel().sendMessage("Invalid dice pool!");

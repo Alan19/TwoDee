@@ -24,12 +24,10 @@ import java.util.concurrent.TimeUnit;
 public class RollComponentInteractionListener implements ButtonClickListener {
     private final User user;
     private final RollResult result;
-    private final EmbedBuilder[] afterEnhancementEmbed;
 
-    public RollComponentInteractionListener(User user, RollResult result, EmbedBuilder[] afterEnhancementEmbed) {
+    public RollComponentInteractionListener(User user, RollResult result) {
         this.user = user;
         this.result = result;
-        this.afterEnhancementEmbed = afterEnhancementEmbed;
     }
 
     /**
@@ -71,8 +69,6 @@ public class RollComponentInteractionListener implements ButtonClickListener {
         // TODO Make this support doom points
         getEnhancementEmbed(componentInteraction.getUser(), result.getTotal(), enhanceCount).thenAccept(enhanceEmbed -> componentInteraction.createOriginalMessageUpdater()
                         .removeAllComponents()
-                        .removeAllEmbeds()
-                        .addEmbeds(afterEnhancementEmbed)
                         .addEmbed(enhanceEmbed)
                         .update())
                 .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":star2:")));
@@ -110,8 +106,6 @@ public class RollComponentInteractionListener implements ButtonClickListener {
             RollResult rerollResult = reroll.get();
             interaction.createOriginalMessageUpdater()
                     .removeAllComponents()
-                    .removeAllEmbeds()
-                    .addEmbed(afterEnhancementEmbed[0])
                     .update()
                     .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":bulb:")));
             final TextChannel channel = interaction.getChannel().get();
@@ -148,13 +142,11 @@ public class RollComponentInteractionListener implements ButtonClickListener {
      * @param embedBuilders      The embeds to set the originals to once the edit is done, leaves out the help text in the footer
      */
     private void sendRerollMessageAndAttachListener(TextChannel channel, Message interactionMessage, RollResult rerollResult, EmbedBuilder[] embedBuilders) {
-        final EmbedBuilder[] afterEnhanceEmbed = embedBuilders.clone();
-        afterEnhanceEmbed[0] = embedBuilders[0].setFooter("");
         new MessageBuilder()
                 .addEmbeds(embedBuilders)
                 .addComponents(ComponentUtils.createRollComponentRows(false, rerollResult.isEnhanceable()))
                 .replyTo(interactionMessage)
                 .send(channel)
-                .thenAccept(message -> message.addButtonClickListener(new RollComponentInteractionListener(user, rerollResult, afterEnhancementEmbed)).removeAfter(60, TimeUnit.SECONDS).addRemoveHandler(() -> new MessageUpdater(message).removeAllComponents().setEmbeds(afterEnhanceEmbed).applyChanges()));
+                .thenAccept(message -> message.addButtonClickListener(new RollComponentInteractionListener(user, rerollResult)).removeAfter(60, TimeUnit.SECONDS).addRemoveHandler(() -> new MessageUpdater(message).removeAllComponents().applyChanges()));
     }
 }
