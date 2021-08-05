@@ -53,7 +53,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     }
 
     /**
-     * Creates a completable future of the embeds that have to be sent
+     * Creates a completable future of the embeds that have to be sent. Updates plot points and doom points if they were generated.
      *
      * @param username   The name of the user in the channel the embeds will be sent in
      * @param user       The user, used for getting the user's icon

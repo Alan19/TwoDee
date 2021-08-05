@@ -147,7 +147,7 @@ public class RollResult implements PoolResultWithEmbed {
                 .addField("Total", String.valueOf(getTotal()), true)
                 .addField("Tier Hit", getTierHit(), true);
         if (enhanceable) {
-            rollResultEmbed.setFooter("Enhance this getResults with plot points in the next 60 seconds by clicking on the reactions below!");
+            rollResultEmbed.setFooter("Enhance this roll with plot points in the next 60 seconds by clicking on the reactions below!");
         }
         return rollResultEmbed;
     }
