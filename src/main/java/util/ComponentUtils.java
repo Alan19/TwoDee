@@ -23,7 +23,7 @@ public class ComponentUtils {
             rows.add(ActionRow.of(enhancementRow));
         }
         if (addReroll) {
-            rows.add(ActionRow.of(Button.danger("reroll", EmojiParser.parseToUnicode(":repeat:"))));
+            rows.add(ActionRow.of(Button.danger("reroll", EmojiParser.parseToUnicode(":recycle:"))));
         }
 
         return rows.toArray(new HighLevelComponent[0]);
