@@ -8,6 +8,7 @@ import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.MessageFlag;
 import org.javacord.api.entity.message.MessageUpdater;
+import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
@@ -17,6 +18,8 @@ import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
+import org.javacord.api.listener.interaction.ButtonClickListener;
+import org.javacord.api.util.event.ListenerManager;
 import pw.mihou.velen.interfaces.*;
 import roles.Storytellers;
 import sheets.PlotPointUtils;
@@ -29,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Rolls a pool of dice based on the input. After rolling, adds doom points to doom pool and makes appropriate changes the player's plot point count based on input options. If the DM is rolling, plot points they spend come from the doom point pool.
@@ -140,13 +143,23 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         updater.addEmbeds(embeds)
                 .addComponents(ComponentUtils.createRollComponentRows(true, result.isEnhanceable()))
                 .update()
-                .thenAccept(message -> attachEnhancementListener(user, updater, result, message));
+                .thenAccept(message -> attachInteractionEnhancementListener(user, result, message, updater));
     }
 
-    private static void attachEnhancementListener(User user, InteractionOriginalResponseUpdater updater, RollResult result, Message message) {
-        message.addButtonClickListener(new RollComponentInteractionListener(user, result))
-                .removeAfter(60, TimeUnit.SECONDS)
-                .addRemoveHandler(() -> updater.removeAllComponents().update());
+    public static void attachEnhancementListener(User user, RollResult result, Message message) {
+        final AtomicReference<ListenerManager<ButtonClickListener>> reference = new AtomicReference<>();
+        final RollComponentInteractionListener listener = new RollComponentInteractionListener(user, result, reference, new MessageUpdater(message).setEmbeds(message.getEmbeds().stream().map(Embed::toBuilder).toArray(EmbedBuilder[]::new)));
+        final ListenerManager<ButtonClickListener> listenerManager = message.addButtonClickListener(listener);
+        reference.set(listenerManager);
+        listener.startRemoveTimer();
+    }
+
+    public static void attachInteractionEnhancementListener(User user, RollResult result, Message message, InteractionOriginalResponseUpdater updater) {
+        final AtomicReference<ListenerManager<ButtonClickListener>> reference = new AtomicReference<>();
+        final RollComponentInteractionListener listener = new RollComponentInteractionListener(user, result, reference, updater);
+        final ListenerManager<ButtonClickListener> listenerManager = message.addButtonClickListener(listener);
+        reference.set(listenerManager);
+        listener.startRemoveTimer();
     }
 
     /**
@@ -163,11 +176,25 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
             rollEmbeds.thenAccept(embeds -> new MessageBuilder()
                     .addEmbeds(embeds)
                     .addComponents(ComponentUtils.createRollComponentRows(true, rollResult.isEnhanceable())).send(event.getChannel())
-                    .thenAccept(message -> message.addButtonClickListener(new RollComponentInteractionListener(user, rollResult)).removeAfter(60, TimeUnit.SECONDS).addRemoveHandler(() -> new MessageUpdater(message).applyChanges())));
+                    .thenAccept(message -> attachEnhancementListener(user, rollResult, message)));
         }
         else {
             event.getChannel().sendMessage("Invalid dice pool!");
         }
+    }
+
+    /**
+     * Removes the footer of the first embed in a message. Used for removing the 60 second warning from a roll embed.
+     *
+     * @param interactionMessage The message to remove the footer for
+     * @return The list of embeds in that message with the first embed not having a footer
+     */
+    public static EmbedBuilder[] removeFirstEmbedFooter(Message interactionMessage) {
+        EmbedBuilder[] afterEnhanceEmbed = interactionMessage.getEmbeds().stream().map(Embed::toBuilder).toArray(EmbedBuilder[]::new);
+        if (afterEnhanceEmbed.length > 0) {
+            afterEnhanceEmbed[0] = afterEnhanceEmbed[0].setFooter("");
+        }
+        return afterEnhanceEmbed;
     }
 
 

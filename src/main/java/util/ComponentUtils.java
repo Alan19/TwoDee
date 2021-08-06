@@ -1,6 +1,5 @@
 package util;
 
-import com.vdurmont.emoji.EmojiParser;
 import org.javacord.api.entity.message.component.ActionRow;
 import org.javacord.api.entity.message.component.Button;
 import org.javacord.api.entity.message.component.HighLevelComponent;
@@ -19,11 +18,11 @@ public class ComponentUtils {
             List<LowLevelComponent> enhancementRow = IntStream.range(0, 4)
                     .mapToObj(i -> Button.primary(String.valueOf(i + 1), "+" + (i + 1)))
                     .collect(Collectors.toList());
-            enhancementRow.add(Button.success("confirm", EmojiParser.parseToUnicode(":heavy_check_mark:")));
+            enhancementRow.add(Button.success("confirm", "Confirm"));
             rows.add(ActionRow.of(enhancementRow));
         }
         if (addReroll) {
-            rows.add(ActionRow.of(Button.danger("reroll", EmojiParser.parseToUnicode(":recycle:"))));
+            rows.add(ActionRow.of(Button.danger("reroll", "Reroll")));
         }
 
         return rows.toArray(new HighLevelComponent[0]);

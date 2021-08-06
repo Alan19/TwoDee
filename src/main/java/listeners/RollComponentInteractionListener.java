@@ -3,6 +3,7 @@ package listeners;
 import com.vdurmont.emoji.EmojiParser;
 import dicerolling.RollResult;
 import doom.DoomHandler;
+import io.vavr.control.Either;
 import logic.RollLogic;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
@@ -12,22 +13,44 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.ButtonClickEvent;
 import org.javacord.api.interaction.ButtonInteraction;
+import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.javacord.api.listener.interaction.ButtonClickListener;
+import org.javacord.api.util.event.ListenerManager;
 import sheets.PlotPointUtils;
 import util.ComponentUtils;
 import util.UtilFunctions;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class RollComponentInteractionListener implements ButtonClickListener {
     private final User user;
     private final RollResult result;
+    private final AtomicReference<ListenerManager<ButtonClickListener>> reference;
+    private final Either<MessageUpdater, InteractionOriginalResponseUpdater> updaterObject;
+    private ScheduledFuture<CompletableFuture<Message>> schedule;
 
-    public RollComponentInteractionListener(User user, RollResult result) {
+    public RollComponentInteractionListener(User user, RollResult result, AtomicReference<ListenerManager<ButtonClickListener>> reference, MessageUpdater messageUpdater) {
         this.user = user;
         this.result = result;
+        this.reference = reference;
+        this.updaterObject = Either.left(messageUpdater);
+    }
+
+    public RollComponentInteractionListener(User user, RollResult result, AtomicReference<ListenerManager<ButtonClickListener>> reference, InteractionOriginalResponseUpdater updater) {
+        this.user = user;
+        this.result = result;
+        this.reference = reference;
+        this.updaterObject = Either.right(updater);
+    }
+
+    public void startRemoveTimer() {
+        if (reference.get() != null) {
+            schedule = user.getApi().getThreadPool().getScheduler().schedule(() -> updaterObject.fold(messageUpdater1 -> messageUpdater1.removeAllComponents().applyChanges(), updater -> updater.removeAllComponents().update()), 5, TimeUnit.SECONDS);
+        }
     }
 
     /**
@@ -46,14 +69,18 @@ public class RollComponentInteractionListener implements ButtonClickListener {
         final String customId = componentInteraction.getCustomId();
         final Optional<Integer> enhanceCount = UtilFunctions.tryParseInt(customId);
         final Optional<Message> interactionMessage = componentInteraction.getMessage();
-        if ("confirm".equals(customId)) {
-            componentInteraction.createOriginalMessageUpdater().removeAllComponents().update();
-        }
-        else if (enhanceCount.isPresent() && interactionMessage.isPresent()) {
-            enhanceRoll(componentInteraction, enhanceCount.get(), interactionMessage.get());
-        }
-        else if ("reroll".equals(customId) && interactionMessage.isPresent()) {
-            handleReroll(componentInteraction, interactionMessage.get());
+
+        if (!schedule.isDone() && schedule.getDelay(TimeUnit.MILLISECONDS) > 0) {
+            schedule.cancel(true);
+            if ("confirm".equals(customId)) {
+                componentInteraction.createOriginalMessageUpdater().removeAllComponents().update();
+            }
+            else if (enhanceCount.isPresent() && interactionMessage.isPresent()) {
+                enhanceRoll(componentInteraction, enhanceCount.get(), interactionMessage.get());
+            }
+            else if ("reroll".equals(customId) && interactionMessage.isPresent()) {
+                handleReroll(componentInteraction, interactionMessage.get());
+            }
         }
 
     }
@@ -69,6 +96,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
         // TODO Make this support doom points
         getEnhancementEmbed(componentInteraction.getUser(), result.getTotal(), enhanceCount).thenAccept(enhanceEmbed -> componentInteraction.createOriginalMessageUpdater()
                         .removeAllComponents()
+                        .addEmbeds(RollLogic.removeFirstEmbedFooter(interactionMessage))
                         .addEmbed(enhanceEmbed)
                         .update())
                 .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":star2:")));
@@ -106,6 +134,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
             RollResult rerollResult = reroll.get();
             interaction.createOriginalMessageUpdater()
                     .removeAllComponents()
+                    .addEmbed(interactionMessage.getEmbeds().get(0).toBuilder().setFooter(""))
                     .update()
                     .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":bulb:")));
             final TextChannel channel = interaction.getChannel().get();
@@ -147,6 +176,6 @@ public class RollComponentInteractionListener implements ButtonClickListener {
                 .addComponents(ComponentUtils.createRollComponentRows(false, rerollResult.isEnhanceable()))
                 .replyTo(interactionMessage)
                 .send(channel)
-                .thenAccept(message -> message.addButtonClickListener(new RollComponentInteractionListener(user, rerollResult)).removeAfter(60, TimeUnit.SECONDS).addRemoveHandler(() -> new MessageUpdater(message).removeAllComponents().applyChanges()));
+                .thenAccept(message -> RollLogic.attachEnhancementListener(user, rerollResult, message));
     }
 }
