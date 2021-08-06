@@ -49,7 +49,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
 
     public void startRemoveTimer() {
         if (reference.get() != null) {
-            schedule = user.getApi().getThreadPool().getScheduler().schedule(() -> updaterObject.fold(messageUpdater1 -> messageUpdater1.removeAllComponents().applyChanges(), updater -> updater.removeAllComponents().update()), 5, TimeUnit.SECONDS);
+            schedule = user.getApi().getThreadPool().getScheduler().schedule(() -> updaterObject.fold(messageUpdater1 -> messageUpdater1.removeAllComponents().applyChanges(), updater -> updater.removeAllComponents().update()), 60, TimeUnit.SECONDS);
         }
     }
 
