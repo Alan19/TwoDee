@@ -9,7 +9,7 @@ import pw.mihou.velen.interfaces.VelenCommand;
 public class SlashCommandRegister {
 
     public static Velen setupVelen() {
-        Velen velen = Velen.builder().setDefaultPrefix(".").build();
+        Velen velen = Velen.builder().setDefaultPrefix("~").build();
         SnackLogic.setupSnackCommand(velen);
         setupBleedCommand(velen);
         setupStopCommand(velen);
