@@ -29,32 +29,32 @@ import java.util.concurrent.atomic.AtomicReference;
 public class RollComponentInteractionListener implements ButtonClickListener {
     private final User user;
     private final RollResult result;
-    private final AtomicReference<ListenerManager<ButtonClickListener>> reference;
+    private final AtomicReference<ListenerManager<ButtonClickListener>> listenerReference;
     private final Either<MessageUpdater, InteractionOriginalResponseUpdater> updaterObject;
-    private ScheduledFuture<CompletableFuture<Message>> schedule;
+    private ScheduledFuture<CompletableFuture<Void>> removeListenerTask;
 
-    public RollComponentInteractionListener(User user, RollResult result, AtomicReference<ListenerManager<ButtonClickListener>> reference, MessageUpdater messageUpdater) {
+    public RollComponentInteractionListener(User user, RollResult result, AtomicReference<ListenerManager<ButtonClickListener>> listenerReference, MessageUpdater messageUpdater) {
         this.user = user;
         this.result = result;
-        this.reference = reference;
+        this.listenerReference = listenerReference;
         this.updaterObject = Either.left(messageUpdater);
     }
 
-    public RollComponentInteractionListener(User user, RollResult result, AtomicReference<ListenerManager<ButtonClickListener>> reference, InteractionOriginalResponseUpdater updater) {
+    public RollComponentInteractionListener(User user, RollResult result, AtomicReference<ListenerManager<ButtonClickListener>> listenerReference, InteractionOriginalResponseUpdater updater) {
         this.user = user;
         this.result = result;
-        this.reference = reference;
+        this.listenerReference = listenerReference;
         this.updaterObject = Either.right(updater);
     }
 
     public void startRemoveTimer() {
-        if (reference.get() != null) {
-            schedule = user.getApi().getThreadPool().getScheduler().schedule(() -> updaterObject.fold(messageUpdater1 -> messageUpdater1.removeAllComponents().applyChanges(), updater -> updater.removeAllComponents().update()), 60, TimeUnit.SECONDS);
+        if (listenerReference.get() != null) {
+            removeListenerTask = user.getApi().getThreadPool().getScheduler().schedule(this::removeHandler, 60, TimeUnit.SECONDS);
         }
     }
 
     /**
-     * The message this component is attached to gets a component interaction, enhance the roll or reroll, and then remove the components.
+     * The message this component is attached to gets a component interaction, enhance the roll or reroll, and then remove the components and the listener.
      * <p>
      * If confirm is received, remove the components on the message.
      * If reroll is received, reroll the roll.
@@ -70,8 +70,8 @@ public class RollComponentInteractionListener implements ButtonClickListener {
         final Optional<Integer> enhanceCount = UtilFunctions.tryParseInt(customId);
         final Optional<Message> interactionMessage = componentInteraction.getMessage();
 
-        if (!schedule.isDone() && schedule.getDelay(TimeUnit.MILLISECONDS) > 0) {
-            schedule.cancel(true);
+        if (!removeListenerTask.isDone() && removeListenerTask.getDelay(TimeUnit.MILLISECONDS) > 0) {
+            removeListenerTask.cancel(true);
             if ("confirm".equals(customId)) {
                 componentInteraction.createOriginalMessageUpdater().removeAllComponents().update();
             }
@@ -81,6 +81,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
             else if ("reroll".equals(customId) && interactionMessage.isPresent()) {
                 handleReroll(componentInteraction, interactionMessage.get());
             }
+            listenerReference.get().remove();
         }
 
     }
@@ -177,5 +178,16 @@ public class RollComponentInteractionListener implements ButtonClickListener {
                 .replyTo(interactionMessage)
                 .send(channel)
                 .thenAccept(message -> RollLogic.attachEnhancementListener(user, rerollResult, message));
+    }
+
+    /**
+     * Removes the listener after 60 seconds and removes the components
+     *
+     * @return A void completable future
+     */
+    private CompletableFuture<Void> removeHandler() {
+        updaterObject.fold(messageUpdater -> messageUpdater.removeAllComponents().applyChanges(), responseUpdater -> responseUpdater.removeAllComponents().update());
+        listenerReference.get().remove();
+        return CompletableFuture.completedFuture(null);
     }
 }

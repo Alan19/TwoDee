@@ -29,25 +29,25 @@ public class TwoDee {
             String token = prop.getProperty("token");
             String channel = prop.getProperty("channel", "484544303247523840");
             final Velen velen = SlashCommandRegister.setupVelen();
-            new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).addListener(velen).login().thenAccept(api -> {
-                velen.registerAllSlashCommands(api);
-                //Send startup messsage
-                new MessageBuilder()
-                        .setContent(getStartupMessage())
-                        .send(api.getTextChannelById(channel)
-                                .orElseThrow(() -> new IllegalStateException("Failed to find Channel for Id: " + channel))
-                        );
-                // Print the invite url of your bot
-                System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
-                CommandHandler cmdHandler = new JavacordHandler(api);
-                cmdHandler.registerCommand(new HelpCommand(cmdHandler));
+            new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
+                        velen.registerAllSlashCommands(api);
+                        //Send startup messsage
+                        new MessageBuilder()
+                                .setContent(getStartupMessage())
+                                .send(api.getTextChannelById(channel)
+                                        .orElseThrow(() -> new IllegalStateException("Failed to find Channel for Id: " + channel))
+                                );
+                        // Print the invite url of your bot
+                        System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
+                        CommandHandler cmdHandler = new JavacordHandler(api);
+                        cmdHandler.registerCommand(new HelpCommand(cmdHandler));
 
-                //Create listeners
-                api.addListener(new PlotPointEnhancementListener());
-                ComponentInteractionListener componentInteractionListener = new ComponentInteractionListener();
-                api.addListener(componentInteractionListener);
+                        //Create listeners
+                        api.addListener(new PlotPointEnhancementListener());
+                        ComponentInteractionListener componentInteractionListener = new ComponentInteractionListener();
+                        api.addListener(componentInteractionListener);
 
-            })
+                    })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
         } catch (Throwable e) {
