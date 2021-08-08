@@ -1,6 +1,5 @@
 package logic;
 
-import de.btobastian.sdcf4j.CommandExecutor;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -25,7 +24,7 @@ import java.util.regex.Matcher;
  * This class adds plot points, subtracts plot points, and sets plot points for players. This class will also keep
  * track of doom points
  */
-public class PlotPointLogic implements CommandExecutor, VelenSlashEvent, VelenEvent {
+public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
 
     public static void registerPlotPointCommand(Velen velen) {
         PlotPointLogic plotPointLogic = new PlotPointLogic();

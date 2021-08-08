@@ -16,6 +16,7 @@ import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
+import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import pw.mihou.velen.interfaces.*;
 import statistics.GenerateStatistics;
 
@@ -41,6 +42,7 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
 
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
+        // Add delete component
         String dicePool = String.join(" ", args);
         final DicePoolBuilder builder = new DicePoolBuilder(user, dicePool);
         final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new GenerateStatistics(builder).getResult());
@@ -56,13 +58,16 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final Optional<String> dicepool = event.getOptionStringValueByName("dicepool");
         if (dicepool.isPresent()) {
-            final DicePoolBuilder builder = new DicePoolBuilder(user, dicepool.get()).withDiceKept(event.getOptionIntValueByName("dicekept").orElse(2));
-            final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new GenerateStatistics(builder).getResult());
-            InteractionImmediateResponseBuilder responseBuilder = firstResponder.setContent("Here are the statistics for **" + dicepool.get() + "**:");
-            if (!event.getOptionBooleanValueByName("nonephemeral").orElse(false)) {
-                responseBuilder = responseBuilder.setFlags(MessageFlag.EPHEMERAL);
-            }
-            responseBuilder.respond().thenAcceptBoth(result, (updater, statisticsEmbed) -> updater.addComponents(ActionRow.of(Button.primary("delete-stats", EmojiParser.parseToUnicode(":x:")))).addEmbeds(statisticsEmbed).update());
+            final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new GenerateStatistics(new DicePoolBuilder(user, dicepool.get()).withDiceKept(event.getOptionIntValueByName("dicekept").orElse(2))).getResult());
+
+            final boolean ephemeral = !event.getOptionBooleanValueByName("nonephemeral").orElse(false);
+            event.respondLater(ephemeral).thenAcceptBoth(result, (updater, embedBuilder) -> {
+                InteractionOriginalResponseUpdater responseUpdater = updater.addEmbed(embedBuilder).setContent("Here are the statistics for **" + dicepool.get() + "**:");
+                if (!ephemeral) {
+                    responseUpdater = responseUpdater.addComponents(ActionRow.of(Button.primary("delete-stats", "Dismiss")));
+                }
+                responseUpdater.update();
+            });
         }
         else {
             firstResponder.setContent("Dice pool not found!").setFlags(MessageFlag.EPHEMERAL).respond();

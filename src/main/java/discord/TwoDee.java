@@ -1,8 +1,5 @@
 package discord;
 
-import commands.HelpCommand;
-import de.btobastian.sdcf4j.CommandHandler;
-import de.btobastian.sdcf4j.handler.JavacordHandler;
 import listeners.ComponentInteractionListener;
 import listeners.PlotPointEnhancementListener;
 import org.javacord.api.DiscordApiBuilder;
@@ -39,8 +36,6 @@ public class TwoDee {
                                 );
                         // Print the invite url of your bot
                         System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
-                        CommandHandler cmdHandler = new JavacordHandler(api);
-                        cmdHandler.registerCommand(new HelpCommand(cmdHandler));
 
                         //Create listeners
                         api.addListener(new PlotPointEnhancementListener());
