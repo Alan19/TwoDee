@@ -44,7 +44,7 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
         VelenCommand.ofHybrid("doom", "Modifies the doom pool!", velen, doomLogic, doomLogic)
                 .addOption(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND_GROUP, "mode", "how to modify the doom pool", options))
                 .addShortcuts("d")
-                .setServerOnly(true, 468046159781429250L)
+
                 .attach();
     }
 

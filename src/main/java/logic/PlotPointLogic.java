@@ -34,7 +34,7 @@ public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
         slashCommandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "set", "Sets the specified plot point pools to the specified amount", getCountOption().setRequired(true), getMentionableOption()));
         slashCommandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all plot point pools", getMentionableOption().setDescription("which player to query the plot point pool of")));
 
-        VelenCommand.ofHybrid("plotpoints", "Adjust plot points", velen, plotPointLogic, plotPointLogic).setServerOnly(true, 468046159781429250L).addShortcuts("p", "pp", "plotpoints").addOption(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND_GROUP, "mode", "how to modify the plot point pools", slashCommandOptions)).attach();
+        VelenCommand.ofHybrid("plotpoints", "Adjust plot points", velen, plotPointLogic, plotPointLogic).addShortcuts("p", "pp", "plotpoints").addOption(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND_GROUP, "mode", "how to modify the plot point pools", slashCommandOptions)).attach();
     }
 
     private static SlashCommandOptionBuilder getMentionableOption() {

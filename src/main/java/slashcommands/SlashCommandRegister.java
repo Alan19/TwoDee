@@ -24,12 +24,12 @@ public class SlashCommandRegister {
 
     private static void setupStopCommand(Velen velen) {
         StopLogic stopLogic = new StopLogic();
-        VelenCommand.ofHybrid("stop", "Shuts down the bot the bot!", velen, stopLogic, stopLogic).setServerOnly(true, 468046159781429250L).attach();
+        VelenCommand.ofHybrid("stop", "Shuts down the bot the bot!", velen, stopLogic, stopLogic).attach();
     }
 
     private static void setupBleedCommand(Velen velen) {
         BleedLogic bleedLogic = new BleedLogic();
-        VelenCommand.ofHybrid("bleed", "Applies plot point bleed!", velen, bleedLogic, bleedLogic).addOptions(SlashCommandOption.create(SlashCommandOptionType.MENTIONABLE, "target", "The party to bleed", true), SlashCommandOption.create(SlashCommandOptionType.INTEGER, "modifier", "The bonus or penalty on the bleed", false)).setServerOnly(true, 468046159781429250L).attach();
+        VelenCommand.ofHybrid("bleed", "Applies plot point bleed!", velen, bleedLogic, bleedLogic).addOptions(SlashCommandOption.create(SlashCommandOptionType.MENTIONABLE, "target", "The party to bleed", true), SlashCommandOption.create(SlashCommandOptionType.INTEGER, "modifier", "The bonus or penalty on the bleed", false)).attach();
     }
 
 }

@@ -42,7 +42,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         RollLogic rollLogic = new RollLogic();
         final List<SlashCommandOption> rollCommandOptions = getRollCommandOptions();
         rollCommandOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false));
-        VelenCommand.ofHybrid("roll", "Rolls some dice!", velen, rollLogic, rollLogic).addOptions(rollCommandOptions.toArray(new SlashCommandOption[0])).addShortcuts("r").setServerOnly(true, 468046159781429250L).attach();
+        VelenCommand.ofHybrid("roll", "Rolls some dice!", velen, rollLogic, rollLogic).addOptions(rollCommandOptions.toArray(new SlashCommandOption[0])).addShortcuts("r").attach();
     }
 
     static List<SlashCommandOption> getRollCommandOptions() {
