@@ -61,7 +61,7 @@ public class DicePoolBuilder {
             }
             //Flat penalty
             else if (flatPenaltyMatcher.matches()) {
-                flatBonus.add(-1 * Integer.parseInt(flatBonusMatcher.group("value")));
+                flatBonus.add(-1 * Integer.parseInt(flatPenaltyMatcher.group("value")));
             }
             //Skill
             else {
