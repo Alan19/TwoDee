@@ -68,12 +68,15 @@ public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
             User target = user;
             int count = 1;
             if (args.length > 1) {
-                final Matcher matcher = DiscordRegexPattern.USER_MENTION.matcher(args[1]);
-                if (matcher.find()) {
-                    target = event.getApi().getUserById(matcher.group("id")).join();
-                }
-                if (args.length > 2) {
-                    count = UtilFunctions.tryParseInt(args[2]).orElse(1);
+                for (int i = 1; i < args.length; i++) {
+                    String arg = args[i];
+                    final Matcher matcher = DiscordRegexPattern.USER_MENTION.matcher(arg);
+                    if (matcher.find()) {
+                        target = event.getApi().getUserById(matcher.group("id")).join();
+                    }
+                    else if (UtilFunctions.tryParseInt(arg).isPresent()) {
+                        count = UtilFunctions.tryParseInt(arg).orElse(1);
+                    }
                 }
             }
             executeCommand(user, mode, target, count, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder));
@@ -86,8 +89,8 @@ public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
     @Override
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final Optional<SlashCommandInteractionOption> mode = event.getOptionByName("mode").flatMap(SlashCommandInteractionOptionsProvider::getFirstOption);
-        final Optional<User> mentionedUser = mode.flatMap(SlashCommandInteractionOptionsProvider::getFirstOptionUserValue);
-        final Optional<Integer> count = mode.flatMap(SlashCommandInteractionOptionsProvider::getFirstOptionIntValue);
+        final Optional<User> mentionedUser = mode.flatMap(slashCommandInteractionOption -> slashCommandInteractionOption.getOptionUserValueByName("name"));
+        final Optional<Integer> count = mode.flatMap(slashCommandInteractionOption -> slashCommandInteractionOption.getOptionIntValueByName("count"));
         if (event.getChannel().isPresent()) {
             final CompletableFuture<EmbedBuilder> query = executeCommand(user, mode.map(SlashCommandInteractionOption::getName).orElse("query"), mentionedUser.orElse(user), count.orElse(1), event.getChannel().get());
             event.respondLater().thenAcceptBoth(query, (updater, embed) -> updater.addEmbed(embed).update());
