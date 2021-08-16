@@ -140,7 +140,7 @@ public class GenerateStatistics {
 
     private HashMap<BuildablePoolResult, Long> processKeptDice(HashMap<BuildablePoolResult, Long> rollResultOccurrences) {
         HashMap<BuildablePoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
-        // Loop through all of the kept dice
+        // Loop through all kept dice
         for (Integer keptDice : dicePool.getKeptDice()) {
             HashMap<BuildablePoolResult, Long> tempMap = new HashMap<>();
             // Create n BuildablePoolResult Objects with each possible outcomes of the dice
@@ -162,7 +162,7 @@ public class GenerateStatistics {
 
     private HashMap<BuildablePoolResult, Long> processChaosDice(HashMap<BuildablePoolResult, Long> rollResultOccurrences) {
         HashMap<BuildablePoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
-        // Loop through all of the kept dice
+        // Loop through all chaos dice
         for (Integer keptDice : dicePool.getChaosDice()) {
             HashMap<BuildablePoolResult, Long> tempMap = new HashMap<>();
             // Create n BuildablePoolResult Objects with each possible outcomes of the dice
@@ -187,7 +187,7 @@ public class GenerateStatistics {
     private HashMap<BuildablePoolResult, Long> processPlotDice(HashMap<BuildablePoolResult, Long> rollResultOccurrences) {
         HashMap<BuildablePoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
         // Loop through all of the kept dice
-        for (Integer plotDice : dicePool.getPlotDice()) {
+        for (Integer plotDice : Stream.concat(dicePool.getPlotDice().stream(), dicePool.getEnhancedDice().stream()).collect(Collectors.toList())) {
             HashMap<BuildablePoolResult, Long> tempMap = new HashMap<>();
             // Create n BuildablePoolResult Objects with each possible outcomes of the dice
             // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
