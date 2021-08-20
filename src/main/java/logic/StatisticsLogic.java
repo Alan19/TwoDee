@@ -51,7 +51,7 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
                 .append(message.getContent(), MessageDecoration.BOLD)
                 .append(" " + user.getMentionTag())
                 .send(event.getChannel());
-        result.thenCompose(builder1 -> user.sendMessage("Here are the statistics for **" + dicePool + "**:", builder1)).thenAcceptBoth(statisticsPM, (message1, message2) -> message.delete());
+        result.thenCompose(builder1 -> new MessageBuilder().setContent("Here are the statistics for **" + dicePool + "**:").addEmbed(builder1).send(user)).thenAcceptBoth(statisticsPM, (message1, message2) -> message.delete());
     }
 
     @Override

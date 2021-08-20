@@ -4,6 +4,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.Mentionable;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
@@ -38,13 +39,13 @@ public class BleedLogic implements VelenSlashEvent, VelenEvent {
             if (userMatcher.find()) {
                 event.getApi().getUserById(userMatcher.group("id")).thenAccept(foundUser -> {
                     int modifier = args.length > 1 ? UtilFunctions.tryParseInt(args[1]).orElse(0) : 0;
-                    onBleedCommand(user, event.getChannel(), Collections.singletonList(foundUser), modifier).thenAccept(embed -> event.getChannel().sendMessage(embed));
+                    onBleedCommand(user, event.getChannel(), Collections.singletonList(foundUser), modifier).thenAccept(embed -> new MessageBuilder().addEmbed(embed).send(event.getChannel()));
                 });
             }
             else if (roleMatcher.find()) {
                 event.getApi().getRoleById(roleMatcher.group("id")).ifPresent(role -> {
                     int modifier = args.length > 1 ? UtilFunctions.tryParseInt(args[1]).orElse(0) : 0;
-                    onBleedCommand(user, event.getChannel(), new ArrayList<>(role.getUsers()), modifier).thenAccept(embed -> event.getChannel().sendMessage(embed));
+                    onBleedCommand(user, event.getChannel(), new ArrayList<>(role.getUsers()), modifier).thenAccept(embed -> new MessageBuilder().addEmbed(embed).send(event.getChannel()));
                 });
             }
         }

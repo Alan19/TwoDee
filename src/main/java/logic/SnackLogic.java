@@ -2,6 +2,7 @@ package logic;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
@@ -49,7 +50,7 @@ public class SnackLogic implements VelenSlashEvent, VelenEvent {
 
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
-        event.getChannel().sendMessage(getSnackEmbed(user, getRandomSnack(), user));
+        new MessageBuilder().addEmbed(getSnackEmbed(user, getRandomSnack(), user)).send(event.getChannel());
     }
 
     private Pair<String, String> getRandomSnack() {

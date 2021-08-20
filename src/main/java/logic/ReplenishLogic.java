@@ -2,6 +2,7 @@ package logic;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
@@ -50,7 +51,7 @@ public class ReplenishLogic implements VelenSlashEvent, VelenEvent {
             if (matcher.find() && count.isPresent()) {
                 Optional<Role> party = event.getApi().getRoleById(matcher.group("id"));
                 if (party.isPresent()) {
-                    replenishParties(user, party.get(), count.get(), event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder.setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, message.getChannel()), user.getAvatar())));
+                    replenishParties(user, party.get(), count.get(), event.getChannel()).thenAccept(embedBuilder -> new MessageBuilder().addEmbed(embedBuilder.setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, message.getChannel()), user.getAvatar())).send(event.getChannel()));
                 }
                 else {
                     event.getChannel().sendMessage("Unable to find role!");

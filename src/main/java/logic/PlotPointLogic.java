@@ -2,6 +2,7 @@ package logic;
 
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
@@ -79,10 +80,10 @@ public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
                     }
                 }
             }
-            executeCommand(user, mode, target, count, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder));
+            executeCommand(user, mode, target, count, event.getChannel()).thenAccept(embedBuilder -> new MessageBuilder().addEmbed(embedBuilder).send(event.getChannel()));
         }
         else {
-            executeCommand(user, "query", user, 0, event.getChannel()).thenAccept(embedBuilder -> event.getChannel().sendMessage(embedBuilder));
+            executeCommand(user, "query", user, 0, event.getChannel()).thenAccept(embedBuilder -> new MessageBuilder().addEmbed(embedBuilder).send(event.getChannel()));
         }
     }
 

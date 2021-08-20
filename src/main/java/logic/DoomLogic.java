@@ -2,6 +2,7 @@ package logic;
 
 import doom.DoomHandler;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
@@ -10,6 +11,7 @@ import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder
 import pw.mihou.velen.interfaces.*;
 import util.UtilFunctions;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -61,10 +63,10 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
             if (params.length > 2) {
                 count = UtilFunctions.tryParseInt(params[2]).orElse(1);
             }
-            event.getChannel().sendMessage(handleCommand(mode, poolName, count).setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, event.getChannel()), user.getAvatar()));
+            new MessageBuilder().addEmbed(handleCommand(mode, poolName, count).setFooter(MessageFormat.format("Requested by {0}", UtilFunctions.getUsernameInChannel(user, event.getChannel())), user.getAvatar())).send(event.getChannel());
         }
         else {
-            event.getChannel().sendMessage(DoomHandler.generateDoomEmbed().setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, event.getChannel()), user.getAvatar()));
+            new MessageBuilder().addEmbed(DoomHandler.generateDoomEmbed().setFooter(MessageFormat.format("Requested by {0}", UtilFunctions.getUsernameInChannel(user, event.getChannel())), user.getAvatar())).send(event.getChannel());
         }
     }
 

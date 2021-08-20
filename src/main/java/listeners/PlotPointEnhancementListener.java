@@ -4,6 +4,7 @@ import doom.DoomHandler;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.emoji.Emoji;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.Reaction;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
@@ -89,7 +90,7 @@ public class PlotPointEnhancementListener implements ReactionAddListener {
                     .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))
                     .addField("Plot Points", oldPP.get() + " → " + newPP)
                     .setColor(RandomColor.getRandomColor());
-            channel.sendMessage(enhanceRollEmbed);
+            new MessageBuilder().addEmbed(enhanceRollEmbed).send(channel);
         }
     }
 
@@ -109,7 +110,7 @@ public class PlotPointEnhancementListener implements ReactionAddListener {
                 .setAuthor(user)
                 .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))
                 .addField("Doom Points", oldDoom + " → " + newDoom);
-        channel.sendMessage(doomExpenditureEmbed);
+        new MessageBuilder().addEmbed(doomExpenditureEmbed).send(channel);
     }
 
     /**

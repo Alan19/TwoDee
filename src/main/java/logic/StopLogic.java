@@ -2,6 +2,7 @@ package logic;
 
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
@@ -19,7 +20,7 @@ public class StopLogic implements VelenSlashEvent, VelenEvent {
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
         scheduleShutdown(event.getApi());
-        event.getChannel().sendMessage(getShutdownEmbed(user));
+        new MessageBuilder().addEmbed(getShutdownEmbed(user)).send(event.getChannel());
     }
 
     @Override
