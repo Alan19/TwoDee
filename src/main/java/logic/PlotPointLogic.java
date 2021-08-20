@@ -95,7 +95,6 @@ public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
         if (event.getChannel().isPresent()) {
             final CompletableFuture<EmbedBuilder> query = executeCommand(user, mode.map(SlashCommandInteractionOption::getName).orElse("query"), mentionedUser.orElse(user), count.orElse(1), event.getChannel().get());
             event.respondLater().thenAcceptBoth(query, (updater, embed) -> updater.addEmbed(embed).update());
-
         }
         else {
             firstResponder.setContent("Unable to find a channel!").respond();

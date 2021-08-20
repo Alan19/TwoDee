@@ -24,7 +24,7 @@ public class SlashCommandRegister {
 
     private static void setupStopCommand(Velen velen) {
         StopLogic stopLogic = new StopLogic();
-        VelenCommand.ofHybrid("stop", "Shuts down the bot the bot!", velen, stopLogic, stopLogic).attach();
+        VelenCommand.ofHybrid("stop", "Shuts down the bot!", velen, stopLogic, stopLogic).attach();
     }
 
     private static void setupBleedCommand(Velen velen) {

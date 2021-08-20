@@ -16,6 +16,7 @@ import org.javacord.api.interaction.ButtonInteraction;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.javacord.api.listener.interaction.ButtonClickListener;
 import org.javacord.api.util.event.ListenerManager;
+import roles.Storytellers;
 import sheets.PlotPointUtils;
 import util.ComponentUtils;
 import util.UtilFunctions;
@@ -87,20 +88,47 @@ public class RollComponentInteractionListener implements ButtonClickListener {
     }
 
     /**
-     * Removes the components from the message, then enhances a roll using plot points and finally attach a star emoji
+     * Removes the components from the message, then enhances a roll using plot points or doom points.
+     * <p>
+     * After the roll is enhanced, react to the message with a star emoji.
      *
      * @param componentInteraction The button interaction
      * @param enhanceCount         The number of plot points the user is spending
      * @param interactionMessage   The message that contained the interaction
      */
     private void enhanceRoll(ButtonInteraction componentInteraction, Integer enhanceCount, Message interactionMessage) {
-        // TODO Make this support doom points
-        getEnhancementEmbed(componentInteraction.getUser(), result.getTotal(), enhanceCount).thenAccept(enhanceEmbed -> componentInteraction.createOriginalMessageUpdater()
-                        .removeAllComponents()
-                        .addEmbeds(RollLogic.removeFirstEmbedFooter(interactionMessage))
-                        .addEmbed(enhanceEmbed)
-                        .update())
-                .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":star2:")));
+        if (Storytellers.isUserStoryteller(componentInteraction.getUser())) {
+            componentInteraction.createOriginalMessageUpdater()
+                    .removeAllComponents()
+                    .addEmbeds(RollLogic.removeFirstEmbedFooter(interactionMessage))
+                    .addEmbeds(getDoomEnhancementEmbed(result.getTotal(), enhanceCount))
+                    .update()
+                    .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":star2:")));
+        }
+        else {
+            getEnhancementEmbed(componentInteraction.getUser(), result.getTotal(), enhanceCount).thenAccept(enhanceEmbed -> componentInteraction.createOriginalMessageUpdater()
+                            .removeAllComponents()
+                            .addEmbeds(RollLogic.removeFirstEmbedFooter(interactionMessage))
+                            .addEmbed(enhanceEmbed)
+                            .update())
+                    .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":star2:")));
+        }
+    }
+
+    /**
+     * Enhances the roll using the current doom pool
+     *
+     * @param result The numerical result of the roll
+     * @param count  The number of doom points to enhance the roll with
+     * @return An embed containing the enhanced result, and the change in doom points
+     */
+    private EmbedBuilder getDoomEnhancementEmbed(int result, int count) {
+        final EmbedBuilder enhanceEmbed = new EmbedBuilder()
+                .setTitle("Enhancing a roll!")
+                .addField("Enhanced Total", result + " → " + (result + count));
+        DoomHandler.addDoom(count * -1);
+        return enhanceEmbed.addField(DoomHandler.getActivePool(), DoomHandler.getDoom(DoomHandler.getActivePool()) + count + " → " + DoomHandler.getDoom(DoomHandler.getActivePool()));
+
     }
 
     /**
