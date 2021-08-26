@@ -27,6 +27,7 @@ public class TwoDee {
             String channel = prop.getProperty("channel", "484544303247523840");
             final Velen velen = SlashCommandRegister.setupVelen();
             new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
+                        // Uncomment this line when a command is altered
                         // velen.registerAllSlashCommands(api);
                         //Send startup messsage
                         new MessageBuilder()

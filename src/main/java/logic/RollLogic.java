@@ -12,10 +12,7 @@ import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
-import org.javacord.api.interaction.SlashCommandInteraction;
-import org.javacord.api.interaction.SlashCommandInteractionOption;
-import org.javacord.api.interaction.SlashCommandOption;
-import org.javacord.api.interaction.SlashCommandOptionType;
+import org.javacord.api.interaction.*;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.javacord.api.listener.interaction.ButtonClickListener;
@@ -29,6 +26,7 @@ import util.UtilFunctions;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -38,6 +36,8 @@ import java.util.concurrent.atomic.AtomicReference;
  * Rolls a pool of dice based on the input. After rolling, adds doom points to doom pool and makes appropriate changes the player's plot point count based on input options. If the DM is rolling, plot points they spend come from the doom point pool.
  */
 public class RollLogic implements VelenSlashEvent, VelenEvent {
+
+
     public static void setupRollCommand(Velen velen) {
         RollLogic rollLogic = new RollLogic();
         final List<SlashCommandOption> rollCommandOptions = getRollCommandOptions();
@@ -52,6 +52,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         options.add(SlashCommandOption.create(SlashCommandOptionType.INTEGER, "discount", "The number of plot points to discount (negative results in a plot point cost increase).", false));
         options.add(SlashCommandOption.create(SlashCommandOptionType.INTEGER, "dicekept", "The number of dice kept. Keeps two dice by default.", false));
         options.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "enhanceable", "Allows the roll to be enhanced after the roll.", false));
+        options.add(SlashCommandOption.createWithChoices(SlashCommandOptionType.STRING, "target", "Adds an embed to provide assistance with hitting the target difficulty", false, Arrays.stream(new String[]{"easy", "average", "hard", "formidable", "heroic", "incredible", "ridiculous", "impossible"}).map(s -> new SlashCommandOptionChoiceBuilder().setName(s).setValue(s)).toArray(SlashCommandOptionChoiceBuilder[]::new)));
         return options;
     }
 
