@@ -24,6 +24,7 @@ import util.ComponentUtils;
 import util.RandomColor;
 import util.UtilFunctions;
 
+import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,7 +37,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * Rolls a pool of dice based on the input. After rolling, adds doom points to doom pool and makes appropriate changes the player's plot point count based on input options. If the DM is rolling, plot points they spend come from the doom point pool.
  */
 public class RollLogic implements VelenSlashEvent, VelenEvent {
-
 
     public static void setupRollCommand(Velen velen) {
         RollLogic rollLogic = new RollLogic();
@@ -112,7 +112,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
      * @param enhanceable If there is an enhancement override on the roll
      * @param opportunity If opportunities are enabled
      */
-    public static void handleSlashCommandRoll(SlashCommandInteraction event, String dicePool, Integer discount, Integer diceKept, @SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<Boolean> enhanceable, Boolean opportunity) {
+    public static void handleSlashCommandRoll(SlashCommandInteraction event, String dicePool, Integer discount, Integer diceKept, @Nullable Boolean enhanceable, Boolean opportunity) {
         // Attempt to roll dice with a valid dice pool. If the dice pool is valid, generate the result embeds and add components
         final User user = event.getUser();
         final CompletableFuture<InteractionOriginalResponseUpdater> respondLater = event.respondLater();
@@ -214,7 +214,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         final Integer discount = event.getOptionIntValueByName("discount").orElse(0);
         final String dicePool = event.getOptionStringValueByName("dicepool").orElse("");
         final Integer diceKept = event.getOptionIntValueByName("dicekept").orElse(2);
-        final Optional<Boolean> enhanceable = event.getOptionBooleanValueByName("enhanceable");
+        final Boolean enhanceable = event.getOptionBooleanValueByName("enhanceable").orElse(null);
 
         handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, opportunity);
     }

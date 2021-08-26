@@ -4,6 +4,7 @@ import org.javacord.api.entity.user.User;
 import sheets.SheetsHandler;
 import util.UtilFunctions;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,7 @@ public class DicePoolBuilder {
     private int diceKept = 2;
     private boolean opportunitiesEnabled = true;
     private int discount;
-    private Optional<Boolean> enhanceable;
+    private Boolean enhanceable;
     private boolean errored;
 
 
@@ -39,7 +40,7 @@ public class DicePoolBuilder {
         enhancedDie = new ArrayList<>();
         flatBonus = new ArrayList<>();
 
-        enhanceable = Optional.empty();
+        enhanceable = null;
         if (pool.isEmpty()) {
             errored = true;
             return;
@@ -123,7 +124,7 @@ public class DicePoolBuilder {
         return this;
     }
 
-    public DicePoolBuilder withEnhanceable(@SuppressWarnings("OptionalUsedAsFieldOrParameterType") Optional<Boolean> enhanceable) {
+    public DicePoolBuilder withEnhanceable(@Nullable Boolean enhanceable) {
         this.enhanceable = enhanceable;
         return this;
     }
@@ -179,6 +180,6 @@ public class DicePoolBuilder {
     }
 
     public boolean isEnhanceable() {
-        return enhanceable.orElseGet(() -> plotDice.size() + enhancedDie.size() <= 0);
+        return enhanceable != null ? enhanceable : plotDice.size() + enhancedDie.size() <= 0;
     }
 }

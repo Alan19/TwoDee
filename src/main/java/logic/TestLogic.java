@@ -11,7 +11,6 @@ import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder
 import pw.mihou.velen.interfaces.*;
 
 import java.util.List;
-import java.util.Optional;
 
 public class TestLogic implements VelenEvent, VelenSlashEvent {
     public static void setTestCommand(Velen velen) {
@@ -36,7 +35,7 @@ public class TestLogic implements VelenEvent, VelenSlashEvent {
         final String dicePool = event.getOptionStringValueByName("dicepool").orElse("");
         final Integer discount = event.getOptionIntValueByName("discount").orElse(0);
         final Integer diceKept = event.getOptionIntValueByName("dicekept").orElse(2);
-        final Optional<Boolean> enhanceable = event.getOptionBooleanValueByName("enhanceable");
+        final Boolean enhanceable = event.getOptionBooleanValueByName("enhanceable").orElse(null);
 
         RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false);
     }
