@@ -57,7 +57,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
     /**
      * The message this component is attached to gets a component interaction, enhance the roll or reroll, and then remove the components and the listener.
      * <p>
-     * If confirm is received, remove the components on the message.
+     * If accept is received, remove the components on the message.
      * If reroll is received, reroll the roll.
      * If a number is received, enhance the roll.
      *
@@ -73,8 +73,9 @@ public class RollComponentInteractionListener implements ButtonClickListener {
 
         if (!removeListenerTask.isDone() && removeListenerTask.getDelay(TimeUnit.MILLISECONDS) > 0) {
             removeListenerTask.cancel(true);
-            if ("confirm".equals(customId)) {
+            if ("accept".equals(customId)) {
                 componentInteraction.createOriginalMessageUpdater().removeAllComponents().update();
+                componentInteraction.getMessage().ifPresent(message -> message.addReaction(EmojiParser.parseToUnicode(":heavy_check_mark:")));
             }
             else if (enhanceCount.isPresent() && interactionMessage.isPresent()) {
                 enhanceRoll(componentInteraction, enhanceCount.get(), interactionMessage.get());
@@ -214,7 +215,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
      * @return A void completable future
      */
     private CompletableFuture<Void> removeHandler() {
-        updaterObject.fold(messageUpdater -> messageUpdater.removeAllComponents().applyChanges(), responseUpdater -> responseUpdater.removeAllComponents().update());
+        updaterObject.fold(messageUpdater -> messageUpdater.removeAllComponents().applyChanges(), responseUpdater -> responseUpdater.removeAllComponents().update()).thenAccept(message -> message.addReaction(EmojiParser.parseToUnicode(":heavy_check_mark:")));
         listenerReference.get().remove();
         return CompletableFuture.completedFuture(null);
     }

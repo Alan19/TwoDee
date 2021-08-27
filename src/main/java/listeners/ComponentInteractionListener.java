@@ -1,19 +1,18 @@
 package listeners;
 
-import org.javacord.api.entity.message.Message;
-import org.javacord.api.event.interaction.MessageComponentCreateEvent;
-import org.javacord.api.interaction.MessageComponentInteraction;
-import org.javacord.api.listener.interaction.MessageComponentCreateListener;
+import org.javacord.api.event.interaction.ButtonClickEvent;
+import org.javacord.api.interaction.ButtonInteraction;
+import org.javacord.api.listener.interaction.ButtonClickListener;
 
-public class ComponentInteractionListener implements MessageComponentCreateListener {
+public class ComponentInteractionListener implements ButtonClickListener {
 
-    //Listen for a user reacting to the delete component in a stats embed and if they press it, delete the message.
+    //Listen for a user reacting to the message delete component in a stats embed and if they press it, delete the message.
     @Override
-    public void onComponentCreate(MessageComponentCreateEvent event) {
+    public void onButtonClick(ButtonClickEvent event) {
         // TODO Fix this when booleans are fixed
-        final MessageComponentInteraction interaction = event.getMessageComponentInteraction();
+        final ButtonInteraction interaction = event.getButtonInteraction();
         if (interaction.getCustomId().equals("delete-stats")) {
-            interaction.createImmediateResponder().respond().thenAccept(updater -> interaction.getMessage().ifPresent(Message::delete));
+            interaction.createImmediateResponder().removeAllEmbeds().setContent("").respond();
         }
     }
 }

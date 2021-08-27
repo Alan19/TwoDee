@@ -18,7 +18,7 @@ public class ComponentUtils {
             List<LowLevelComponent> enhancementRow = IntStream.range(0, 4)
                     .mapToObj(i -> Button.primary(String.valueOf(i + 1), "+" + (i + 1)))
                     .collect(Collectors.toList());
-            enhancementRow.add(Button.success("confirm", "Confirm"));
+            enhancementRow.add(Button.success("accept", "Accept"));
             rows.add(ActionRow.of(enhancementRow));
         }
         if (addReroll) {
