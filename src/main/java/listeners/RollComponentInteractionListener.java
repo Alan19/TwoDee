@@ -104,7 +104,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
                     .addEmbeds(RollLogic.removeFirstEmbedFooter(interactionMessage))
                     .addEmbeds(getDoomEnhancementEmbed(result.getTotal(), enhanceCount))
                     .update()
-                    .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":star2:")));
+                    .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":imp:")));
         }
         else {
             getEnhancementEmbed(componentInteraction.getUser(), result.getTotal(), enhanceCount).thenAccept(enhanceEmbed -> componentInteraction.createOriginalMessageUpdater()

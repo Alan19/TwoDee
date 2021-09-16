@@ -1,7 +1,6 @@
 package discord;
 
 import listeners.ComponentInteractionListener;
-import listeners.PlotPointEnhancementListener;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -39,14 +38,13 @@ public class TwoDee {
                         System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
 
                         //Create listeners
-                        api.addListener(new PlotPointEnhancementListener());
                         ComponentInteractionListener componentInteractionListener = new ComponentInteractionListener();
                         api.addListener(componentInteractionListener);
 
                     })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
-        } catch (Throwable e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
