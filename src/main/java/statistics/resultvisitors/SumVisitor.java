@@ -1,6 +1,6 @@
 package statistics.resultvisitors;
 
-import logic.EmbedField;
+import util.EmbedField;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,7 @@ public class SumVisitor implements ResultVisitor {
     @Override
     public List<EmbedField> getEmbedField() {
         EmbedField embedField = new EmbedField();
-        embedField.setTitle("Chance to roll a:");
+        embedField.setTitle("Chance to get a:");
         for (Map.Entry<Integer, Long> outcome : diceOutcomes.entrySet()) {
             embedField.appendContent(outcome.getKey() + ": " + generatePercentage(outcome.getValue(), getNumberOfResults(diceOutcomes)) + "\n");
         }

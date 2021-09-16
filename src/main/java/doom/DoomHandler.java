@@ -2,8 +2,6 @@ package doom;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import java.awt.*;
@@ -14,7 +12,6 @@ import java.util.Map;
 import java.util.Optional;
 
 public class DoomHandler {
-    private static final Logger LOGGER = LogManager.getLogger(DoomHandler.class);
 
     public static final String DOOM = "Doom!";
     private static final DoomHandler instance = new DoomHandler();
@@ -125,7 +122,7 @@ public class DoomHandler {
             new Gson().toJson(instance.doomConfigs, writer);
             writer.close();
         } catch (IOException e) {
-            LOGGER.error("Failed to serialize pools", e);
+            e.printStackTrace();
         }
     }
 
@@ -151,7 +148,7 @@ public class DoomHandler {
      * the active doom pool
      */
     public static EmbedBuilder generateDoomEmbed() {
-        final EmbedBuilder embedBuilder = new EmbedBuilder().setTitle(DOOM).setDescription(MessageFormat.format("Here are the values of all doom pools.\nThe current active doom pool is ''**{0}**'' with {1} doom points", getActivePool(), getDoom(getActivePool())));
+        final EmbedBuilder embedBuilder = new EmbedBuilder().setTitle(DOOM).setDescription(MessageFormat.format("Here are the values of all doom pools.\nThe current active doom pool is ''**{0}**'' with {1} doom points", getActivePool(), getDoom(getActivePool()))).setColor(new Color((int) (getDoom() % 101 * (2.55))));
         instance.doomConfigs.getDoomPools().forEach((key, value) -> embedBuilder.addField(key, String.valueOf(value)));
         return embedBuilder;
     }
