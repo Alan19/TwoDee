@@ -1,3 +1,5 @@
+[comment]: <> (TODO Expand about section, add images, add roadmap)
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -16,12 +18,12 @@
 
 ## Install
 
-This is an example of how you may give instructions on setting up your project locally. To get a local copy up and
-running follow these simple example steps.
+To get a local copy up and running follow these steps.
 
 ### Prerequisites
 
 * Gradle
+* Java
 
 ### Installation
 
@@ -30,18 +32,40 @@ running follow these simple example steps.
    ```sh
     https://github.com/Alan19/TwoDee.git
     ```
-3. Add announcement channels
-4. Setup bot properties
-5. Add Storyteller role ID
-6. Setup `resources` folder
-   ```JS
-   const API_KEY = 'ENTER YOUR API';
-   ```
+3. Set up the `resources` folder
+    1. Create a file named `announcement_channels.txt` and add the channel IDs of each channel that you want the bot to
+       send a startup message to
+       #### Example `announcement_channels.txt` file
+        ```
+       9084021907123
+       2198487129038
+       ```
+    2. In the `bot.properties` file, paste the token you have obtained from Discord after the equals sign in the token
+       field
+    3. Create a file named `storytellers.json` and create a JSON array containing the role IDs for storytellers (
+       Storytellers are the Facets equivalent of GMs or DMs)
+       #### Example `storytellers.json` file
+       ```json
+       [
+         123498903812,
+         129321390521
+       ]
+       ```
 
 ### Adding Google Sheets integration
 
 1. Download Google Drive API token
-2. Fill out `players.json`
+2. Fill out `players.json`. The file should contain a JSON array containing objects that contain the Discord ID and the
+   Sheet ID of the players.
+   #### Example `players.json` file
+   ```json
+   [
+      {
+        "discord_id": 707906577071579042,
+        "sheet_id": "26dPTBrNsoScoAmsqCz026dPTBrNsoScoAmsqCz0"
+      }
+   ]
+   ```
 
 ## Usage
 
@@ -56,6 +80,7 @@ the [documentation](https://github.com/Alan19/TwoDee/wiki/Bot-Commands)*
 
 ### Inviting the bot to your server
 
+On startup, the bot will print its invite link in the console. Use that link to invite the bot to servers you are in.
 ### Google Sheets
 
 If this is the first time you have started the bot after adding Google Sheets integration, your browser automatically
@@ -66,10 +91,28 @@ root directory of your project and download a `StoredCredential` file.
 
 ## Author
 
-👤 **Alan19**
+👤 **Alan Xiao** -
 
 * Github: [@Alan19](https://github.com/Alan19)
 * LinkedIn: [@alan-xiao1](https://www.linkedin.com/in/alan-xiao1/)
+
+## Contributors
+
+👤 **Skylar Sommers**
+
+* Github: [@SkySom](https://github.com/SkySom)
+
+👤 **Lance**
+
+* Github: [@Lance5057](https://github.com/Lance5057)
+
+👤 **Andrew Sage**
+
+* Github: [@belathus](https://github.com/belathus)
+
+👤 **_0Steven**
+
+* Github: [@00-Steven](https://github.com/00-Steven)
 
 ## 🤝 Contributing
 
