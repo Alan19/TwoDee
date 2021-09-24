@@ -11,10 +11,18 @@
 <img src="images/icon.png" alt="Logo" align="right" width="80" height="80">
 <h1 align="center">Welcome to TwoDee 👋</h1>
 
-
-> A Discord bot for the Facets tabletop RPG ruleset. TwoDee handles dice rolls, character sheet automation, and game state tracking all within Discord so you don't have to track them yourself.
-
 ### 🏠 [Homepage](https://github.com/Alan19/TwoDee)
+
+> TwoDee is a Discord bot for the Facets tabletop RPG ruleset, a homebrew ruleset inspired by [Cortex](https://www.cortexrpg.com/). It handles dice rolls, character sheet automation, and game state tracking all within Discord so you don't have to track them yourself.
+
+## About the Project
+
+The Facets ruleset uses a custom method of calculating the dice rolls, where the outcome of a roll is calculated by
+rolling a pool of dice, and choosing the two highest dice rolls (with some exceptions). Because not many dice statistics
+calculation systems support this without extensive tweaks, as well as the system having mechanics where you can choose
+the top three dice instead of two, I decided to make a program that would calculate the statistics of dice rolls. Over
+time, I added features such as character sheet automation in order to decrease the amount of time spent updating
+spreadsheets so more time can be spent adventuring and doing ~~stupid~~ cool things in the game.
 
 ## Install
 
@@ -78,6 +86,16 @@ gradle run
 *For examples of available commands, please refer to
 the [documentation](https://github.com/Alan19/TwoDee/wiki/Bot-Commands)*
 
+### Demo
+
+#### Statistics Calculation
+
+[TwoDee Statistics Demo](images/statistics.gif)
+
+#### Dice Rolling
+
+[TwoDee Dice Rolling Demo](images/roll.gif)
+
 ### Inviting the bot to your server
 
 On startup, the bot will print its invite link in the console. Use that link to invite the bot to servers you are in.
@@ -103,7 +121,7 @@ See the [open issues](https://github.com/Alan19/TwoDee/issues) for a list of pro
 
 ## Author
 
-👤 **Alan Xiao** -
+👤 **Alan Xiao**
 
 * Github: [@Alan19](https://github.com/Alan19)
 * LinkedIn: [@alan-xiao1](https://www.linkedin.com/in/alan-xiao1/)
