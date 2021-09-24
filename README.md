@@ -12,7 +12,7 @@
 <h1 align="center">Welcome to TwoDee 👋</h1>
 
 
-> A Discord bot for the Facets tabletop RPG ruleset.
+> A Discord bot for the Facets tabletop RPG ruleset. TwoDee handles dice rolls, character sheet automation, and game state tracking all within Discord so you don't have to track them yourself.
 
 ### 🏠 [Homepage](https://github.com/Alan19/TwoDee)
 
@@ -81,6 +81,7 @@ the [documentation](https://github.com/Alan19/TwoDee/wiki/Bot-Commands)*
 ### Inviting the bot to your server
 
 On startup, the bot will print its invite link in the console. Use that link to invite the bot to servers you are in.
+
 ### Google Sheets
 
 If this is the first time you have started the bot after adding Google Sheets integration, your browser automatically
@@ -88,6 +89,17 @@ open and send you to a page to authenticate your Google account. Once you do so,
 root directory of your project and download a `StoredCredential` file.
 
 **Do not share the `credentials.json` file or the `StoredCredential` files!**
+
+## Roadmap
+
+See the [open issues](https://github.com/Alan19/TwoDee/issues) for a list of proposed features (and known issues).
+
+**Some cool features coming in the near future include**:
+
+* Settings consolidation
+* Removal of hardcoded IDs
+* Damage calculation command
+* Dice roll difficulty helper
 
 ## Author
 
