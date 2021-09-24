@@ -1,5 +1,3 @@
-[comment]: <> (TODO Expand about section, add images, add roadmap)
-
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -86,11 +84,15 @@ gradle run
 *For examples of available commands, please refer to
 the [documentation](https://github.com/Alan19/TwoDee/wiki/Bot-Commands)*
 
-### Demo
+## Statistics Demo
 
-<img src="images/statistics.gif" alt="Statistics calculation demo" align="center">
+TwoDee uses ephemeral messages to not clog up the channel for others when calculating the statistics for a dice pool.
 
-<img src="images/roll.gif" alt="Dice roll demo" align="center">
+<p align="center">
+<a href="images/statistics.gif">
+   <img src="images/statistics.gif" alt="Statistics calculation demo" width="750" text>
+</a>
+</p>
 
 ### Inviting the bot to your server
 
