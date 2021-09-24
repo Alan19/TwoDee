@@ -88,13 +88,9 @@ the [documentation](https://github.com/Alan19/TwoDee/wiki/Bot-Commands)*
 
 ### Demo
 
-#### Statistics Calculation
+<img src="images/statistics.gif" alt="Statistics calculation demo" align="center">
 
-[TwoDee Statistics Demo](images/statistics.gif)
-
-#### Dice Rolling
-
-[TwoDee Dice Rolling Demo](images/roll.gif)
+<img src="images/roll.gif" alt="Dice roll demo" align="center">
 
 ### Inviting the bot to your server
 
