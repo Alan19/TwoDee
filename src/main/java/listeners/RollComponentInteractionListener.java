@@ -69,19 +69,19 @@ public class RollComponentInteractionListener implements ButtonClickListener {
         // Check for the type of component
         final String customId = componentInteraction.getCustomId();
         final Optional<Integer> enhanceCount = UtilFunctions.tryParseInt(customId);
-        final Optional<Message> interactionMessage = componentInteraction.getMessage();
+        final Message interactionMessage = componentInteraction.getMessage();
 
         if (!removeListenerTask.isDone() && removeListenerTask.getDelay(TimeUnit.MILLISECONDS) > 0) {
             removeListenerTask.cancel(true);
             if ("accept".equals(customId)) {
                 componentInteraction.createOriginalMessageUpdater().removeAllComponents().update();
-                componentInteraction.getMessage().ifPresent(message -> message.addReaction(EmojiParser.parseToUnicode(":heavy_check_mark:")));
+                interactionMessage.addReaction(EmojiParser.parseToUnicode(":heavy_check_mark:"));
             }
-            else if (enhanceCount.isPresent() && interactionMessage.isPresent()) {
-                enhanceRoll(componentInteraction, enhanceCount.get(), interactionMessage.get());
+            else if (enhanceCount.isPresent()) {
+                enhanceRoll(componentInteraction, enhanceCount.get(), interactionMessage);
             }
-            else if ("reroll".equals(customId) && interactionMessage.isPresent()) {
-                handleReroll(componentInteraction, interactionMessage.get());
+            else if ("reroll".equals(customId)) {
+                handleReroll(componentInteraction, interactionMessage);
             }
             listenerReference.get().remove();
         }

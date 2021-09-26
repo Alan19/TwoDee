@@ -1,6 +1,5 @@
 package discord;
 
-import listeners.ComponentInteractionListener;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -37,10 +36,6 @@ public class TwoDee {
                                 );
                         // Print the invite url of your bot
                         System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
-
-                        //Create listeners
-                        ComponentInteractionListener componentInteractionListener = new ComponentInteractionListener();
-                        api.addListener(componentInteractionListener);
 
                     })
                     // Log any exceptions that happened

@@ -6,8 +6,6 @@ import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.MessageDecoration;
 import org.javacord.api.entity.message.MessageFlag;
-import org.javacord.api.entity.message.component.ActionRow;
-import org.javacord.api.entity.message.component.Button;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
@@ -51,7 +49,7 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
                 .append(message.getContent(), MessageDecoration.BOLD)
                 .append(" " + user.getMentionTag())
                 .send(event.getChannel());
-        result.thenCompose(builder1 -> new MessageBuilder().setContent("Here are the statistics for **" + dicePool + "**:").addEmbed(builder1).send(user)).thenAcceptBoth(statisticsPM, (message1, message2) -> message.delete());
+        result.thenCompose(builder1 -> new MessageBuilder().setContent("Here are the statistics for **" + dicePool + "**").addEmbed(builder1).send(user)).thenAcceptBoth(statisticsPM, (message1, message2) -> message.delete());
     }
 
     @Override
@@ -62,10 +60,7 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
 
             final boolean ephemeral = !event.getOptionBooleanValueByName("nonephemeral").orElse(false);
             event.respondLater(ephemeral).thenAcceptBoth(result, (updater, embedBuilder) -> {
-                InteractionOriginalResponseUpdater responseUpdater = updater.addEmbed(embedBuilder).setContent("Here are the statistics for **" + dicepool.get() + "**:");
-                if (!ephemeral) {
-                    responseUpdater = responseUpdater.addComponents(ActionRow.of(Button.primary("delete-stats", "Dismiss")));
-                }
+                InteractionOriginalResponseUpdater responseUpdater = updater.addEmbed(embedBuilder).setContent("Here are the statistics for **" + dicepool.get() + "**");
                 responseUpdater.update();
             });
         }
