@@ -1,7 +1,5 @@
 package discord;
 
-import listeners.ComponentInteractionListener;
-import listeners.PlotPointEnhancementListener;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -24,6 +22,7 @@ public class TwoDee {
             Properties prop = new Properties();
             prop.load(new FileInputStream("resources/bot.properties"));
             String token = prop.getProperty("token");
+            // TODO Un hard-code this
             String channel = prop.getProperty("channel", "484544303247523840");
             final Velen velen = SlashCommandRegister.setupVelen();
             new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
@@ -38,15 +37,10 @@ public class TwoDee {
                         // Print the invite url of your bot
                         System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
 
-                        //Create listeners
-                        api.addListener(new PlotPointEnhancementListener());
-                        ComponentInteractionListener componentInteractionListener = new ComponentInteractionListener();
-                        api.addListener(componentInteractionListener);
-
                     })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
-        } catch (Throwable e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
