@@ -1,11 +1,10 @@
 package listeners;
 
 import doom.DoomHandler;
-import logic.PlotPointEnhancementHelper;
-import logic.RandomColor;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.emoji.Emoji;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.Reaction;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
@@ -13,6 +12,8 @@ import org.javacord.api.event.message.reaction.ReactionAddEvent;
 import org.javacord.api.listener.message.reaction.ReactionAddListener;
 import roles.Storytellers;
 import sheets.SheetsHandler;
+import util.PlotPointEnhancementHelper;
+import util.RandomColor;
 
 import java.util.Map;
 import java.util.Optional;
@@ -49,14 +50,14 @@ public class PlotPointEnhancementListener implements ReactionAddListener {
     }
 
     /**
-     * Enhances a roll by deducting the appropriate number of plot / doom points from the user
+     * Enhances a getResults by deducting the appropriate number of plot / doom points from the user
      *
      * @param event    The reaction event that contains the reaction being used
      * @param reaction The reaction that provides the user that added the reaction
      * @param message  The message to be enhanced
      */
     private void enhanceRoll(ReactionAddEvent event, Reaction reaction, Message message) {
-        //Get user roll value and add to that based on reaction. Then deduct plot points.
+        //Get user getResults value and add to that based on reaction. Then deduct plot points.
         int rollVal = Integer.parseInt(message.getEmbeds().get(0).getFields().get(6).getValue());
         Emoji emoji = reaction.getEmoji();
         Optional<Integer> toAdd = getAddAmount(emoji);
@@ -72,12 +73,12 @@ public class PlotPointEnhancementListener implements ReactionAddListener {
     }
 
     /**
-     * Subtracts plot point from player to enhance a roll
+     * Subtracts plot point from player to enhance a getResults
      *
-     * @param user    The user object that reacted to the roll
+     * @param user    The user object that reacted to the getResults
      * @param channel The channel the message was reacted to
-     * @param rollVal The original roll value
-     * @param toAdd   The number of points to add to the roll value
+     * @param rollVal The original getResults value
+     * @param toAdd   The number of points to add to the getResults value
      */
     private void sendPlotPointEnhancementMessage(User user, TextChannel channel, int rollVal, int toAdd) {
         Optional<Integer> oldPP = SheetsHandler.getPlotPoints(user);
@@ -89,7 +90,7 @@ public class PlotPointEnhancementListener implements ReactionAddListener {
                     .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))
                     .addField("Plot Points", oldPP.get() + " → " + newPP)
                     .setColor(RandomColor.getRandomColor());
-            channel.sendMessage(enhanceRollEmbed);
+            new MessageBuilder().addEmbed(enhanceRollEmbed).send(channel);
         }
     }
 
@@ -97,8 +98,8 @@ public class PlotPointEnhancementListener implements ReactionAddListener {
      * Helper method to help DM enhance rolls with doom points and send an embed with the new value
      *
      * @param channel The channel the message was sent from
-     * @param rollVal The original value of the roll
-     * @param toAdd   The amount of points to add to the roll
+     * @param rollVal The original value of the getResults
+     * @param toAdd   The amount of points to add to the getResults
      */
     private void sendDoomPointEnhancementMessage(User user, TextChannel channel, int rollVal, int toAdd) {
         int oldDoom = DoomHandler.getDoom();
@@ -109,11 +110,11 @@ public class PlotPointEnhancementListener implements ReactionAddListener {
                 .setAuthor(user)
                 .addField("Enhanced Total", rollVal + " → " + (rollVal + toAdd))
                 .addField("Doom Points", oldDoom + " → " + newDoom);
-        channel.sendMessage(doomExpenditureEmbed);
+        new MessageBuilder().addEmbed(doomExpenditureEmbed).send(channel);
     }
 
     /**
-     * Helper method to get the number of points to add to a roll
+     * Helper method to get the number of points to add to a getResults
      *
      * @param emoji The emoji the user reacted to
      * @return The number of points to add as an optional

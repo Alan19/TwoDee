@@ -148,7 +148,7 @@ public class DoomHandler {
      * the active doom pool
      */
     public static EmbedBuilder generateDoomEmbed() {
-        final EmbedBuilder embedBuilder = new EmbedBuilder().setTitle(DOOM).setDescription(MessageFormat.format("Here are the values of all doom pools.\nThe current active doom pool is ''**{0}**'' with {1} doom points", getActivePool(), getDoom(getActivePool())));
+        final EmbedBuilder embedBuilder = new EmbedBuilder().setTitle(DOOM).setDescription(MessageFormat.format("Here are the values of all doom pools.\nThe current active doom pool is ''**{0}**'' with {1} doom points", getActivePool(), getDoom(getActivePool()))).setColor(new Color((int) (getDoom() % 101 * (2.55))));
         instance.doomConfigs.getDoomPools().forEach((key, value) -> embedBuilder.addField(key, String.valueOf(value)));
         return embedBuilder;
     }

@@ -1,14 +1,13 @@
 package discord;
 
-import commands.*;
-import de.btobastian.sdcf4j.CommandHandler;
-import de.btobastian.sdcf4j.handler.JavacordHandler;
-import listeners.DeleteStatsListener;
+import listeners.ComponentInteractionListener;
 import listeners.PlotPointEnhancementListener;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.util.logging.ExceptionLogger;
+import pw.mihou.velen.interfaces.Velen;
+import slashcommands.SlashCommandRegister;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -26,35 +25,25 @@ public class TwoDee {
             prop.load(new FileInputStream("resources/bot.properties"));
             String token = prop.getProperty("token");
             String channel = prop.getProperty("channel", "484544303247523840");
-            new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).login().thenAccept(api -> {
-                //Send startup messsage
-                new MessageBuilder()
-                        .setContent(getStartupMessage())
-                        .send(api.getTextChannelById(channel)
-                                .orElseThrow(() -> new IllegalStateException("Failed to find Channel for Id: " + channel))
-                        );
-                // Print the invite url of your bot
-                System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
-                //Create command handler
-                CommandHandler cmdHandler = new JavacordHandler(api);
-                cmdHandler.registerCommand(new StatisticsCommand());
-                cmdHandler.registerCommand(new RollCommand());
-                cmdHandler.registerCommand(new TestRollCommand());
-                cmdHandler.registerCommand(new DoomCommand());
-                cmdHandler.registerCommand(new StopCommand());
-                cmdHandler.registerCommand(new HelpCommand(cmdHandler));
-                cmdHandler.registerCommand(new PlotPointCommand());
-                cmdHandler.registerCommand(new EmojiPurgeCommand());
-                cmdHandler.registerCommand(new EnhancementToggleCommand());
-                cmdHandler.registerCommand(new ReplenishCommand());
-                cmdHandler.registerCommand(new BleedCommand());
+            final Velen velen = SlashCommandRegister.setupVelen();
+            new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
+                        // Uncomment this line when a command is altered
+                        // velen.registerAllSlashCommands(api);
+                        //Send startup messsage
+                        new MessageBuilder()
+                                .setContent(getStartupMessage())
+                                .send(api.getTextChannelById(channel)
+                                        .orElseThrow(() -> new IllegalStateException("Failed to find Channel for Id: " + channel))
+                                );
+                        // Print the invite url of your bot
+                        System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
 
-                //Create listeners
-                api.addListener(new PlotPointEnhancementListener());
-                DeleteStatsListener deleteStatsListener = new DeleteStatsListener(api);
-                deleteStatsListener.startListening();
+                        //Create listeners
+                        api.addListener(new PlotPointEnhancementListener());
+                        ComponentInteractionListener componentInteractionListener = new ComponentInteractionListener();
+                        api.addListener(componentInteractionListener);
 
-            })
+                    })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
         } catch (Throwable e) {
@@ -63,7 +52,7 @@ public class TwoDee {
 
     }
 
-    //Returns a random dice roll line
+    //Returns a random dice getResults line
     public static String getRollTitleMessage() {
         try (BufferedReader reader = new BufferedReader(new FileReader("resources/rollLines.txt"))) {
             ArrayList<String> rollLines = new ArrayList<>();
@@ -95,7 +84,7 @@ public class TwoDee {
         return "I'm out of witty lines!";
     }
 
-    //Returns a random emoji removal roll line
+    //Returns a random emoji removal getResults line
     public static String getEmojiRemovalMessage() {
         try (BufferedReader reader = new BufferedReader(new FileReader("resources/emojiRemovalLines.txt"))) {
             ArrayList<String> rollLines = new ArrayList<>();
@@ -111,7 +100,7 @@ public class TwoDee {
         return "I'm out of witty lines!";
     }
 
-    //Returns a random serverwide emoji removal roll line
+    //Returns a random serverwide emoji removal getResults line
     public static String getServerwideEmojiRemovalMessage() {
         try (BufferedReader reader = new BufferedReader(new FileReader("resources/serverWideEmojiRemovalLines.txt"))) {
             ArrayList<String> rollLines = new ArrayList<>();

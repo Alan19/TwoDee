@@ -72,6 +72,7 @@ public class SheetsHandler {
 
     /**
      * Retrieves all skills on a player
+     * TODO Convert get functions to CompletableFuture
      *
      * @param user The user to lookup
      * @return The skills of a user as a HashMap of skill names to facet count
@@ -84,7 +85,7 @@ public class SheetsHandler {
                 final ValueRange response = instance.service.spreadsheets().values().get(spreadsheetID.get(), "Variables!AK3:AL1001").execute();
                 response.getValues().stream()
                         .filter(objects -> objects.size() == 2 && ((String) objects.get(1)).matches("d[1-9]+[0-9]*"))
-                        .forEach(objects -> skills.put((String) objects.get(0), Integer.parseInt(((String) (objects.get(1))).substring(1))));
+                        .forEach(objects -> skills.put(((String) objects.get(0)).toLowerCase().replaceAll("\\s", ""), Integer.parseInt(((String) (objects.get(1))).substring(1))));
                 return Optional.of(skills);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -146,7 +147,6 @@ public class SheetsHandler {
                     return Optional.of(updatedPlotPointCount);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    sneakyThrow(e);
                 }
                 return Optional.empty();
             }

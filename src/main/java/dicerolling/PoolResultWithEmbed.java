@@ -2,36 +2,17 @@ package dicerolling;
 
 import com.google.common.collect.Range;
 import org.apache.commons.lang3.tuple.Pair;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.OptionalInt;
 
 public interface PoolResultWithEmbed extends PoolResult {
-    List<Integer> getRegularDice();
-
-    List<Integer> getPickedRegularDice();
-
-    List<Integer> getDroppedRegularDice();
-
-    List<Integer> getPlotDice();
-
-    OptionalInt getPickedPlotDie();
-
-    List<Integer> getDegradedPlotDice();
-
-    List<Integer> getAllPickedDice();
-
-    List<Integer> getAllDroppedDice();
-
-    List<Integer> getKeptDice();
-
-    List<Integer> getFlatBonuses();
+    EmbedBuilder getResultEmbed();
 
     /**
-     * Generates a string that contains the tier and extraordinary tier hit by the roll
+     * Generates a string that contains the tier and extraordinary tier hit by the getResults
      *
-     * @return The tiers and extraordinary tier hit by the roll, if any
+     * @return The tiers and extraordinary tier hit by the getResults, if any
      */
     default String getTierHit() {
         Pair<String, Range<Integer>> noneRange = Pair.of("None", Range.lessThan(3));
@@ -55,4 +36,6 @@ public interface PoolResultWithEmbed extends PoolResult {
                 .findFirst().ifPresent(stringRangePair -> difficultyString.append(", Extraordinary ").append(stringRangePair.getLeft()));
         return difficultyString.toString();
     }
+
+    int getTotal();
 }

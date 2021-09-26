@@ -1,4 +1,4 @@
-package logic;
+package util;
 
 /**
  * A class that contains 2 strings to be used as an Embed's title and content
