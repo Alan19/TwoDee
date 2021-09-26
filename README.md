@@ -13,7 +13,7 @@
 
 ### 🏠 [Homepage](https://github.com/Alan19/TwoDee)
 
-> TwoDee is a Discord bot for the Facets tabletop RPG ruleset, a homebrew ruleset inspired by [Cortex](https://www.cortexrpg.com/). It handles dice rolls, character sheet automation, and game state tracking all within Discord so you don't have to track them yourself.
+> TwoDee is a Discord bot built on Javacord for the Facets tabletop RPG ruleset, a homebrew ruleset inspired by [Cortex](https://www.cortexrpg.com/). It handles dice rolls, character sheet automation, and game state tracking all within Discord so you don't have to track them yourself.
 
 ## About the Project
 
@@ -159,6 +159,15 @@ Give a ⭐️ if this project helped you!
 Copyright © 2021 [Alan19](https://github.com/Alan19). <br/>
 This project is [MIT](https://github.com/Alan19/TwoDee/blob/master/LICENSE) licensed.
 
+## Acknowledgements
+
+TwoDee was built on [Javacord](https://javacord.org/), a Discord bot library for Java, combined with command a framework
+developed by [@ShindouMihou](https://github.com/ShindouMihou) called [Velen](https://github.com/ShindouMihou/Velen). In
+addition, the Google Sheets integration would not be possible without Google's api-client library. Finally, I would like
+to thank [@wadeanthony0100](https://github.com/wadeanthony0100) and [@00-Steven](https://github.com/00-Steven) for
+giving me ideas on how to implement various commands, and to [@Lance][Lance], [@00-Steven][Steve],
+and [@Belathus][Belathus] for contributing roll lines.
+
 ***
 _This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
 
@@ -191,3 +200,9 @@ _This README was generated with ❤️ by [readme-md-generator](https://github.c
 [linkedin-url]: https://www.linkedin.com/in/alan-xiao1/
 
 [product-screenshot]: images/icon.png
+
+[Steve]: https://github.com/00-Steven
+
+[Belathus]:  https://github.com/Belathus
+
+[Lance]: https://github.com/Lance5057
