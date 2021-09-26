@@ -43,7 +43,7 @@ To get a local copy up and running follow these steps.
 3. Set up the `resources` folder
     1. Create a file named `announcement_channels.txt` and add the channel IDs of each channel that you want the bot to
        send a startup message to
-       ####  Example `announcement_channels.txt` file
+       #### Example `announcement_channels.txt` file
         ```
        9084021907123
        2198487129038
@@ -52,7 +52,7 @@ To get a local copy up and running follow these steps.
        field
     3. Create a file named `storytellers.json` and create a JSON array containing the role IDs for storytellers (
        Storytellers are the Facets equivalent of GMs or DMs)
-       ####  Example `storytellers.json` file
+       #### Example `storytellers.json` file
        ```json
        [
          123498903812,
@@ -65,7 +65,7 @@ To get a local copy up and running follow these steps.
 1. Download Google Drive API token
 2. Fill out `players.json`. The file should contain a JSON array containing objects that contain the Discord ID and the
    Sheet ID of the players.
-   ####  Example `players.json` file
+   #### Example `players.json` file
    ```json
    [
       {
