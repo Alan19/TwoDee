@@ -31,8 +31,9 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
     compile group: 'com.vdurmont', name: 'emoji-java', version: '5.1.1'
     compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
+    compile 'io.vavr:vavr:0.10.4'
     implementation 'com.google.code.gson:gson:2.8.7'
-    implementation 'pw.mihou:Velen:2.0.0'
+    implementation 'pw.mihou:Velen:2.1.1'
 }
 
 distZip {
