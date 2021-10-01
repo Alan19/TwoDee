@@ -19,6 +19,7 @@ public class SlashCommandRegister {
         RollLogic.setupRollCommand(velen);
         TestLogic.setTestCommand(velen);
         StatisticsLogic.setupStatisticsCommand(velen);
+        DamageLogic.setupDamageCommand(velen);
         return velen;
     }
 
