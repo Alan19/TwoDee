@@ -141,7 +141,9 @@ public class DamageLogic implements VelenSlashEvent {
         int basicMitigated = calculateBasicMitigation(damage, basicArmor);
         // Prioritize in the order of basic > wounds > stun in the case of a tie
         if (basicMitigated >= stunMitigated && basicMitigated >= woundMitigated) {
-            return Triple.of(resilienceUsed, damage.getLeft() - (int) Math.ceil((double) basicArmor / 2), Math.min(damage.getRight(), basicArmor / 2));
+            final int basicStunMitigation = Math.min(damage.getLeft(), (int) Math.ceil((double) basicArmor / 2));
+            final int basicWoundMitigation = Math.min(damage.getRight(), basicArmor / 2);
+            return Triple.of(resilienceUsed, damage.getLeft() - basicStunMitigation, damage.getRight() - basicWoundMitigation);
         }
         else if (woundMitigated >= stunMitigated) {
             return Triple.of(resilienceUsed, damage.getLeft(), damage.getRight() - woundMitigated);
