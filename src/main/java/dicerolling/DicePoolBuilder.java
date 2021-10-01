@@ -1,10 +1,12 @@
 package dicerolling;
 
+import io.vavr.control.Either;
 import org.javacord.api.entity.user.User;
 import sheets.SheetsHandler;
 import util.UtilFunctions;
 
 import javax.annotation.Nullable;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +32,7 @@ public class DicePoolBuilder {
     private int discount;
     private Boolean enhanceable;
     private boolean errored;
-
+    private Either<String, RollResult> result;
 
     public DicePoolBuilder(User user, String pool) {
         regularDice = new ArrayList<>();
@@ -42,7 +44,7 @@ public class DicePoolBuilder {
 
         enhanceable = null;
         if (pool.isEmpty()) {
-            errored = true;
+            result = Either.left("Cannot roll with an empty pool!");
             return;
         }
         final Optional<Map<String, Integer>> skills = SheetsHandler.getSkills(user);
@@ -72,7 +74,8 @@ public class DicePoolBuilder {
                     regularDice.addAll(splitSkillFacets(skillFacets.get()));
                 }
                 else {
-                    errored = true;
+                    result = Either.left(MessageFormat.format("Cannot find ''{0}'' on your character sheet!", lowercaseSkill));
+                    return;
                 }
             }
         }
@@ -134,13 +137,8 @@ public class DicePoolBuilder {
         return this;
     }
 
-    public Optional<RollResult> getResults() {
-        if (!errored) {
-            return Optional.of(new RollResult(this));
-        }
-        else {
-            return Optional.empty();
-        }
+    public Either<String, RollResult> getResults() {
+        return result.isLeft() ? result : Either.right(new RollResult(this));
     }
 
     public List<Integer> getRegularDice() {

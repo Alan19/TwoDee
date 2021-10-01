@@ -37,7 +37,7 @@ public class TestLogic implements VelenEvent, VelenSlashEvent {
         final Integer diceKept = event.getOptionIntValueByName("dicekept").orElse(2);
         final Boolean enhanceable = event.getOptionBooleanValueByName("enhanceable").orElse(null);
 
-        RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false);
+        RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false, target);
     }
 
 }

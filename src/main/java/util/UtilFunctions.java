@@ -28,7 +28,7 @@ public class UtilFunctions {
         return channel.asServerTextChannel().map(serverTextChannel -> user.getDisplayName(serverTextChannel.getServer())).orElseGet(user::getName);
     }
 
-    public static <T> CompletableFuture<List<T>> appendOptionalToCompletableFutureList(CompletableFuture<List<T>> listCompletableFuture, CompletableFuture<Optional<T>> element) {
+    public static <T> CompletableFuture<List<T>> appendFutureOptionalToCompletableFutureList(CompletableFuture<List<T>> listCompletableFuture, CompletableFuture<Optional<T>> element) {
         return listCompletableFuture.thenCombine(element, (ts, t) -> {
             t.ifPresent(ts::add);
             return ts;
