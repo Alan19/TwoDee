@@ -55,7 +55,6 @@ public class DamageLogic implements VelenSlashEvent {
 
         DamageLogic logic = new DamageLogic();
 
-        // TODO Remove command from main server
         VelenCommand.ofSlash("damage", "calculates the damage of each type received from an attack", velen, logic)
                 .addOptions(options.toArray(new SlashCommandOptionBuilder[0]))
                 .attach();
