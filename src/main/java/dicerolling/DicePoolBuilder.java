@@ -31,7 +31,6 @@ public class DicePoolBuilder {
     private boolean opportunitiesEnabled = true;
     private int discount;
     private Boolean enhanceable;
-    private boolean errored;
     private Either<String, RollResult> result;
 
     public DicePoolBuilder(User user, String pool) {
@@ -138,7 +137,7 @@ public class DicePoolBuilder {
     }
 
     public Either<String, RollResult> getResults() {
-        return result.isLeft() ? result : Either.right(new RollResult(this));
+        return result != null ? result : Either.right(new RollResult(this));
     }
 
     public List<Integer> getRegularDice() {

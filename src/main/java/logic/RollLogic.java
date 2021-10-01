@@ -54,7 +54,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         options.add(SlashCommandOption.create(SlashCommandOptionType.INTEGER, "discount", "The number of plot points to discount (negative results in a plot point cost increase).", false));
         options.add(SlashCommandOption.create(SlashCommandOptionType.INTEGER, "dicekept", "The number of dice kept. Keeps two dice by default.", false));
         options.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "enhanceable", "Allows the roll to be enhanced after the roll.", false));
-        options.add(SlashCommandOption.createWithChoices(SlashCommandOptionType.STRING, "target", "Adds an embed to provide assistance with hitting the target difficulty", false, Arrays.stream(new String[]{"easy", "average", "hard", "formidable", "heroic", "incredible", "ridiculous", "impossible"}).map(s -> new SlashCommandOptionChoiceBuilder().setName(s).setValue(s)).toArray(SlashCommandOptionChoiceBuilder[]::new)));
+        options.add(SlashCommandOption.createWithChoices(SlashCommandOptionType.STRING, "target", "Adds an embed to provide assistance with hitting the target difficulty", false, Arrays.stream(new String[]{"Easy", "Average", "Hard", "Formidable", "Heroic", "Incredible", "Ridiculous", "Impossible"}).map(s -> new SlashCommandOptionChoiceBuilder().setName(s).setValue(s)).toArray(SlashCommandOptionChoiceBuilder[]::new)));
         return options;
     }
 
