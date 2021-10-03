@@ -73,9 +73,9 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
     private EmbedBuilder handleCommand(String mode, String poolName, int count) {
         switch (mode) {
             case "add":
-                return DoomHandler.addDoom(count);
+                return DoomHandler.addDoom(poolName, count);
             case "sub":
-                return DoomHandler.addDoom(count * -1);
+                return DoomHandler.addDoom(poolName, count * -1);
             case "select":
                 return DoomHandler.setActivePool(poolName);
             case "set":
