@@ -1,5 +1,6 @@
 package logic;
 
+import com.vdurmont.emoji.EmojiParser;
 import dicerolling.DicePoolBuilder;
 import dicerolling.RollResult;
 import doom.DoomHandler;
@@ -144,7 +145,12 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         updater.addEmbeds(embeds)
                 .addComponents(ComponentUtils.createRollComponentRows(true, result.isEnhanceable()))
                 .update()
-                .thenAccept(message -> attachInteractionEnhancementListener(user, result, message, updater));
+                .thenAccept(message -> {
+                    attachInteractionEnhancementListener(user, result, message, updater);
+                    if (result.getDoomGenerated() > 0) {
+                        message.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
+                    }
+                });
     }
 
     public static void attachEnhancementListener(User user, RollResult result, Message message) {
@@ -177,7 +183,13 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
             rollEmbeds.thenAccept(embeds -> new MessageBuilder()
                     .addEmbeds(embeds)
                     .addComponents(ComponentUtils.createRollComponentRows(true, rollResult.isEnhanceable())).send(event.getChannel())
-                    .thenAccept(message -> attachEnhancementListener(user, rollResult, message)));
+                    .thenAccept(message -> {
+                        attachEnhancementListener(user, rollResult, message);
+                        if (rollResult.getDoomGenerated() > 0) {
+                            message.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
+                        }
+
+                    }));
         }
         else {
             event.getChannel().sendMessage("Invalid dice pool!");
