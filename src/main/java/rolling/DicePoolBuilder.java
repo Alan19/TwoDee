@@ -1,13 +1,12 @@
-package dicerolling;
+package rolling;
 
-import sheets.SheetsHandler;
 import util.UtilFunctions;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
@@ -31,7 +30,8 @@ public class DicePoolBuilder {
     private boolean errored;
 
 
-    public DicePoolBuilder(String pool) {
+    public DicePoolBuilder(String pool, UnaryOperator<String> parseFunction) {
+        pool = parseFunction.apply(pool);
         regularDice = new ArrayList<>();
         plotDice = new ArrayList<>();
         chaosDice = new ArrayList<>();
@@ -44,7 +44,6 @@ public class DicePoolBuilder {
             errored = true;
             return;
         }
-        final Optional<Map<String, Integer>> skills = SheetsHandler.getSkills(user);
 
         String[] paramArray = pool.split(" ");
         for (String param : paramArray) {
@@ -62,17 +61,6 @@ public class DicePoolBuilder {
             //Flat penalty
             else if (flatPenaltyMatcher.matches()) {
                 flatBonus.add(-1 * Integer.parseInt(flatPenaltyMatcher.group("value")));
-            }
-            //Skill
-            else {
-                final String lowercaseSkill = param.toLowerCase();
-                final Optional<Integer> skillFacets = skills.flatMap(stringIntegerMap -> stringIntegerMap.containsKey(lowercaseSkill) ? Optional.of(stringIntegerMap.get(lowercaseSkill)) : Optional.empty());
-                if (skillFacets.isPresent()) {
-                    regularDice.addAll(splitSkillFacets(skillFacets.get()));
-                }
-                else {
-                    errored = true;
-                }
             }
         }
     }

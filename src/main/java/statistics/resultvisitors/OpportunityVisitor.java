@@ -1,7 +1,7 @@
 package statistics.resultvisitors;
 
 import com.google.common.collect.ImmutableList;
-import dicerolling.BuildablePoolResult;
+import rolling.BuildablePoolResult;
 import util.EmbedField;
 
 import java.util.Comparator;

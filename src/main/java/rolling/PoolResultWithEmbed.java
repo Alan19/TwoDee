@@ -1,4 +1,4 @@
-package dicerolling;
+package rolling;
 
 import com.google.common.collect.Range;
 import org.apache.commons.lang3.tuple.Pair;

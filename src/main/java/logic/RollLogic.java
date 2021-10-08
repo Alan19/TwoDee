@@ -1,24 +1,24 @@
 package logic;
 
-import dicerolling.DicePoolBuilder;
-import dicerolling.RollResult;
 import doom.DoomHandler;
 import listeners.RollComponentInteractionListener;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.entity.message.MessageFlag;
 import org.javacord.api.entity.message.MessageUpdater;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.*;
+import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.javacord.api.listener.interaction.ButtonClickListener;
 import org.javacord.api.util.event.ListenerManager;
 import pw.mihou.velen.interfaces.*;
 import roles.Storytellers;
+import rolling.DicePoolBuilder;
+import rolling.RollResult;
 import sheets.PlotPointUtils;
 import util.ComponentUtils;
 import util.RandomColor;
@@ -116,7 +116,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         // Attempt to roll dice with a valid dice pool. If the dice pool is valid, generate the result embeds and add components
         final User user = event.getUser();
         final CompletableFuture<InteractionOriginalResponseUpdater> respondLater = event.respondLater();
-        final Optional<RollResult> resultOptional = new DicePoolBuilder(user, dicePool)
+        final Optional<RollResult> resultOptional = new DicePoolBuilder(dicePool, s -> s)
                 .withDiceKept(diceKept)
                 .withDiscount(discount)
                 .withEnhanceable(enhanceable)
@@ -129,7 +129,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
             respondLater.thenAcceptBoth(rollEmbeds, (updater, embedBuilders) -> handleRollSideEffects(user, updater, embedBuilders, rollInfo));
         }
         else {
-            respondLater.thenAccept(updater -> updater.setContent("Invalid dice pool!").setFlags(MessageFlag.EPHEMERAL).update());
+            respondLater.thenAccept(updater -> updater.setContent("Invalid dice pool!").setFlags(InteractionCallbackDataFlag.EPHEMERAL).update());
         }
     }
 
@@ -204,7 +204,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         String dicePool = String.join(" ", args);
 
         //Variables containing getResults information
-        DicePoolBuilder builder = new DicePoolBuilder(user, dicePool).withOpportunity(true);
+        DicePoolBuilder builder = new DicePoolBuilder(dicePool, s -> s).withOpportunity(true);
         handleTextCommandRoll(event, user, builder);
     }
 

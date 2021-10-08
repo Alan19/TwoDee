@@ -1,4 +1,4 @@
-package dicerolling;
+package rolling;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;

@@ -1,7 +1,6 @@
 package listeners;
 
 import com.vdurmont.emoji.EmojiParser;
-import dicerolling.RollResult;
 import doom.DoomHandler;
 import io.vavr.control.Either;
 import logic.RollLogic;
@@ -17,6 +16,7 @@ import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.javacord.api.listener.interaction.ButtonClickListener;
 import org.javacord.api.util.event.ListenerManager;
 import roles.Storytellers;
+import rolling.RollResult;
 import sheets.PlotPointUtils;
 import util.ComponentUtils;
 import util.UtilFunctions;

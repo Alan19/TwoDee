@@ -2,13 +2,13 @@ package logic;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
-import org.javacord.api.entity.message.MessageFlag;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOptionBuilder;
 import org.javacord.api.interaction.SlashCommandOptionType;
+import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import pw.mihou.velen.interfaces.Velen;
 import pw.mihou.velen.interfaces.VelenArguments;
@@ -84,10 +84,10 @@ public class DamageLogic implements VelenSlashEvent {
             int resilience = interaction.getOptionIntValueByName("resilience").orElse(0);
 
             final EmbedBuilder embed = createDamageEmbed(type, damageCount, stunArmor, basicArmor, woundArmor, resilience);
-            immediateResponseBuilder.addEmbed(embed).setFlags(MessageFlag.EPHEMERAL).respond();
+            immediateResponseBuilder.addEmbed(embed).setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
         }
         else {
-            immediateResponseBuilder.setContent("invalid damage type and / or count!").setFlags(MessageFlag.EPHEMERAL).respond();
+            immediateResponseBuilder.setContent("invalid damage type and / or count!").setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
         }
     }
 

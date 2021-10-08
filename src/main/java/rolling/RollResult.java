@@ -1,4 +1,4 @@
-package dicerolling;
+package rolling;
 
 import com.google.common.collect.Multiset;
 import com.google.common.collect.TreeMultiset;

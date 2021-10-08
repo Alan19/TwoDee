@@ -1,9 +1,9 @@
 package statistics;
 
-import dicerolling.BuildablePoolResult;
-import dicerolling.DicePoolBuilder;
-import dicerolling.FastRollResult;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
+import rolling.BuildablePoolResult;
+import rolling.DicePoolBuilder;
+import rolling.FastRollResult;
 import statistics.resultvisitors.*;
 import util.EmbedField;
 
