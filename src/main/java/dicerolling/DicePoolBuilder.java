@@ -1,6 +1,5 @@
 package dicerolling;
 
-import org.javacord.api.entity.user.User;
 import sheets.SheetsHandler;
 import util.UtilFunctions;
 
@@ -32,7 +31,7 @@ public class DicePoolBuilder {
     private boolean errored;
 
 
-    public DicePoolBuilder(User user, String pool) {
+    public DicePoolBuilder(String pool) {
         regularDice = new ArrayList<>();
         plotDice = new ArrayList<>();
         chaosDice = new ArrayList<>();
