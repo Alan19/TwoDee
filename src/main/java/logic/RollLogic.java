@@ -18,7 +18,9 @@ import org.javacord.api.util.event.ListenerManager;
 import pw.mihou.velen.interfaces.*;
 import roles.Storytellers;
 import rolling.DicePoolBuilder;
+import rolling.Result;
 import rolling.RollResult;
+import rolling.Roller;
 import sheets.PlotPointUtils;
 import util.ComponentUtils;
 import util.RandomColor;
@@ -116,6 +118,14 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         // Attempt to roll dice with a valid dice pool. If the dice pool is valid, generate the result embeds and add components
         final User user = event.getUser();
         final CompletableFuture<InteractionOriginalResponseUpdater> respondLater = event.respondLater();
+        Roller.parse(dicePool, strings -> null)
+                .map(Roller::roll)
+                .map(listListPair -> new Result(listListPair.getLeft(), listListPair.getRight(), diceKept, getPlotDiceCost(dicePool) - discount))
+                .flatMap(result -> Roller.handleOpportunities(result, 1, opportunity, value -> CompletableFuture.supplyAsync(() -> DoomHandler.addDoom(value)).thenApply(embedBuilder -> DoomHandler.getDoom()), value -> PlotPointUtils.addPlotPointsToUser(user, value).thenApply(Optional::get)))
+                .toCompletableFuture()
+                .thenCompose(pair -> pair.getRight().thenApply(changes -> Roller.output(pair.getLeft(), getPlotDiceCost(dicePool) - discount, opportunity, changes.getLeft(), changes.getRight())))
+                .thenApply(embedBuilders -> respondLater.thenAccept(updater -> updater.addEmbeds(embedBuilders).update()))
+                .exceptionally(throwable -> respondLater.thenAccept(updater -> updater.setContent(throwable.getMessage()).update()));
         final Optional<RollResult> resultOptional = new DicePoolBuilder(dicePool, s -> s)
                 .withDiceKept(diceKept)
                 .withDiscount(discount)
@@ -131,6 +141,16 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         else {
             respondLater.thenAccept(updater -> updater.setContent("Invalid dice pool!").setFlags(InteractionCallbackDataFlag.EPHEMERAL).update());
         }
+    }
+
+    /**
+     * Gets the number of plot points spent on plot dice
+     *
+     * @param dicePool The pool to be rolled as a string
+     * @return The number of points the plot dice purchased costs
+     */
+    private static int getPlotDiceCost(String dicePool) {
+        return 0;
     }
 
     /**
