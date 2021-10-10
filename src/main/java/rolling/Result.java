@@ -1,17 +1,20 @@
 package rolling;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Result {
     private final List<Integer> regularDice;
-    private final List<Integer> plotDice;
+    private final List<Roll> plotDice;
     private final List<Integer> keptDice;
     private final List<Integer> chaosDice;
     private final List<Integer> flatBonuses;
     private final int kept;
 
-    public Result(List<Roll> rolls, List<Integer> flatBonuses, int kept, int plotPointsUsed) {
+    public Result(List<Roll> rolls, List<Integer> flatBonuses, int kept) {
         this.regularDice = new ArrayList<>();
         this.plotDice = new ArrayList<>();
         this.keptDice = new ArrayList<>();
@@ -23,11 +26,10 @@ public class Result {
 
 
     private void acceptDice(Roll roll) {
-        // TODO Add logic for plot dice
         switch (roll.getType()) {
             case "pd":
             case "ed":
-                plotDice.add(roll.getValue());
+                plotDice.add(roll);
                 break;
             case "cd":
                 chaosDice.add(roll.getValue());
@@ -42,38 +44,49 @@ public class Result {
     }
 
     public int getTotal() {
-        return 0;
+        return getPickedDice().stream().mapToInt(Integer::intValue).sum() + getFlatBonuses().stream().mapToInt(Integer::intValue).sum();
     }
 
     public List<Integer> getDroppedDice() {
-        return null;
+        final Stream<Integer> droppedRegularDice = Stream.concat(regularDice.stream(), getPlotDice().stream().skip(1)).sorted(Comparator.reverseOrder()).skip(kept);
+        return Stream.concat(getChaosDiceStream().sorted(Comparator.naturalOrder()).skip(2), droppedRegularDice).collect(Collectors.toList());
     }
 
     public List<Integer> getFlatBonuses() {
-        return null;
+        return flatBonuses;
     }
 
     public List<Integer> getPickedDice() {
-        return null;
+        Stream<Integer> pickedRegularDice = Stream.concat(regularDice.stream(), getPlotDice().stream().sorted(Comparator.reverseOrder()).skip(1)).sorted(Comparator.reverseOrder()).limit(kept);
+        pickedRegularDice = Stream.concat(pickedRegularDice, getPlotDice().stream().sorted(Comparator.reverseOrder()).limit(1));
+        final Stream<Integer> pickedChaosDiceAndKeptDice = Stream.concat(getChaosDiceStream().sorted(Comparator.naturalOrder()).limit(2), keptDice.stream());
+        return Stream.concat(pickedRegularDice, pickedChaosDiceAndKeptDice).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
     }
 
     public List<Integer> getKeptDice() {
-        return null;
+        return keptDice;
     }
 
     public List<Integer> getPlotDice() {
-        return null;
+        return plotDice.stream()
+                .map(integer -> (plotDice.size() <= 1) ? Math.max(integer.getValue(), integer.getEnhancedValue()) : integer.getValue())
+                .collect(Collectors.toList());
+    }
+
+    private Stream<Integer> getChaosDiceStream() {
+        return chaosDice.stream().map(integer -> integer * -1);
     }
 
     public List<Integer> getRegularAndChaosDice() {
-        return null;
+        return Stream.concat(regularDice.stream(), getChaosDiceStream()).collect(Collectors.toList());
     }
 
     public int getOpportunities() {
-        return 0;
+        Stream<Integer> streamsToCheck = Stream.concat(regularDice.stream(), keptDice.stream());
+        if (plotDice.size() > 1) {
+            streamsToCheck = Stream.concat(streamsToCheck, plotDice.stream().skip(1).map(Roll::getValue));
+        }
+        return Math.toIntExact(streamsToCheck.filter(integer -> integer == 1).count());
     }
 
-    public int getPlotPointsSpent() {
-        return 0;
-    }
 }

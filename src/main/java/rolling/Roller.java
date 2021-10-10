@@ -1,6 +1,7 @@
 package rolling;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Range;
 import doom.DoomHandler;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
@@ -8,6 +9,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import util.UtilFunctions;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +25,9 @@ import static rolling.DicePoolBuilder.*;
 import static rolling.RollResult.NONE;
 
 public class Roller {
+
+    private static final Random random = new SecureRandom();
+
     /**
      * Attempts to parse a pool of dice into a list of dice and modifiers.
      *
@@ -78,8 +83,14 @@ public class Roller {
      * @return A pair with a list of dice roll results, and a list of roll modifiers
      */
     public static Pair<List<Roll>, List<Integer>> roll(Pair<List<Dice>, List<Integer>> diceModifierPair) {
-        Random random = new Random();
-        return Pair.of(diceModifierPair.getLeft().stream().map(dice -> new Roll(dice.getName(), random.nextInt(dice.getValue()) + 1)).collect(Collectors.toList()), diceModifierPair.getRight());
+        return Pair.of(diceModifierPair.getLeft().stream().map(Roller::createRoll).collect(Collectors.toList()), diceModifierPair.getRight());
+    }
+
+    private static Roll createRoll(Dice dice) {
+        if (dice.getName().equals("pd") || dice.getName().equals("ed")) {
+            return new Roll(dice.getName(), random.nextInt(dice.getValue()) + 1, dice.getValue() / 2);
+        }
+        return new Roll(dice.getName(), random.nextInt(dice.getValue()) + 1);
     }
 
     /**
@@ -132,30 +143,28 @@ public class Roller {
         return newPlotPoints + plotPointsSpent - (opportunityTriggered ? 1 : 0) + " → " + (newPlotPoints - (opportunityTriggered ? 1 : 0));
     }
 
-    //    public static Result createResult(Pair<List<Roll>, List<Integer>> rollModifierPair, int plotPointsUsed, Boolean enhanceable, Boolean opportunity, Integer diceKept) {
-//        final Result result = new Result(rollModifierPair.getLeft(), rollModifierPair.getRight(), diceKept, plotPointsUsed);
-//        return
-//        EmbedBuilder output = new EmbedBuilder()
-//                .addField("Regular and chaos dice", formatRegularDiceResults(result.getRegularAndChaosDice(), true), true)
-//                .addField("Plot dice", formatRegularDiceResults(result.getPlotDice(), true), true)
-//                .addField("Kept dice", formatRegularDiceResults(result.getKeptDice(), true), true)
-//                .addField("Picked", formatRegularDiceResults(result.getPickedDice(), false), true)
-//                .addField("Flat bonuses", formatRegularDiceResults(result.getFlatBonuses(), false), true)
-//                .addField("Dropped", formatRegularDiceResults(result.getDroppedDice(), false), true)
-//                .addField("Total", String.valueOf(result.getTotal()), true)
-//                .addField("Tier Hit", getTierHit(result.getTotal()), true);
-//        // TODO Make sure check works with plot dice
-//        if (opportunity && rollModifierPair.getLeft().stream().filter(roll -> roll.getValue() == 1))
-//        if (plotPointsUsed != 0) {
-//
-//        }
-//        EmbedBuilder doom = new EmbedBuilder();
-//        EmbedBuilder plotPoints = new EmbedBuilder();
-//        return Collections.list
-//    }
-//
     private static String getTierHit(int total) {
-        return null;
+        Pair<String, Range<Integer>> noneRange = Pair.of("None", Range.lessThan(3));
+        Pair<String, Range<Integer>> easyRange = Pair.of("Easy", Range.closedOpen(3, 7));
+        Pair<String, Range<Integer>> averageRange = Pair.of("Average", Range.closedOpen(7, 11));
+        Pair<String, Range<Integer>> hardRange = Pair.of("Hard", Range.closedOpen(11, 15));
+        Pair<String, Range<Integer>> formidableRange = Pair.of("Formidable", Range.closedOpen(15, 19));
+        Pair<String, Range<Integer>> heroicRange = Pair.of("Heroic", Range.closedOpen(19, 23));
+        Pair<String, Range<Integer>> incredibleRange = Pair.of("Incredible", Range.closedOpen(23, 27));
+        Pair<String, Range<Integer>> ridiculousRange = Pair.of("Ridiculous", Range.closedOpen(27, 31));
+        Pair<String, Range<Integer>> impossibleRange = Pair.of("Impossible", Range.atLeast(31));
+        List<Pair<String, Range<Integer>>> difficultyRanges = Arrays.asList(impossibleRange, ridiculousRange, incredibleRange, heroicRange, formidableRange, hardRange, averageRange, easyRange, noneRange);
+        StringBuilder difficultyString = new StringBuilder();
+        difficultyRanges.stream()
+                .filter(difficultyRange -> difficultyRange.getRight().contains(total))
+                .findFirst()
+                .ifPresent(difficultyRange -> difficultyString.append(difficultyRange.getLeft()));
+        difficultyRanges.subList(0, difficultyRanges.size() - 1)
+                .stream()
+                .filter(stringRangePair -> stringRangePair.getRight().contains(total - 7))
+                .findFirst().ifPresent(stringRangePair -> difficultyString.append(", Extraordinary ").append(stringRangePair.getLeft()));
+        return difficultyString.toString();
+
     }
 
     /**

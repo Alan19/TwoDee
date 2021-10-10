@@ -3,6 +3,7 @@ package rolling;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.tuple.Pair;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,11 +20,20 @@ class DiceRollerTest {
 
     private Try<Pair<List<Dice>, List<Integer>>> pool;
     private Pair<List<Roll>, List<Integer>> roll;
+    private Result result;
+    private List<EmbedBuilder> output;
 
     @BeforeEach
     void setUp() {
         pool = Roller.parse("2d8 d6 pd4 cd8 +1 stealth", strings -> Try.success(Collections.singletonList(new Dice("d", 8))));
         roll = Roller.roll(Pair.of(Arrays.asList(new Dice("d", 12), new Dice("pd", 12), new Dice("cd", 12)), Arrays.asList(3, -2)));
+        result = new Result(Arrays.asList(new Roll("d", 4),
+                new Roll("d", 1),
+                new Roll("pd", 12, 6),
+                new Roll("ed", 12, 6),
+                new Roll("cd", 3),
+                new Roll("kd", 1)), Arrays.asList(6, -3), 2);
+        output = Roller.output(result, 6, true, 12, 15);
     }
 
     @Test
@@ -47,6 +57,16 @@ class DiceRollerTest {
     void testPlotPointSpendEmbedTest() {
         assertEquals("24 → 20", Roller.getPlotPointSpendingText(4, 21, true));
         assertEquals("26 → 20", Roller.getPlotPointSpendingText(6, 20, false));
+    }
+
+    @Test
+    void testResult() {
+        assertEquals(29, result.getTotal());
+    }
+
+    @Test
+    void testOutput() {
+        assertEquals(3, output.size());
     }
 
     @AfterEach

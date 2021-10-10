@@ -10,7 +10,6 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.*;
-import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.javacord.api.listener.interaction.ButtonClickListener;
@@ -120,27 +119,12 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         final CompletableFuture<InteractionOriginalResponseUpdater> respondLater = event.respondLater();
         Roller.parse(dicePool, strings -> null)
                 .map(Roller::roll)
-                .map(listListPair -> new Result(listListPair.getLeft(), listListPair.getRight(), diceKept, getPlotDiceCost(dicePool) - discount))
+                .map(listListPair -> new Result(listListPair.getLeft(), listListPair.getRight(), diceKept))
                 .flatMap(result -> Roller.handleOpportunities(result, 1, opportunity, value -> CompletableFuture.supplyAsync(() -> DoomHandler.addDoom(value)).thenApply(embedBuilder -> DoomHandler.getDoom()), value -> PlotPointUtils.addPlotPointsToUser(user, value).thenApply(Optional::get)))
                 .toCompletableFuture()
                 .thenCompose(pair -> pair.getRight().thenApply(changes -> Roller.output(pair.getLeft(), getPlotDiceCost(dicePool) - discount, opportunity, changes.getLeft(), changes.getRight())))
                 .thenApply(embedBuilders -> respondLater.thenAccept(updater -> updater.addEmbeds(embedBuilders).update()))
                 .exceptionally(throwable -> respondLater.thenAccept(updater -> updater.setContent(throwable.getMessage()).update()));
-        final Optional<RollResult> resultOptional = new DicePoolBuilder(dicePool, s -> s)
-                .withDiceKept(diceKept)
-                .withDiscount(discount)
-                .withEnhanceable(enhanceable)
-                .withOpportunity(opportunity)
-                .getResults();
-
-        if (resultOptional.isPresent()) {
-            final RollResult rollInfo = resultOptional.get();
-            final CompletableFuture<EmbedBuilder[]> rollEmbeds = getRollEmbeds(UtilFunctions.getUsernameFromSlashEvent(event, user), user, rollInfo);
-            respondLater.thenAcceptBoth(rollEmbeds, (updater, embedBuilders) -> handleRollSideEffects(user, updater, embedBuilders, rollInfo));
-        }
-        else {
-            respondLater.thenAccept(updater -> updater.setContent("Invalid dice pool!").setFlags(InteractionCallbackDataFlag.EPHEMERAL).update());
-        }
     }
 
     /**
