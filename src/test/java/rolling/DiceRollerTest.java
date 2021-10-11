@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,7 +24,7 @@ class DiceRollerTest {
 
     @BeforeEach
     void setUp() {
-        pool = Roller.parse("2d8 d6 pd4 cd8 +1 stealth", strings -> Try.success(Collections.singletonList(new Dice("d", 8))));
+        pool = Roller.parse("2d8 d6 pd4 cd8 +1 stealth", s -> Try.success(s.replace("stealth", "d8")));
         roll = Roller.roll(Pair.of(Arrays.asList(new Dice("d", 12), new Dice("pd", 12), new Dice("cd", 12)), Arrays.asList(3, -2)));
         result = new Result(Arrays.asList(new Roll("d", 4),
                 new Roll("d", 1),

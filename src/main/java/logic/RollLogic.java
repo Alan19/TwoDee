@@ -1,6 +1,7 @@
 package logic;
 
 import doom.DoomHandler;
+import io.vavr.control.Try;
 import listeners.RollComponentInteractionListener;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -21,18 +22,18 @@ import rolling.Result;
 import rolling.RollResult;
 import rolling.Roller;
 import sheets.PlotPointUtils;
+import sheets.SheetsHandler;
 import util.ComponentUtils;
 import util.RandomColor;
 import util.UtilFunctions;
 
 import javax.annotation.Nullable;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * Rolls a pool of dice based on the input. After rolling, adds doom points to doom pool and makes appropriate changes the player's plot point count based on input options. If the DM is rolling, plot points they spend come from the doom point pool.
@@ -117,14 +118,20 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         // Attempt to roll dice with a valid dice pool. If the dice pool is valid, generate the result embeds and add components
         final User user = event.getUser();
         final CompletableFuture<InteractionOriginalResponseUpdater> respondLater = event.respondLater();
-        Roller.parse(dicePool, strings -> null)
+        Roller.parse(dicePool, pool -> convertSkillsToDice(user, pool))
                 .map(Roller::roll)
                 .map(listListPair -> new Result(listListPair.getLeft(), listListPair.getRight(), diceKept))
-                .flatMap(result -> Roller.handleOpportunities(result, 1, opportunity, value -> CompletableFuture.supplyAsync(() -> DoomHandler.addDoom(value)).thenApply(embedBuilder -> DoomHandler.getDoom()), value -> PlotPointUtils.addPlotPointsToUser(user, value).thenApply(Optional::get)))
+                .flatMap(result -> Roller.handleOpportunities(result, 1, opportunity, value -> CompletableFuture.supplyAsync(() -> DoomHandler.addDoom(value)).thenApply(embedBuilder -> DoomHandler.getDoom()) /* TODO Convert addDoom to return a CompletableFuture<Integer>*/, value -> PlotPointUtils.addPlotPointsToUser(user, value).thenApply(Optional::get) /* TODO Convert to a CompletableFuture<Integer> and have it return an exception if it fails / sheet doesn't exist*/))
                 .toCompletableFuture()
                 .thenCompose(pair -> pair.getRight().thenApply(changes -> Roller.output(pair.getLeft(), getPlotDiceCost(dicePool) - discount, opportunity, changes.getLeft(), changes.getRight())))
                 .thenApply(embedBuilders -> respondLater.thenAccept(updater -> updater.addEmbeds(embedBuilders).update()))
                 .exceptionally(throwable -> respondLater.thenAccept(updater -> updater.setContent(throwable.getMessage()).update()));
+    }
+
+
+    private static Try<String> convertSkillsToDice(User user, String pool) {
+        final Try<Map<String, String>> skillMap = Try.of(() -> SheetsHandler.getSkills(user).get());
+        return skillMap.map(map -> Arrays.stream(pool.split(" ")).map(s -> map.getOrDefault(s, s)).collect(Collectors.joining(" ")));
     }
 
     /**

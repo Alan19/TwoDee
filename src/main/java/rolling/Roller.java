@@ -1,15 +1,15 @@
 package rolling;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 import doom.DoomHandler;
+import io.vavr.control.Either;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import util.UtilFunctions;
 
 import java.security.SecureRandom;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,19 +31,18 @@ public class Roller {
     /**
      * Attempts to parse a pool of dice into a list of dice and modifiers.
      *
-     * @param pool     The dice pool string
-     * @param operator A function that converts a given skill into dice. Usually used for pulling information from character sheets.
+     * @param pool                  The dice pool string
+     * @param skillReplacerFunction A function that converts a given skill into dice. Usually used for pulling information from character sheets.
      * @return A Try that may contain a list of dice and a list of flat modifiers.
      */
-    public static Try<Pair<List<Dice>, List<Integer>>> parse(String pool, Function<List<String>, Try<List<Dice>>> operator) {
-        String[] paramArray = pool.split(" ");
-        final Triple<List<Dice>, List<Integer>, List<String>> diceModifierSkillTuple = Arrays.stream(paramArray)
-                .map(Roller::processPoolParam)
-                .collect(PoolCollector.toTripleList());
-        final List<String> skills = diceModifierSkillTuple.getRight();
-        final List<Dice> dice = diceModifierSkillTuple.getLeft();
-        final List<Integer> modifiers = diceModifierSkillTuple.getMiddle();
-        return operator.apply(skills).map(skill -> Pair.of(ImmutableList.<Dice>builder().addAll(dice).addAll(skill).build(), modifiers));
+    public static Try<Pair<List<Dice>, List<Integer>>> parse(String pool, Function<String, Try<String>> skillReplacerFunction) {
+        Try<String> tryReplacePool = skillReplacerFunction.apply(pool);
+        return tryReplacePool.flatMap(replacedPool -> {
+            String[] paramArray = replacedPool.split(" ");
+            return Arrays.stream(paramArray)
+                    .map(Roller::processPoolParam)
+                    .collect(PoolCollector.toTripleList());
+        });
     }
 
     /**
@@ -52,7 +51,7 @@ public class Roller {
      * @param s One element in the dice pool
      * @return A triple to represent an object being one of three data types, a list of dice, an integer, or a string
      */
-    private static Triple<List<Dice>, Integer, String> processPoolParam(String s) {
+    private static Try<Either<List<Dice>, Integer>> processPoolParam(String s) {
         final Matcher diceMatcher = DICE_PATTERN.matcher(s);
         final Matcher flatBonusMatcher = FLAT_BONUS_PATTERN.matcher(s);
         final Matcher flatPenaltyMatcher = FLAT_PENALTY_PATTERN.matcher(s);
@@ -61,18 +60,18 @@ public class Roller {
             final int count = UtilFunctions.tryParseInt(diceMatcher.group("count")).orElse(1);
             final String type = diceMatcher.group("type");
             final int facets = Integer.parseInt(diceMatcher.group("facets"));
-            return Triple.of(IntStream.range(0, count).mapToObj(value -> new Dice(type, facets)).collect(Collectors.toList()), null, null);
+            return Try.success(Either.left(IntStream.range(0, count).mapToObj(value -> new Dice(type, facets)).collect(Collectors.toList())));
         }
         //Flat bonus
         else if (flatBonusMatcher.matches()) {
-            return Triple.of(null, Integer.parseInt(flatBonusMatcher.group("value")), null);
+            return Try.success(Either.right(Integer.parseInt(flatBonusMatcher.group("value"))));
         }
         //Flat penalty
         else if (flatPenaltyMatcher.matches()) {
-            return Triple.of(null, Integer.parseInt(flatBonusMatcher.group("value")) * -1, null);
+            return Try.success(Either.right(Integer.parseInt(flatBonusMatcher.group("value")) * -1));
         }
         else {
-            return Triple.of(null, null, s);
+            return Try.failure(new IllegalArgumentException(MessageFormat.format("`{0}` does not result in valid dice, or is not registered on the character sheet!", s)));
         }
     }
 

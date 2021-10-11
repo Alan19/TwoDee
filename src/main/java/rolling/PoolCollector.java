@@ -1,6 +1,8 @@
 package rolling;
 
-import org.apache.commons.lang3.tuple.Triple;
+import io.vavr.control.Either;
+import io.vavr.control.Try;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -9,14 +11,14 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
-public class PoolCollector implements Collector<Triple<List<Dice>, Integer, String>, Triple<List<Dice>, List<Integer>, List<String>>, Triple<List<Dice>, List<Integer>, List<String>>> {
+public class PoolCollector implements Collector<Try<Either<List<Dice>, Integer>>, Try<Pair<List<Dice>, List<Integer>>>, Try<Pair<List<Dice>, List<Integer>>>> {
     public static PoolCollector toTripleList() {
         return new PoolCollector();
     }
 
     @Override
-    public Supplier<Triple<List<Dice>, List<Integer>, List<String>>> supplier() {
-        return () -> Triple.of(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+    public Supplier<Try<Pair<List<Dice>, List<Integer>>>> supplier() {
+        return () -> Try.success(Pair.of(new ArrayList<>(), new ArrayList<>()));
     }
 
     /**
@@ -25,33 +27,28 @@ public class PoolCollector implements Collector<Triple<List<Dice>, Integer, Stri
      * @return A BiConsumer with instructions on how to merge incoming triples into the container
      */
     @Override
-    public BiConsumer<Triple<List<Dice>, List<Integer>, List<String>>, Triple<List<Dice>, Integer, String>> accumulator() {
-        return (list, incomingTriple) -> {
-            if (incomingTriple.getLeft() != null) {
-                list.getLeft().addAll(incomingTriple.getLeft());
+    public BiConsumer<Try<Pair<List<Dice>, List<Integer>>>, Try<Either<List<Dice>, Integer>>> accumulator() {
+        return (list, incomingEither) -> list.andThen(pair -> incomingEither.andThen(integers -> {
+            if (integers.isLeft()) {
+                pair.getLeft().addAll(integers.getLeft());
             }
-            else if (incomingTriple.getMiddle() != null) {
-                list.getMiddle().add(incomingTriple.getMiddle());
+            else {
+                pair.getRight().add(integers.get());
             }
-            else if (incomingTriple.getRight() != null) {
-                list.getRight().add(incomingTriple.getRight());
-            }
-        };
+        }));
     }
 
     @Override
-    public BinaryOperator<Triple<List<Dice>, List<Integer>, List<String>>> combiner() {
-        return (list1, list2) -> {
-            list1.getLeft().addAll(list2.getLeft());
-            list1.getMiddle().addAll(list2.getMiddle());
-            list1.getRight().addAll(list2.getRight());
-            return list1;
-        };
+    public BinaryOperator<Try<Pair<List<Dice>, List<Integer>>>> combiner() {
+        return (tryPair1, tryPair2) -> tryPair1.andThen(pair1 -> tryPair2.andThen(pair2 -> {
+            pair1.getLeft().addAll(pair2.getLeft());
+            pair1.getRight().addAll(pair2.getRight());
+        }));
     }
 
     @Override
-    public Function<Triple<List<Dice>, List<Integer>, List<String>>, Triple<List<Dice>, List<Integer>, List<String>>> finisher() {
-        return listListListTriple -> listListListTriple;
+    public Function<Try<Pair<List<Dice>, List<Integer>>>, Try<Pair<List<Dice>, List<Integer>>>> finisher() {
+        return tryPair -> tryPair;
     }
 
     @Override
