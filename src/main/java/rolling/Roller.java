@@ -36,13 +36,26 @@ public class Roller {
      * @return A Try that may contain a list of dice and a list of flat modifiers.
      */
     public static Try<Pair<List<Dice>, List<Integer>>> parse(String pool, Function<String, Try<String>> skillReplacerFunction) {
-        Try<String> tryReplacePool = skillReplacerFunction.apply(pool);
+        Try<String> tryReplacePool = preprocessPool(pool, skillReplacerFunction);
         return tryReplacePool.flatMap(replacedPool -> {
             String[] paramArray = replacedPool.split(" ");
             return Arrays.stream(paramArray)
                     .map(Roller::processPoolParam)
                     .collect(PoolCollector.toTripleList());
         });
+    }
+
+    private static Try<String> preprocessPool(String pool, Function<String, Try<String>> skillReplacerFunction) {
+        final boolean anySkills = Arrays.stream(pool.split(" ")).anyMatch(s -> {
+            final Matcher diceMatcher = DICE_PATTERN.matcher(s);
+            final Matcher flatBonusMatcher = FLAT_BONUS_PATTERN.matcher(s);
+            final Matcher flatPenaltyMatcher = FLAT_PENALTY_PATTERN.matcher(s);
+            return !diceMatcher.matches() && !flatBonusMatcher.matches() && !flatPenaltyMatcher.matches();
+        });
+        if (anySkills) {
+            return skillReplacerFunction.apply(pool);
+        }
+        return Try.success(pool);
     }
 
     /**
