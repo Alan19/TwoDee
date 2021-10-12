@@ -12,9 +12,18 @@ public class Player {
     @Expose
     private final String sheetId;
 
-    public Player(Integer discordId, String sheetId) {
+    @SerializedName("doom_pool")
+    @Expose
+    private final String doomPool;
+
+    public Player(Integer discordId, String sheetId, String doomPool) {
         this.discordId = discordId;
         this.sheetId = sheetId;
+        this.doomPool = doomPool;
+    }
+
+    public String getDoomPool() {
+        return doomPool;
     }
 
     public long getDiscordId() {

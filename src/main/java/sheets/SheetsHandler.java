@@ -120,6 +120,8 @@ public class SheetsHandler {
 
     /**
      * Attempts to retrieve the number of plot points a user has
+     * <p>
+     * TODO Switch this to use CompletableFuture
      *
      * @param user The user to look up
      * @return The number of plot points a user has in an optional, or empty if the user does not have a linked character sheet

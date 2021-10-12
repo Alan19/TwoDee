@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -27,6 +28,7 @@ import static rolling.RollResult.NONE;
 public class Roller {
 
     private static final Random random = new SecureRandom();
+    public static final Pattern SKILL_PATTERN = Pattern.compile("\\b[a-zA-Z]{3,}\\w*");
 
     /**
      * Attempts to parse a pool of dice into a list of dice and modifiers.
@@ -46,16 +48,8 @@ public class Roller {
     }
 
     private static Try<String> preprocessPool(String pool, Function<String, Try<String>> skillReplacerFunction) {
-        final boolean anySkills = Arrays.stream(pool.split(" ")).anyMatch(s -> {
-            final Matcher diceMatcher = DICE_PATTERN.matcher(s);
-            final Matcher flatBonusMatcher = FLAT_BONUS_PATTERN.matcher(s);
-            final Matcher flatPenaltyMatcher = FLAT_PENALTY_PATTERN.matcher(s);
-            return !diceMatcher.matches() && !flatBonusMatcher.matches() && !flatPenaltyMatcher.matches();
-        });
-        if (anySkills) {
-            return skillReplacerFunction.apply(pool);
-        }
-        return Try.success(pool);
+        final boolean anySkills = Arrays.stream(pool.split(" ")).anyMatch(s -> SKILL_PATTERN.matcher(s).matches());
+        return anySkills ? skillReplacerFunction.apply(pool) : Try.success(pool);
     }
 
     /**
@@ -115,16 +109,18 @@ public class Roller {
      * @return A try that attempts to contain a pair with the rolls and the modifiers but will return an exception there
      * is an error modifying plot points or doom points
      */
-    public static Try<Pair<Result, CompletableFuture<Pair<Integer, Integer>>>> handleOpportunities(Result result, int plotPointsSpent, boolean opportunities, IntFunction<CompletableFuture<Integer>> doomHandler, IntFunction<CompletableFuture<Integer>> plotPointHandler) {
+    public static Try<Pair<Result, CompletableFuture<Pair<Integer, Integer>>>> handleOpportunities(Result result, int discount, boolean opportunities, IntFunction<Integer> doomHandler, IntFunction<CompletableFuture<Integer>> plotPointHandler) {
         int doomCount = opportunities ? result.getOpportunities() : 0;
+        int plotPointsSpent = result.getPlotDiceCost() - discount;
         if (doomCount > 0) {
             plotPointsSpent--;
         }
-        final CompletableFuture<Pair<Integer, Integer>> tryCompletableFuture = doomHandler.apply(doomCount).thenCombine(plotPointHandler.apply(plotPointsSpent * -1), Pair::of);
-        return Try.success(Pair.of(result, tryCompletableFuture));
+        final int newDoomValue = doomHandler.apply(doomCount);
+        final CompletableFuture<Integer> newPlotPointFuture = plotPointHandler.apply(plotPointsSpent * -1);
+        return Try.success(Pair.of(result, newPlotPointFuture.thenApply(newPlotPointValue -> Pair.of(newDoomValue, newPlotPointValue))));
     }
 
-    public static List<EmbedBuilder> output(Result result, int plotPointsSpent, boolean opportunities, Integer newDoomPoints, Integer newPlotPoints) {
+    public static List<EmbedBuilder> output(Result result, int discount, boolean opportunities, Integer newDoomPoints, Integer newPlotPoints) {
         List<EmbedBuilder> outputs = new ArrayList<>();
         outputs.add(new EmbedBuilder()
                 .addField("Regular and chaos dice", formatRegularDiceResults(result.getRegularAndChaosDice(), true), true)
@@ -136,6 +132,7 @@ public class Roller {
                 .addField("Total", String.valueOf(result.getTotal()), true)
                 .addField("Tier Hit", getTierHit(result.getTotal()), true));
         boolean opportunityTriggered = opportunities && result.getOpportunities() > 0;
+        final int plotPointsSpent = result.getPlotDiceCost() - discount;
         if (plotPointsSpent != 0) {
             outputs.add(new EmbedBuilder()
                     .setTitle("Using " + plotPointsSpent + " plot point(s)!")

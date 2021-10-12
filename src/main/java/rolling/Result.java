@@ -13,6 +13,7 @@ public class Result {
     private final List<Integer> chaosDice;
     private final List<Integer> flatBonuses;
     private final int kept;
+    private final int plotDiceCost;
 
     public Result(List<Roll> rolls, List<Integer> flatBonuses, int kept) {
         this.regularDice = new ArrayList<>();
@@ -21,6 +22,7 @@ public class Result {
         this.chaosDice = new ArrayList<>();
         this.flatBonuses = flatBonuses;
         this.kept = kept;
+        plotDiceCost = rolls.stream().filter(roll -> roll.getType().equals("pd")).mapToInt(Roll::getEnhancedValue).sum();
         rolls.forEach(this::acceptDice);
     }
 
@@ -89,4 +91,7 @@ public class Result {
         return Math.toIntExact(streamsToCheck.filter(integer -> integer == 1).count());
     }
 
+    public int getPlotDiceCost() {
+        return plotDiceCost;
+    }
 }

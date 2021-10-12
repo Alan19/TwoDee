@@ -1,12 +1,11 @@
 package sheets;
 
+import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.user.User;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.text.MessageFormat;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -22,6 +21,16 @@ public class PlotPointUtils {
             return SheetsHandler.setPlotPoints(user, newPlotPointCount);
         }
         return CompletableFuture.completedFuture(Optional.empty());
+    }
+
+    public static CompletableFuture<Integer> addPlotPointsToPlayer(User user, int amount) {
+        final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(user);
+        if (plotPoints.isPresent()) {
+            return Try.success(plotPoints.get()).toCompletableFuture().thenCompose(integer -> SheetsHandler.setPlotPoints(user, integer + amount).thenApply(Optional::get));
+        }
+        else {
+            return Try.failure(new NoSuchElementException(MessageFormat.format("Unable to retrieve {0}''s plot points!", user))).toCompletableFuture().thenApply(o -> (int) o);
+        }
     }
 
     public static CompletableFuture<PlotPointChangeResult> addPlotPointsToUsers(Collection<User> users, Integer amount) {
