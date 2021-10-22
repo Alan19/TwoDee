@@ -4,6 +4,7 @@ import doom.DoomHandler;
 import io.vavr.API;
 import io.vavr.control.Try;
 import listeners.RollComponentInteractionListener;
+import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.MessageUpdater;
@@ -17,6 +18,8 @@ import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.javacord.api.listener.interaction.ButtonClickListener;
 import org.javacord.api.util.event.ListenerManager;
 import pw.mihou.velen.interfaces.*;
+import roles.Player;
+import roles.PlayerHandler;
 import roles.Storytellers;
 import rolling.DicePoolBuilder;
 import rolling.Result;
@@ -119,24 +122,23 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
      * @param opportunity If opportunities are enabled
      */
     public static void handleSlashCommandRoll(SlashCommandInteraction event, String dicePool, Integer discount, Integer diceKept, @Nullable Boolean enhanceable, Boolean opportunity) {
-        // Attempt to roll dice with a valid dice pool. If the dice pool is valid, generate the result embeds and add components
         final User user = event.getUser();
-        final CompletableFuture<InteractionOriginalResponseUpdater> respondLater = event.respondLater();
-        Roller.parse(dicePool, pool -> convertSkillsToDice(user, pool))
+        final CompletableFuture<InteractionOriginalResponseUpdater> updater = event.respondLater();
+        Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user).flatMap(integer -> PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).map(s -> Pair.of(integer, DoomHandler.getDoom(s))));
+        rollDice(dicePool, discount, diceKept, opportunity, user)
+                .handle((embedBuilders, throwable) -> Roller.sendResult(enhanceable, updater, embedBuilders.getLeft(), throwable, embedBuilders.getRight()))
+                .thenCompose(future -> future)
+                .thenAccept(trySend -> Roller.attachListener(user, trySend, originalPointPair.orElse(Pair.of(0, 0)), dicePool, opportunity, discount, diceKept));
+    }
+
+    public static CompletableFuture<Pair<List<EmbedBuilder>, Boolean>> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, User user) {
+        return Roller.parse(dicePool, pool -> convertSkillsToDice(user, pool))
                 .map(Roller::roll)
-                .map(listListPair -> new Result(listListPair.getLeft(), listListPair.getRight(), diceKept))
-                .flatMap(result -> Roller.handleOpportunities(result, discount, opportunity, value -> DoomHandler.addDoom(user, value), value -> PlotPointUtils.addPlotPointsToPlayer(user, value)))
+                .map(pair -> new Result(pair.getLeft(), pair.getRight(), diceKept))
+                .map(result -> Roller.handleOpportunities(result, discount, opportunity, value -> DoomHandler.addDoom(user, value), value -> PlotPointUtils.addPlotPointsToPlayer(user, value)))
                 .toCompletableFuture()
-                .thenCompose(pair -> pair.getRight().thenApply(changes -> Roller.output(pair.getLeft(), discount, opportunity, changes.getLeft(), changes.getRight())))
-                .whenComplete((embedBuilders, throwable) -> {
-                    if (throwable != null) {
-                        respondLater.thenAccept(updater -> updater.setContent(throwable.getMessage()).update());
-                        // TODO Add fancy listeners here
-                    }
-                    else {
-                        respondLater.thenAccept(updater -> updater.addEmbeds(embedBuilders).update());
-                    }
-                });
+                .thenCompose(future -> future)
+                .thenApply(triple -> Pair.of(Roller.output(triple.getLeft(), discount, opportunity, triple.getMiddle(), triple.getRight()), triple.getLeft().getPlotDiceCost() == 0));
     }
 
 
@@ -147,31 +149,9 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         return skillMap.map(map -> Arrays.stream(pool.split(" ")).map(s -> map.getOrDefault(s, s)).collect(Collectors.joining(" ")));
     }
 
-    /**
-     * Attach components to a roll result message and adds button click handlers to handle rerolls or enhancements
-     *
-     * @param updater The object for updating the message
-     * @param embeds  The roll result embeds
-     * @param result  The roll result object
-     */
-    public static void handleRollSideEffects(User user, InteractionOriginalResponseUpdater updater, EmbedBuilder[] embeds, RollResult result) {
-        updater.addEmbeds(embeds)
-                .addComponents(ComponentUtils.createRollComponentRows(true, result.isEnhanceable()))
-                .update()
-                .thenAccept(message -> attachInteractionEnhancementListener(user, result, message, updater));
-    }
-
     public static void attachEnhancementListener(User user, RollResult result, Message message) {
         final AtomicReference<ListenerManager<ButtonClickListener>> reference = new AtomicReference<>();
         final RollComponentInteractionListener listener = new RollComponentInteractionListener(user, result, reference, new MessageUpdater(message).setEmbeds(message.getEmbeds().stream().map(Embed::toBuilder).toArray(EmbedBuilder[]::new)));
-        final ListenerManager<ButtonClickListener> listenerManager = message.addButtonClickListener(listener);
-        reference.set(listenerManager);
-        listener.startRemoveTimer();
-    }
-
-    public static void attachInteractionEnhancementListener(User user, RollResult result, Message message, InteractionOriginalResponseUpdater updater) {
-        final AtomicReference<ListenerManager<ButtonClickListener>> reference = new AtomicReference<>();
-        final RollComponentInteractionListener listener = new RollComponentInteractionListener(user, result, reference, updater);
         final ListenerManager<ButtonClickListener> listenerManager = message.addButtonClickListener(listener);
         reference.set(listenerManager);
         listener.startRemoveTimer();

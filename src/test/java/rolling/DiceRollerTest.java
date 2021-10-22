@@ -32,7 +32,7 @@ class DiceRollerTest {
                 new Roll("ed", 12, 6),
                 new Roll("cd", 3),
                 new Roll("kd", 1)), Arrays.asList(6, -3), 2);
-        output = Roller.output(result, 6, true, 12, 15);
+        output = Roller.output(result, 0, true, 12, 15);
     }
 
     @Test

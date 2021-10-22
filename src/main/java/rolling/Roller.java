@@ -4,10 +4,20 @@ import com.google.common.collect.Range;
 import doom.DoomHandler;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
+import listeners.RollComponentInteractionListener;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
+import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
+import org.javacord.api.entity.user.User;
+import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
+import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
+import org.javacord.api.listener.interaction.ButtonClickListener;
+import org.javacord.api.util.event.ListenerManager;
+import util.ComponentUtils;
 import util.UtilFunctions;
 
+import javax.annotation.Nullable;
 import java.security.SecureRandom;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -15,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.regex.Matcher;
@@ -109,7 +120,7 @@ public class Roller {
      * @return A try that attempts to contain a pair with the rolls and the modifiers but will return an exception there
      * is an error modifying plot points or doom points
      */
-    public static Try<Pair<Result, CompletableFuture<Pair<Integer, Integer>>>> handleOpportunities(Result result, int discount, boolean opportunities, IntFunction<Integer> doomHandler, IntFunction<CompletableFuture<Integer>> plotPointHandler) {
+    public static CompletableFuture<Triple<Result, Integer, Integer>> handleOpportunities(Result result, int discount, boolean opportunities, IntFunction<Integer> doomHandler, IntFunction<CompletableFuture<Integer>> plotPointHandler) {
         int doomCount = opportunities ? result.getOpportunities() : 0;
         int plotPointsSpent = result.getPlotDiceCost() - discount;
         if (doomCount > 0) {
@@ -117,7 +128,7 @@ public class Roller {
         }
         final int newDoomValue = doomHandler.apply(doomCount);
         final CompletableFuture<Integer> newPlotPointFuture = plotPointHandler.apply(plotPointsSpent * -1);
-        return Try.success(Pair.of(result, newPlotPointFuture.thenApply(newPlotPointValue -> Pair.of(newDoomValue, newPlotPointValue))));
+        return newPlotPointFuture.thenApply(newPlotPointValue -> Triple.of(result, newDoomValue, newPlotPointValue));
     }
 
     public static List<EmbedBuilder> output(Result result, int discount, boolean opportunities, Integer newDoomPoints, Integer newPlotPoints) {
@@ -149,7 +160,7 @@ public class Roller {
     }
 
     public static String getPlotPointSpendingText(int plotPointsSpent, Integer newPlotPoints, boolean opportunityTriggered) {
-        return newPlotPoints + plotPointsSpent - (opportunityTriggered ? 1 : 0) + " → " + (newPlotPoints - (opportunityTriggered ? 1 : 0));
+        return MessageFormat.format("{0} → {1}", newPlotPoints + plotPointsSpent - (opportunityTriggered ? 1 : 0), newPlotPoints - (opportunityTriggered ? 1 : 0));
     }
 
     private static String getTierHit(int total) {
@@ -189,6 +200,37 @@ public class Roller {
         }
         else {
             return s.stream().map(die -> die == 1 && boldOne ? "**1**" : String.valueOf(die)).collect(Collectors.joining(", "));
+        }
+    }
+
+    public static void attachListener(User user, Try<Triple<InteractionOriginalResponseUpdater, Message, Boolean>> trySend, Pair<Integer, Integer> originalPointPair, String dicePool, Boolean opportunity, Integer discount, Integer diceKept) {
+        trySend.andThen(triple -> {
+            final AtomicReference<ListenerManager<ButtonClickListener>> reference = new AtomicReference<>();
+            final RollComponentInteractionListener listener = new RollComponentInteractionListener(user, dicePool, reference, triple.getLeft(), discount, triple.getRight(), opportunity, diceKept, originalPointPair);
+            final ListenerManager<ButtonClickListener> listenerManager = triple.getMiddle().createUpdater().addButtonClickListener(listener);
+            reference.set(listenerManager);
+            listener.startRemoveTimer();
+        });
+    }
+
+    /**
+     * Sends the result of the roll to the channel the message was sent in
+     *
+     * @param enhanceable        The enhancement override setting on the roll.
+     * @param updaterFuture      A CompletableFuture containing the updater object
+     * @param embeds             The embeds that contain the results of the roll
+     * @param throwable          The error for the roll that was added through the Try object
+     * @param isPlotDiceCostZero A boolean for whether the plot dice cost is zero, which determines if the roll is enhanceable
+     * @return A CompletableFuture containing a Try that returns a success if nothing is thrown, with the updater, message, and enhanceable variable of the roll
+     */
+    public static CompletableFuture<Try<Triple<InteractionOriginalResponseUpdater, Message, Boolean>>> sendResult(@Nullable Boolean enhanceable, CompletableFuture<InteractionOriginalResponseUpdater> updaterFuture, List<EmbedBuilder> embeds, @Nullable Throwable throwable, Boolean isPlotDiceCostZero) {
+        if (throwable != null) {
+            return updaterFuture.thenAccept(updater -> updater.setContent(throwable.getMessage()).setFlags(InteractionCallbackDataFlag.EPHEMERAL).update()).thenApply(unused -> Try.failure(throwable));
+        }
+        else {
+            return updaterFuture.thenCompose(updater -> updater.addEmbeds(embeds)
+                    .addComponents(ComponentUtils.createRollComponentRows(true, enhanceable != null ? enhanceable : isPlotDiceCostZero))
+                    .update().thenApply(message -> Try.success(Triple.of(updater, message, isPlotDiceCostZero))));
         }
     }
 }
