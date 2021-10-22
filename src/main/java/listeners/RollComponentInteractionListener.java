@@ -2,25 +2,21 @@ package listeners;
 
 import com.vdurmont.emoji.EmojiParser;
 import doom.DoomHandler;
-import io.vavr.control.Either;
 import logic.RollLogic;
 import org.apache.commons.lang3.tuple.Pair;
-import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.entity.message.MessageUpdater;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.message.embed.EmbedField;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.ButtonClickEvent;
 import org.javacord.api.interaction.ButtonInteraction;
-import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.javacord.api.listener.interaction.ButtonClickListener;
 import org.javacord.api.util.event.ListenerManager;
 import roles.Player;
 import roles.PlayerHandler;
 import roles.Storytellers;
-import rolling.RollResult;
+import rolling.RollParameters;
 import rolling.Roller;
 import sheets.PlotPointUtils;
 import sheets.SheetsHandler;
@@ -35,8 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class RollComponentInteractionListener implements ButtonClickListener {
     private final User user;
-    private final AtomicReference<ListenerManager<ButtonClickListener>> listenerReference;
-    private final Either<MessageUpdater, InteractionOriginalResponseUpdater> updaterObject;
+    private final Message message;
     private final int discount;
     private final boolean enhanceable;
     private final boolean opportunity;
@@ -44,31 +39,25 @@ public class RollComponentInteractionListener implements ButtonClickListener {
     private final String pool;
     private final Integer originalPlotPoints;
     private final Integer originalDoomPoints;
+    private final AtomicReference<ListenerManager<ButtonClickListener>> listenerReference;
     private ScheduledFuture<CompletableFuture<Void>> removeListenerTask;
 
-    public RollComponentInteractionListener(User user, RollResult result, AtomicReference<ListenerManager<ButtonClickListener>> listenerReference, MessageUpdater messageUpdater) {
+    public RollComponentInteractionListener(User user, RollParameters rollParameters, AtomicReference<ListenerManager<ButtonClickListener>> reference, Pair<Integer, Integer> originalPointPair, Message message) {
         this.user = user;
-        this.result = result;
-        this.listenerReference = listenerReference;
-        this.updaterObject = Either.left(messageUpdater);
-    }
-
-    public RollComponentInteractionListener(User user, String pool, AtomicReference<ListenerManager<ButtonClickListener>> reference, InteractionOriginalResponseUpdater updater, int discount, boolean enhanceable, boolean opportunity, int diceKept, Pair<Integer, Integer> originalPointPair) {
-        this.user = user;
-        this.pool = pool;
+        this.pool = rollParameters.getPool();
         this.listenerReference = reference;
-        this.updaterObject = Either.right(updater);
-        this.discount = discount;
-        this.enhanceable = enhanceable;
-        this.opportunity = opportunity;
-        this.diceKept = diceKept;
+        this.discount = rollParameters.getDiscount();
+        this.enhanceable = rollParameters.isEnhanceable();
+        this.opportunity = rollParameters.isOpportunity();
+        this.diceKept = rollParameters.getDiceKept();
         this.originalPlotPoints = originalPointPair.getLeft();
         this.originalDoomPoints = originalPointPair.getRight();
+        this.message = message;
     }
 
     public void startRemoveTimer() {
         if (listenerReference.get() != null) {
-            removeListenerTask = user.getApi().getThreadPool().getScheduler().schedule(this::removeHandler, 60, TimeUnit.SECONDS);
+            removeListenerTask = user.getApi().getThreadPool().getScheduler().schedule(this::removeHandler, 10, TimeUnit.SECONDS);
         }
     }
 
@@ -198,8 +187,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
                         .addComponents(ComponentUtils.createRollComponentRows(false, enhanceable))
                         .replyTo(interactionMessage)
                         .send(interactionMessage.getChannel())
-                        .thenAccept(message -> Roller.attachListener(user, , Pair.of(originalPlotPoints, originalDoomPoints), pool, opportunity, discount, diceKept, )));
-    }
+                        .thenAccept(rerollMessage -> Roller.attachListener(user, new RollParameters(pool, discount, enhanceable, opportunity, diceKept), rerollMessage, Pair.of(originalPlotPoints, originalDoomPoints))));
     }
 
     /**
@@ -213,30 +201,12 @@ public class RollComponentInteractionListener implements ButtonClickListener {
     }
 
     /**
-     * Sends the outcome of a re-roll and attach a listener for roll enhancement
-     *
-     * @param channel            The ButtonInteraction to send the re-roll result to
-     * @param interactionMessage The message to reference when re-rolling
-     * @param rerollResult       The result of the re-roll
-     * @param embedBuilders      The embeds to set the originals to once the edit is done, leaves out the help text in the footer
-     */
-    private void sendRerollMessageAndAttachListener(TextChannel channel, Message interactionMessage, RollResult rerollResult, EmbedBuilder[] embedBuilders) {
-        new MessageBuilder()
-                .addEmbeds(embedBuilders)
-                .addComponents(ComponentUtils.createRollComponentRows(false, rerollResult.isEnhanceable()))
-                .replyTo(interactionMessage)
-                .send(channel)
-                .thenAccept(message -> RollLogic.attachEnhancementListener(user, rerollResult, message));
-    }
-
-    /**
      * Removes the listener after 60 seconds and removes the components
      *
      * @return A void completable future
      */
     private CompletableFuture<Void> removeHandler() {
-        updaterObject.fold(messageUpdater -> messageUpdater.removeAllComponents().applyChanges(), responseUpdater -> responseUpdater.removeAllComponents().update()).thenAccept(message -> message.addReaction(EmojiParser.parseToUnicode(":heavy_check_mark:")));
         listenerReference.get().remove();
-        return CompletableFuture.completedFuture(null);
+        return message.createUpdater().removeAllComponents().applyChanges().thenAccept(updated -> updated.addReaction(EmojiParser.parseToUnicode(":heavy_check_mark:")));
     }
 }

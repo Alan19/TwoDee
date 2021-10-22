@@ -3,11 +3,9 @@ package logic;
 import doom.DoomHandler;
 import io.vavr.API;
 import io.vavr.control.Try;
-import listeners.RollComponentInteractionListener;
 import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.entity.message.MessageUpdater;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
@@ -15,16 +13,11 @@ import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.*;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
-import org.javacord.api.listener.interaction.ButtonClickListener;
-import org.javacord.api.util.event.ListenerManager;
 import pw.mihou.velen.interfaces.*;
 import roles.Player;
 import roles.PlayerHandler;
 import roles.Storytellers;
-import rolling.DicePoolBuilder;
-import rolling.Result;
-import rolling.RollResult;
-import rolling.Roller;
+import rolling.*;
 import sheets.PlotPointUtils;
 import sheets.SheetsHandler;
 import util.ComponentUtils;
@@ -37,7 +30,6 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static io.vavr.API.$;
@@ -51,7 +43,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         RollLogic rollLogic = new RollLogic();
         final List<SlashCommandOption> rollCommandOptions = getRollCommandOptions();
         rollCommandOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false));
-        VelenCommand.ofHybrid("roll", "Rolls some dice!", velen, rollLogic, rollLogic).addOptions(rollCommandOptions.toArray(new SlashCommandOption[0])).addShortcuts("r").attach();
+        VelenCommand.ofHybrid("newroll", "Rolls some dice!", velen, rollLogic, rollLogic).addOptions(rollCommandOptions.toArray(new SlashCommandOption[0])).addShortcuts("r").setServerOnly(true, 468046159781429250L).attach();
     }
 
     static List<SlashCommandOption> getRollCommandOptions() {
@@ -128,7 +120,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         rollDice(dicePool, discount, diceKept, opportunity, user)
                 .handle((embedBuilders, throwable) -> Roller.sendResult(enhanceable, updater, embedBuilders.getLeft(), throwable, embedBuilders.getRight()))
                 .thenCompose(future -> future)
-                .thenAccept(trySend -> Roller.attachListener(user, trySend, originalPointPair.orElse(Pair.of(0, 0)), dicePool, opportunity, discount, diceKept));
+                .thenAccept(trySend -> trySend.andThen(triple -> Roller.attachListener(user, new RollParameters(dicePool, discount, triple.getRight(), opportunity, diceKept), triple.getLeft(), originalPointPair.orElse(Pair.of(0, 0)))));
     }
 
     public static CompletableFuture<Pair<List<EmbedBuilder>, Boolean>> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, User user) {
@@ -149,13 +141,6 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         return skillMap.map(map -> Arrays.stream(pool.split(" ")).map(s -> map.getOrDefault(s, s)).collect(Collectors.joining(" ")));
     }
 
-    public static void attachEnhancementListener(User user, RollResult result, Message message) {
-        final AtomicReference<ListenerManager<ButtonClickListener>> reference = new AtomicReference<>();
-        final RollComponentInteractionListener listener = new RollComponentInteractionListener(user, result, reference, new MessageUpdater(message).setEmbeds(message.getEmbeds().stream().map(Embed::toBuilder).toArray(EmbedBuilder[]::new)));
-        final ListenerManager<ButtonClickListener> listenerManager = message.addButtonClickListener(listener);
-        reference.set(listenerManager);
-        listener.startRemoveTimer();
-    }
 
     /**
      * Handles a roll made through a text command
@@ -170,8 +155,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
             final CompletableFuture<EmbedBuilder[]> rollEmbeds = getRollEmbeds(UtilFunctions.getUsernameInChannel(user, event.getChannel()), user, rollResult);
             rollEmbeds.thenAccept(embeds -> new MessageBuilder()
                     .addEmbeds(embeds)
-                    .addComponents(ComponentUtils.createRollComponentRows(true, rollResult.isEnhanceable())).send(event.getChannel())
-                    .thenAccept(message -> attachEnhancementListener(user, rollResult, message)));
+                    .addComponents(ComponentUtils.createRollComponentRows(true, rollResult.isEnhanceable())).send(event.getChannel()));
         }
         else {
             event.getChannel().sendMessage("Invalid dice pool!");
@@ -196,6 +180,11 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
         String dicePool = String.join(" ", args);
+        Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user).flatMap(integer -> PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).map(s -> Pair.of(integer, DoomHandler.getDoom(s))));
+        rollDice(dicePool, 0, 2, true, user)
+                .handle((embedBuilders, throwable) -> Roller.sendResult(null, event.getChannel(), embedBuilders.getLeft(), throwable, embedBuilders.getRight()))
+                .thenCompose(future -> future)
+                .thenAccept(trySend -> trySend.andThen(triple -> Roller.attachListener(user, new RollParameters(dicePool, 0, triple.getRight(), true, 2), triple.getLeft(), originalPointPair.orElse(Pair.of(0, 0)))));
 
         //Variables containing getResults information
         DicePoolBuilder builder = new DicePoolBuilder(dicePool, s -> s).withOpportunity(true);
