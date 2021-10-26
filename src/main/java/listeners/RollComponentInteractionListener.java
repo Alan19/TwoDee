@@ -159,16 +159,16 @@ public class RollComponentInteractionListener implements ButtonClickListener {
      */
     private void handleReroll(ButtonInteraction interaction, Message interactionMessage) {
         // Handles a reroll by removing the components from the original message, then sending a new message with the new embeds and components and then attach a listener
-        final Optional<RollResult> reroll = result.reroll();
-        if (reroll.isPresent() && interaction.getChannel().isPresent()) {
-            RollResult rerollResult = reroll.get();
+        final RollResult reroll = result.reroll();
+        if (interaction.getChannel().isPresent()) {
             interaction.createOriginalMessageUpdater()
                     .removeAllComponents()
                     .addEmbed(interactionMessage.getEmbeds().get(0).toBuilder().setFooter(""))
                     .update()
                     .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":bulb:")));
             final TextChannel channel = interaction.getChannel().get();
-            rollBackChanges().thenAccept(integer -> RollLogic.getRollEmbeds(UtilFunctions.getUsernameInChannel(interaction.getUser(), channel), interaction.getUser(), rerollResult).thenAccept(embedBuilders -> sendRerollMessageAndAttachListener(channel, interactionMessage, rerollResult, embedBuilders)));
+            // TODO Allow rerolls to have a difficulty calculator
+            rollBackChanges().thenAccept(integer -> RollLogic.getRollEmbeds(UtilFunctions.getUsernameInChannel(interaction.getUser(), channel), interaction.getUser(), reroll, null).thenAccept(embedBuilders -> sendRerollMessageAndAttachListener(channel, interactionMessage, reroll, embedBuilders)));
         }
     }
 

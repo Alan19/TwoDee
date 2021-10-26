@@ -43,8 +43,8 @@ public class RollResult implements PoolResultWithEmbed {
         this.enhanceable = builder.isEnhanceable();
     }
 
-    public Optional<RollResult> reroll() {
-        return builder.getResults();
+    public RollResult reroll() {
+        return builder.getResults().get();
     }
 
     public boolean isEnhanceable() {
