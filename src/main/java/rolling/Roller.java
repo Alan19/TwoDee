@@ -60,6 +60,13 @@ public class Roller {
         });
     }
 
+    /**
+     * Loops through the dice pool to see if there are any skills, and then replacing them if there is.
+     *
+     * @param pool                  The pool to check
+     * @param skillReplacerFunction A function that takes the input string and outputs another string with the skills replaced.
+     * @return A Try that contains the replaced string. If there are no skills, the Try is guaranteed to be a success but if not, the function passed in the parameter may return an exception.
+     */
     private static Try<String> preprocessPool(String pool, Function<String, Try<String>> skillReplacerFunction) {
         final boolean anySkills = Arrays.stream(pool.split(" ")).anyMatch(s -> SKILL_PATTERN.matcher(s).matches());
         return anySkills ? skillReplacerFunction.apply(pool) : Try.success(pool);

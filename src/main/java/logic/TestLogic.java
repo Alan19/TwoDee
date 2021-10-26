@@ -8,7 +8,6 @@ import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import pw.mihou.velen.interfaces.*;
-import rolling.DicePoolBuilder;
 
 import java.util.List;
 
@@ -23,11 +22,7 @@ public class TestLogic implements VelenEvent, VelenSlashEvent {
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
         String dicePool = String.join(" ", args);
-
-        //Variables containing getResults information
-        DicePoolBuilder builder = new DicePoolBuilder(dicePool, s -> s).withOpportunity(false);
-        RollLogic.handleTextCommandRoll(event, user, builder);
-
+        RollLogic.handleTextCommandRoll(user, event.getChannel(), dicePool, false);
     }
 
     @Override
