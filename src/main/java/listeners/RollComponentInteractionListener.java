@@ -1,23 +1,25 @@
 package listeners;
 
 import com.vdurmont.emoji.EmojiParser;
-import dicerolling.RollResult;
 import doom.DoomHandler;
-import io.vavr.control.Either;
 import logic.RollLogic;
-import org.javacord.api.entity.channel.TextChannel;
+import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.entity.message.MessageUpdater;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
+import org.javacord.api.entity.message.embed.EmbedField;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.ButtonClickEvent;
 import org.javacord.api.interaction.ButtonInteraction;
-import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.javacord.api.listener.interaction.ButtonClickListener;
 import org.javacord.api.util.event.ListenerManager;
+import roles.Player;
+import roles.PlayerHandler;
 import roles.Storytellers;
+import rolling.RollParameters;
+import rolling.Roller;
 import sheets.PlotPointUtils;
+import sheets.SheetsHandler;
 import util.ComponentUtils;
 import util.UtilFunctions;
 
@@ -29,23 +31,28 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class RollComponentInteractionListener implements ButtonClickListener {
     private final User user;
-    private final RollResult result;
+    private final Message message;
+    private final int discount;
+    private final Boolean enhanceable;
+    private final boolean opportunity;
+    private final int diceKept;
+    private final String pool;
+    private final Integer originalPlotPoints;
+    private final Integer originalDoomPoints;
     private final AtomicReference<ListenerManager<ButtonClickListener>> listenerReference;
-    private final Either<MessageUpdater, InteractionOriginalResponseUpdater> updaterObject;
     private ScheduledFuture<CompletableFuture<Void>> removeListenerTask;
 
-    public RollComponentInteractionListener(User user, RollResult result, AtomicReference<ListenerManager<ButtonClickListener>> listenerReference, MessageUpdater messageUpdater) {
+    public RollComponentInteractionListener(User user, RollParameters rollParameters, AtomicReference<ListenerManager<ButtonClickListener>> reference, Pair<Integer, Integer> originalPointPair, Message message) {
         this.user = user;
-        this.result = result;
-        this.listenerReference = listenerReference;
-        this.updaterObject = Either.left(messageUpdater);
-    }
-
-    public RollComponentInteractionListener(User user, RollResult result, AtomicReference<ListenerManager<ButtonClickListener>> listenerReference, InteractionOriginalResponseUpdater updater) {
-        this.user = user;
-        this.result = result;
-        this.listenerReference = listenerReference;
-        this.updaterObject = Either.right(updater);
+        this.pool = rollParameters.getPool();
+        this.listenerReference = reference;
+        this.discount = rollParameters.getDiscount();
+        this.enhanceable = rollParameters.isEnhanceable();
+        this.opportunity = rollParameters.isOpportunity();
+        this.diceKept = rollParameters.getDiceKept();
+        this.originalPlotPoints = originalPointPair.getLeft();
+        this.originalDoomPoints = originalPointPair.getRight();
+        this.message = message;
     }
 
     public void startRemoveTimer() {
@@ -98,21 +105,31 @@ public class RollComponentInteractionListener implements ButtonClickListener {
      * @param interactionMessage   The message that contained the interaction
      */
     private void enhanceRoll(ButtonInteraction componentInteraction, Integer enhanceCount, Message interactionMessage) {
-        if (Storytellers.isUserStoryteller(componentInteraction.getUser())) {
-            componentInteraction.createOriginalMessageUpdater()
-                    .removeAllComponents()
-                    .addEmbeds(RollLogic.removeFirstEmbedFooter(interactionMessage))
-                    .addEmbeds(getDoomEnhancementEmbed(result.getTotal(), enhanceCount))
-                    .update()
-                    .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":imp:")));
-        }
-        else {
-            getEnhancementEmbed(componentInteraction.getUser(), result.getTotal(), enhanceCount).thenAccept(enhanceEmbed -> componentInteraction.createOriginalMessageUpdater()
-                            .removeAllComponents()
-                            .addEmbeds(RollLogic.removeFirstEmbedFooter(interactionMessage))
-                            .addEmbed(enhanceEmbed)
-                            .update())
-                    .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":star2:")));
+        final Optional<Integer> total = interactionMessage.getEmbeds()
+                .get(0)
+                .getFields()
+                .stream()
+                .filter(embedField -> embedField.getName().equals("Total"))
+                .findFirst()
+                .map(EmbedField::getValue)
+                .flatMap(UtilFunctions::tryParseInt);
+        if (total.isPresent()) {
+            if (Storytellers.isUserStoryteller(componentInteraction.getUser())) {
+                componentInteraction.createOriginalMessageUpdater()
+                        .removeAllComponents()
+                        .addEmbeds(RollLogic.removeFirstEmbedFooter(interactionMessage))
+                        .addEmbeds(getDoomEnhancementEmbed(total.get(), enhanceCount))
+                        .update()
+                        .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":imp:")));
+            }
+            else {
+                getEnhancementEmbed(componentInteraction.getUser(), total.get(), enhanceCount).thenAccept(enhanceEmbed -> componentInteraction.createOriginalMessageUpdater()
+                                .removeAllComponents()
+                                .addEmbeds(RollLogic.removeFirstEmbedFooter(interactionMessage))
+                                .addEmbed(enhanceEmbed)
+                                .update())
+                        .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":star2:")));
+            }
         }
     }
 
@@ -152,24 +169,25 @@ public class RollComponentInteractionListener implements ButtonClickListener {
     }
 
     /**
-     * Handles the reroll of a roll by removing the components from the message,
+     * Handles a re-roll. First rolls back doom and plot points, then rolls and changes doom and plot points, and finally removes embeds from the original message, removes the footer, adds a reaction, and replies to the original roll and sends the new roll.
      *
      * @param interaction        The button interaction
      * @param interactionMessage The message the button interaction is attached to
      */
     private void handleReroll(ButtonInteraction interaction, Message interactionMessage) {
-        // Handles a reroll by removing the components from the original message, then sending a new message with the new embeds and components and then attach a listener
-        final RollResult reroll = result.reroll();
-        if (interaction.getChannel().isPresent()) {
-            interaction.createOriginalMessageUpdater()
-                    .removeAllComponents()
-                    .addEmbed(interactionMessage.getEmbeds().get(0).toBuilder().setFooter(""))
-                    .update()
-                    .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":bulb:")));
-            final TextChannel channel = interaction.getChannel().get();
-            // TODO Allow rerolls to have a difficulty calculator
-            rollBackChanges().thenAccept(integer -> RollLogic.getRollEmbeds(UtilFunctions.getUsernameInChannel(interaction.getUser(), channel), interaction.getUser(), reroll, null).thenAccept(embedBuilders -> sendRerollMessageAndAttachListener(channel, interactionMessage, reroll, embedBuilders)));
-        }
+        rollBackChanges().thenCompose(unused -> RollLogic.rollDice(pool, discount, diceKept, opportunity, user))
+                .thenCompose(pair -> interaction.createOriginalMessageUpdater()
+                        .removeAllComponents()
+                        .addEmbeds(interactionMessage.getEmbeds().get(0).toBuilder().setFooter(""))
+                        .update()
+                        .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":bulb:")))
+                        .thenApply(unused -> pair))
+                .thenAccept(triple -> new MessageBuilder()
+                        .addEmbeds(triple.getLeft())
+                        .addComponents(ComponentUtils.createRollComponentRows(false, enhanceable != null ? enhanceable : triple.getMiddle(), triple.getRight()))
+                        .replyTo(interactionMessage)
+                        .send(interactionMessage.getChannel())
+                        .thenAccept(rerollMessage -> Roller.attachListener(user, new RollParameters(pool, discount, enhanceable, opportunity, diceKept), rerollMessage, Pair.of(originalPlotPoints, originalDoomPoints))));
     }
 
     /**
@@ -178,35 +196,8 @@ public class RollComponentInteractionListener implements ButtonClickListener {
      * @return A completable future indicating that the plot points and doom points have been rolled back
      */
     private CompletableFuture<Void> rollBackChanges() {
-        CompletableFuture<Optional<Integer>> future = CompletableFuture.completedFuture(Optional.empty());
-        if (result.getPlotPointsSpent() != 0 || result.getDoomGenerated() > 0) {
-            int plotPointChange = result.getPlotPointsSpent();
-            if (result.getDoomGenerated() > 0) {
-                plotPointChange--;
-            }
-            future = PlotPointUtils.addPlotPointsToUser(user, plotPointChange);
-        }
-        if (result.getDoomGenerated() != 0) {
-            DoomHandler.addDoom(result.getDoomGenerated() * -1);
-        }
-        return future.thenAccept(integer -> {});
-    }
-
-    /**
-     * Sends the outcome of a re-roll and attach a listener for roll enhancement
-     *
-     * @param channel            The ButtonInteraction to send the re-roll result to
-     * @param interactionMessage The message to reference when re-rolling
-     * @param rerollResult       The result of the re-roll
-     * @param embedBuilders      The embeds to set the originals to once the edit is done, leaves out the help text in the footer
-     */
-    private void sendRerollMessageAndAttachListener(TextChannel channel, Message interactionMessage, RollResult rerollResult, EmbedBuilder[] embedBuilders) {
-        new MessageBuilder()
-                .addEmbeds(embedBuilders)
-                .addComponents(ComponentUtils.createRollComponentRows(false, rerollResult.isEnhanceable()))
-                .replyTo(interactionMessage)
-                .send(channel)
-                .thenAccept(message -> RollLogic.attachEnhancementListener(user, rerollResult, message));
+        PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).ifPresent(s -> DoomHandler.setDoom(s, originalDoomPoints));
+        return SheetsHandler.setPlotPoints(user, originalPlotPoints).thenAccept(integer -> {});
     }
 
     /**
@@ -215,8 +206,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
      * @return A void completable future
      */
     private CompletableFuture<Void> removeHandler() {
-        updaterObject.fold(messageUpdater -> messageUpdater.removeAllComponents().applyChanges(), responseUpdater -> responseUpdater.removeAllComponents().update()).thenAccept(message -> message.addReaction(EmojiParser.parseToUnicode(":heavy_check_mark:")));
         listenerReference.get().remove();
-        return CompletableFuture.completedFuture(null);
+        return message.createUpdater().removeAllComponents().applyChanges().thenAccept(updated -> updated.addReaction(EmojiParser.parseToUnicode(":heavy_check_mark:")));
     }
 }

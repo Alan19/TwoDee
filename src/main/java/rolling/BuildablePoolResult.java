@@ -1,4 +1,4 @@
-package dicerolling;
+package rolling;
 
 public interface BuildablePoolResult extends PoolResult {
     BuildablePoolResult addRegularDice(int diceValue);

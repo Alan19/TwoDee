@@ -65,7 +65,7 @@ public class BleedLogic implements VelenSlashEvent, VelenEvent {
             else {
                 users.add((User) targets.get());
             }
-            event.respondLater().thenAcceptBoth(onBleedCommand(event.getUser(), event.getChannel().get(), users, event.getOptionIntValueByName("modifier").orElse(0)), (updater, embed) -> updater.addEmbed(embed).update());
+            event.respondLater().thenAcceptBoth(onBleedCommand(event.getUser(), event.getChannel().get(), users, event.getOptionLongValueByName("modifier").map(Math::toIntExact).orElse(0)), (updater, embed) -> updater.addEmbed(embed).update());
         }
         else {
             firstResponder.setContent("Invalid role or channel!").respond();

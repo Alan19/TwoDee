@@ -89,9 +89,9 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
 
     @Override
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final Optional<SlashCommandInteractionOption> mode = event.getOptionByName("mode").flatMap(SlashCommandInteractionOptionsProvider::getFirstOption);
+        final Optional<SlashCommandInteractionOption> mode = event.getOptionByName("mode").flatMap(option -> option.getOptionByIndex(0));
         final Optional<String> poolName = mode.flatMap(slashCommandInteractionOption -> slashCommandInteractionOption.getOptionStringValueByName("name"));
-        final Optional<Integer> count = mode.flatMap(slashCommandInteractionOption -> slashCommandInteractionOption.getOptionIntValueByName("count"));
+        final Optional<Integer> count = mode.flatMap(slashCommandInteractionOption -> slashCommandInteractionOption.getOptionLongValueByName("count").map(Math::toIntExact));
         if (event.getChannel().isPresent()) {
             final String modeAsString = mode.map(SlashCommandInteractionOption::getName).orElse("query");
             final EmbedBuilder query = handleCommand(modeAsString, poolName.orElseGet(() -> modeAsString.equals("query") ? "" : DoomHandler.getActivePool()), count.orElse(1));

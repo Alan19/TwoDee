@@ -69,7 +69,7 @@ public class ReplenishLogic implements VelenSlashEvent, VelenEvent {
     @Override
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final Optional<Role> party = event.getOptionRoleValueByName("party");
-        final Optional<Integer> count = event.getOptionIntValueByName("count");
+        final Optional<Integer> count = event.getOptionLongValueByName("count").map(Math::toIntExact);
         if (party.isPresent() && count.isPresent() && event.getChannel().isPresent()) {
             event.respondLater().thenAcceptBoth(replenishParties(user, party.get(), count.get(), event.getChannel().get()), (updater, embed) -> updater.addEmbed(embed).update());
         }

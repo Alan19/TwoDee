@@ -3,6 +3,9 @@ package doom;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
+import org.javacord.api.entity.user.User;
+import roles.Player;
+import roles.PlayerHandler;
 
 import java.awt.*;
 import java.io.*;
@@ -49,6 +52,26 @@ public class DoomHandler {
      */
     public static EmbedBuilder addDoom(int doomVal) {
         return addDoom(getActivePool(), doomVal);
+    }
+
+    /**
+     * Adds doom to the player's set doom pool, or the default doom pool if there isn't any.
+     *
+     * @param user  The user object
+     * @param count The amount of doom to add
+     * @return The new amount of plot points in the doom pool
+     */
+    public static int addDoom(User user, int count) {
+        final Optional<String> doomPoolOptional = PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool);
+        if (doomPoolOptional.isPresent()) {
+            final String pool = doomPoolOptional.get();
+            addDoom(pool, count);
+            return getDoom(pool);
+        }
+        else {
+            addDoom(count);
+            return getDoom();
+        }
     }
 
     /**

@@ -1,6 +1,5 @@
 package logic;
 
-import dicerolling.DicePoolBuilder;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
@@ -23,22 +22,17 @@ public class TestLogic implements VelenEvent, VelenSlashEvent {
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
         String dicePool = String.join(" ", args);
-
-        //Variables containing getResults information
-        DicePoolBuilder builder = new DicePoolBuilder(user, dicePool).withOpportunity(false);
-        RollLogic.handleTextCommandRoll(event, user, builder);
-
+        RollLogic.handleTextCommandRoll(user, event.getChannel(), dicePool, false);
     }
 
     @Override
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final String dicePool = event.getOptionStringValueByName("dicepool").orElse("");
-        final Integer discount = event.getOptionIntValueByName("discount").orElse(0);
-        final Integer diceKept = event.getOptionIntValueByName("dicekept").orElse(2);
+        final Integer discount = event.getOptionLongValueByName("discount").map(Math::toIntExact).orElse(0);
+        final Integer diceKept = event.getOptionLongValueByName("dicekept").map(Math::toIntExact).orElse(2);
         final Boolean enhanceable = event.getOptionBooleanValueByName("enhanceable").orElse(null);
-        final String target = args.getStringOptionWithName("target").orElse(null);
 
-        RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false, target);
+        RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false);
     }
 
 }

@@ -1,4 +1,4 @@
-package dicerolling;
+package rolling;
 
 public enum DiceType {
     REGULAR("d"),

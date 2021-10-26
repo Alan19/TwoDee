@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -72,26 +73,31 @@ public class SheetsHandler {
 
     /**
      * Retrieves all skills on a player
-     * TODO Convert get functions to CompletableFuture
+     * <p>
+     * Throws an error if the spreadsheet could not be accessed, or when trying to access the spreadsheet of an unregistered user
      *
      * @param user The user to lookup
-     * @return The skills of a user as a HashMap of skill names to facet count
+     * @return The skills of a user as a HashMap of skill names to the value of the skill in a valid dice format (3d12, d6, etc.)
      */
-    public static Optional<Map<String, Integer>> getSkills(User user) {
-        Map<String, Integer> skills = new HashMap<>();
-        final Optional<String> spreadsheetID = getSpreadsheetForPartyMember(user);
-        if (spreadsheetID.isPresent()) {
-            try {
-                final ValueRange response = instance.service.spreadsheets().values().get(spreadsheetID.get(), "Variables!AK3:AL1001").execute();
-                response.getValues().stream()
-                        .filter(objects -> objects.size() == 2 && ((String) objects.get(1)).matches("d[1-9]+[0-9]*"))
-                        .forEach(objects -> skills.put(((String) objects.get(0)).toLowerCase().replaceAll("\\s", ""), Integer.parseInt(((String) (objects.get(1))).substring(1))));
-                return Optional.of(skills);
-            } catch (IOException e) {
-                e.printStackTrace();
+    public static CompletableFuture<Map<String, String>> getSkills(User user) {
+        Map<String, String> skills = new HashMap<>();
+        return CompletableFuture.supplyAsync(() -> {
+            final Optional<String> spreadsheetID = getSpreadsheetForPartyMember(user);
+            if (spreadsheetID.isPresent()) {
+                try {
+                    final ValueRange response = instance.service.spreadsheets().values().get(spreadsheetID.get(), "AllEverything").execute();
+                    response.getValues().stream()
+                            .filter(objects -> objects.size() == 2 && ((String) objects.get(1)).matches("([1-9]\\d*)?[kcp]?d[1-9]\\d?"))
+                            .forEach(objects -> skills.put(((String) objects.get(0)).toLowerCase().replaceAll("\\s", ""), ((String) (objects.get(1)))));
+                    return skills;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    sneakyThrow(new IllegalArgumentException(MessageFormat.format("Unable to retrieve skill list for user `{0}`!", user.getName())));
+                }
             }
-        }
-        return Optional.empty();
+            sneakyThrow(new IllegalArgumentException(MessageFormat.format("User `{0}` is not registered in `players.json`!", user.getName())));
+            return new HashMap<>();
+        });
     }
 
     /**
@@ -114,6 +120,8 @@ public class SheetsHandler {
 
     /**
      * Attempts to retrieve the number of plot points a user has
+     * <p>
+     * TODO Switch this to use CompletableFuture
      *
      * @param user The user to look up
      * @return The number of plot points a user has in an optional, or empty if the user does not have a linked character sheet
