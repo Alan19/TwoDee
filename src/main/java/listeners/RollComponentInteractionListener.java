@@ -23,7 +23,6 @@ import sheets.SheetsHandler;
 import util.ComponentUtils;
 import util.UtilFunctions;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledFuture;
@@ -34,7 +33,6 @@ public class RollComponentInteractionListener implements ButtonClickListener {
     private final User user;
     private final Message message;
     private final int discount;
-    @Nullable
     private final Boolean enhanceable;
     private final boolean opportunity;
     private final int diceKept;
@@ -59,7 +57,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
 
     public void startRemoveTimer() {
         if (listenerReference.get() != null) {
-            removeListenerTask = user.getApi().getThreadPool().getScheduler().schedule(this::removeHandler, 10, TimeUnit.SECONDS);
+            removeListenerTask = user.getApi().getThreadPool().getScheduler().schedule(this::removeHandler, 60, TimeUnit.SECONDS);
         }
     }
 
@@ -184,9 +182,9 @@ public class RollComponentInteractionListener implements ButtonClickListener {
                         .update()
                         .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":bulb:")))
                         .thenApply(unused -> pair))
-                .thenAccept(pair -> new MessageBuilder()
-                        .addEmbeds(pair.getLeft())
-                        .addComponents(ComponentUtils.createRollComponentRows(false, enhanceable != null ? enhanceable : pair.getRight()))
+                .thenAccept(triple -> new MessageBuilder()
+                        .addEmbeds(triple.getLeft())
+                        .addComponents(ComponentUtils.createRollComponentRows(false, enhanceable != null ? enhanceable : triple.getMiddle(), triple.getRight()))
                         .replyTo(interactionMessage)
                         .send(interactionMessage.getChannel())
                         .thenAccept(rerollMessage -> Roller.attachListener(user, new RollParameters(pool, discount, enhanceable, opportunity, diceKept), rerollMessage, Pair.of(originalPlotPoints, originalDoomPoints))));

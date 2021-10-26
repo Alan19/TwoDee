@@ -5,13 +5,17 @@ import doom.DoomHandler;
 import io.vavr.API;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
-import org.javacord.api.interaction.*;
+import org.javacord.api.interaction.SlashCommandInteraction;
+import org.javacord.api.interaction.SlashCommandInteractionOption;
+import org.javacord.api.interaction.SlashCommandOption;
+import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import pw.mihou.velen.interfaces.*;
@@ -43,17 +47,15 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         RollLogic rollLogic = new RollLogic();
         final List<SlashCommandOption> rollCommandOptions = getRollCommandOptions();
         rollCommandOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false));
-        VelenCommand.ofHybrid("newroll", "Rolls some dice!", velen, rollLogic, rollLogic).addOptions(rollCommandOptions.toArray(new SlashCommandOption[0])).addShortcuts("r").setServerOnly(true, 468046159781429250L).attach();
+        VelenCommand.ofHybrid("roll", "Rolls some dice!", velen, rollLogic, rollLogic).addOptions(rollCommandOptions.toArray(new SlashCommandOption[0])).addShortcuts("r").setServerOnly(true, 468046159781429250L).attach();
     }
 
     static List<SlashCommandOption> getRollCommandOptions() {
-        // TODO Add target difficulty option
         List<SlashCommandOption> options = new ArrayList<>();
         options.add(SlashCommandOption.create(SlashCommandOptionType.STRING, "dicepool", "The dice pool to roll with.", true));
         options.add(SlashCommandOption.create(SlashCommandOptionType.INTEGER, "discount", "The number of plot points to discount (negative results in a plot point cost increase).", false));
         options.add(SlashCommandOption.create(SlashCommandOptionType.INTEGER, "dicekept", "The number of dice kept. Keeps two dice by default.", false));
         options.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "enhanceable", "Allows the roll to be enhanced after the roll.", false));
-        options.add(SlashCommandOption.createWithChoices(SlashCommandOptionType.STRING, "target", "Adds an embed to provide assistance with hitting the target difficulty", false, Arrays.stream(new String[]{"easy", "average", "hard", "formidable", "heroic", "incredible", "ridiculous", "impossible"}).map(s -> new SlashCommandOptionChoiceBuilder().setName(s).setValue(s)).toArray(SlashCommandOptionChoiceBuilder[]::new)));
         return options;
     }
 
@@ -72,9 +74,9 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         final CompletableFuture<InteractionOriginalResponseUpdater> updater = event.respondLater();
         Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user).flatMap(integer -> PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).map(s -> Pair.of(integer, DoomHandler.getDoom(s))));
         rollDice(dicePool, discount, diceKept, opportunity, user)
-                .handle((embedBuilders, throwable) -> {
-                    final Boolean canEnhance = enhanceable != null ? enhanceable : embedBuilders.getRight();
-                    return Roller.sendResult(updater, embedBuilders.getLeft(), throwable, ComponentUtils.createRollComponentRows(true, canEnhance));
+                .handle((triple, throwable) -> {
+                    final Boolean canEnhance = enhanceable != null ? enhanceable : triple.getMiddle();
+                    return Roller.sendResult(updater, triple.getLeft(), throwable, ComponentUtils.createRollComponentRows(true, canEnhance, triple.getRight()));
                 })
                 .thenCompose(future -> future)
                 .thenAccept(trySend -> trySend.andThen(message -> Roller.attachListener(user, new RollParameters(dicePool, discount, enhanceable, opportunity, diceKept), message, originalPointPair.orElse(Pair.of(0, 0)))));
@@ -88,16 +90,16 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
      * @param diceKept    The amount of dice kept
      * @param opportunity If the roll can have opportunities
      * @param user        The user who made the roll
-     * @return A CompletableFuture that contains a Pair that that has a list of the embeds to send, and a boolean states if the roll uses any plot dice
+     * @return A CompletableFuture that contains a Triple that that has a list of the embeds to send, a boolean states if the roll uses any plot dice, and the total of the roll
      */
-    public static CompletableFuture<Pair<List<EmbedBuilder>, Boolean>> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, User user) {
+    public static CompletableFuture<Triple<List<EmbedBuilder>, Boolean, Integer>> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, User user) {
         return Roller.parse(dicePool, pool -> convertSkillsToDice(user, pool))
                 .map(Roller::roll)
                 .map(pair -> new Result(pair.getLeft(), pair.getRight(), diceKept))
                 .map(result -> Roller.handleOpportunities(result, discount, opportunity, value -> DoomHandler.addDoom(user, value), value -> PlotPointUtils.addPlotPointsToPlayer(user, value)))
                 .toCompletableFuture()
                 .thenCompose(future -> future)
-                .thenApply(triple -> Pair.of(Roller.output(triple.getLeft(), builder -> postProcessResult(dicePool, user, builder), PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).orElse(DoomHandler.getActivePool()), discount, opportunity, triple.getMiddle(), triple.getRight()), triple.getLeft().getPlotDiceCost() == 0));
+                .thenApply(triple -> Triple.of(Roller.output(triple.getLeft(), builder -> postProcessResult(dicePool, user, builder), PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).orElse(DoomHandler.getActivePool()), discount, opportunity, triple.getMiddle(), triple.getRight()), triple.getLeft().getPlotDiceCost() == 0, triple.getLeft().getTotal()));
     }
 
     private static EmbedBuilder postProcessResult(String dicePool, User user, EmbedBuilder builder) {
@@ -147,7 +149,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     public static void handleTextCommandRoll(User user, TextChannel channel, String pool, boolean opportunity) {
         Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user).flatMap(integer -> PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).map(s -> Pair.of(integer, DoomHandler.getDoom(s))));
         rollDice(pool, 0, 2, opportunity, user)
-                .handle((pair, throwable) -> Roller.sendResult(channel, pair.getLeft(), throwable, ComponentUtils.createRollComponentRows(true, pair.getRight())))
+                .handle((triple, throwable) -> Roller.sendResult(channel, triple.getLeft(), throwable, ComponentUtils.createRollComponentRows(true, triple.getMiddle(), triple.getRight())))
                 .thenCompose(future -> future)
                 .thenAccept(trySend -> trySend.andThen(message -> Roller.attachListener(user, new RollParameters(pool, 0, null, true, 2), message, originalPointPair.orElse(Pair.of(0, 0)))));
     }
