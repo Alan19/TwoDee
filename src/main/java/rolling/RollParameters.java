@@ -1,13 +1,15 @@
 package rolling;
 
+import javax.annotation.Nullable;
+
 public class RollParameters {
     private final String pool;
     private final int discount;
-    private final boolean enhanceable;
+    private final Boolean enhanceable;
     private final boolean opportunity;
     private final int diceKept;
 
-    public RollParameters(String pool, int discount, boolean enhanceable, boolean opportunity, int diceKept) {
+    public RollParameters(String pool, int discount, @Nullable Boolean enhanceable, boolean opportunity, int diceKept) {
         this.pool = pool;
         this.discount = discount;
         this.enhanceable = enhanceable;
@@ -23,7 +25,8 @@ public class RollParameters {
         return discount;
     }
 
-    public boolean isEnhanceable() {
+    @Nullable
+    public Boolean isEnhanceable() {
         return enhanceable;
     }
 

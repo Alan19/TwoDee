@@ -1,5 +1,6 @@
 package logic;
 
+import discord.TwoDee;
 import doom.DoomHandler;
 import io.vavr.API;
 import io.vavr.control.Try;
@@ -21,8 +22,11 @@ import rolling.RollParameters;
 import rolling.Roller;
 import sheets.PlotPointUtils;
 import sheets.SheetsHandler;
+import util.ComponentUtils;
+import util.RandomColor;
 
 import javax.annotation.Nullable;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -68,9 +72,12 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         final CompletableFuture<InteractionOriginalResponseUpdater> updater = event.respondLater();
         Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user).flatMap(integer -> PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).map(s -> Pair.of(integer, DoomHandler.getDoom(s))));
         rollDice(dicePool, discount, diceKept, opportunity, user)
-                .handle((embedBuilders, throwable) -> Roller.sendResult(enhanceable, updater, embedBuilders.getLeft(), throwable, embedBuilders.getRight()))
+                .handle((embedBuilders, throwable) -> {
+                    final Boolean canEnhance = enhanceable != null ? enhanceable : embedBuilders.getRight();
+                    return Roller.sendResult(updater, embedBuilders.getLeft(), throwable, ComponentUtils.createRollComponentRows(true, canEnhance));
+                })
                 .thenCompose(future -> future)
-                .thenAccept(trySend -> trySend.andThen(triple -> Roller.attachListener(user, new RollParameters(dicePool, discount, triple.getRight(), opportunity, diceKept), triple.getLeft(), originalPointPair.orElse(Pair.of(0, 0)))));
+                .thenAccept(trySend -> trySend.andThen(message -> Roller.attachListener(user, new RollParameters(dicePool, discount, enhanceable, opportunity, diceKept), message, originalPointPair.orElse(Pair.of(0, 0)))));
     }
 
     /**
@@ -81,7 +88,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
      * @param diceKept    The amount of dice kept
      * @param opportunity If the roll can have opportunities
      * @param user        The user who made the roll
-     * @return A CompletableFuture that contains a Pair that that has a list of the embeds to send, and a boolean determines if the roll is enhanceable
+     * @return A CompletableFuture that contains a Pair that that has a list of the embeds to send, and a boolean states if the roll uses any plot dice
      */
     public static CompletableFuture<Pair<List<EmbedBuilder>, Boolean>> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, User user) {
         return Roller.parse(dicePool, pool -> convertSkillsToDice(user, pool))
@@ -90,7 +97,14 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
                 .map(result -> Roller.handleOpportunities(result, discount, opportunity, value -> DoomHandler.addDoom(user, value), value -> PlotPointUtils.addPlotPointsToPlayer(user, value)))
                 .toCompletableFuture()
                 .thenCompose(future -> future)
-                .thenApply(triple -> Pair.of(Roller.output(triple.getLeft(), discount, opportunity, triple.getMiddle(), triple.getRight()), triple.getLeft().getPlotDiceCost() == 0));
+                .thenApply(triple -> Pair.of(Roller.output(triple.getLeft(), builder -> postProcessResult(dicePool, user, builder), PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).orElse(DoomHandler.getActivePool()), discount, opportunity, triple.getMiddle(), triple.getRight()), triple.getLeft().getPlotDiceCost() == 0));
+    }
+
+    private static EmbedBuilder postProcessResult(String dicePool, User user, EmbedBuilder builder) {
+        return builder.setAuthor(user)
+                .setColor(RandomColor.getRandomColor())
+                .setTitle(TwoDee.getRollTitleMessage())
+                .setDescription(MessageFormat.format("Here are the results for **{0}**", dicePool));
     }
 
     /**
@@ -133,9 +147,9 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     public static void handleTextCommandRoll(User user, TextChannel channel, String pool, boolean opportunity) {
         Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user).flatMap(integer -> PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).map(s -> Pair.of(integer, DoomHandler.getDoom(s))));
         rollDice(pool, 0, 2, opportunity, user)
-                .handle((embedBuilders, throwable) -> Roller.sendResult(null, channel, embedBuilders.getLeft(), throwable, embedBuilders.getRight()))
+                .handle((pair, throwable) -> Roller.sendResult(channel, pair.getLeft(), throwable, ComponentUtils.createRollComponentRows(true, pair.getRight())))
                 .thenCompose(future -> future)
-                .thenAccept(trySend -> trySend.andThen(triple -> Roller.attachListener(user, new RollParameters(pool, 0, triple.getRight(), true, 2), triple.getLeft(), originalPointPair.orElse(Pair.of(0, 0)))));
+                .thenAccept(trySend -> trySend.andThen(message -> Roller.attachListener(user, new RollParameters(pool, 0, null, true, 2), message, originalPointPair.orElse(Pair.of(0, 0)))));
     }
 
     @Override

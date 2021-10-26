@@ -23,6 +23,7 @@ import sheets.SheetsHandler;
 import util.ComponentUtils;
 import util.UtilFunctions;
 
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledFuture;
@@ -33,7 +34,8 @@ public class RollComponentInteractionListener implements ButtonClickListener {
     private final User user;
     private final Message message;
     private final int discount;
-    private final boolean enhanceable;
+    @Nullable
+    private final Boolean enhanceable;
     private final boolean opportunity;
     private final int diceKept;
     private final String pool;
@@ -184,7 +186,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
                         .thenApply(unused -> pair))
                 .thenAccept(pair -> new MessageBuilder()
                         .addEmbeds(pair.getLeft())
-                        .addComponents(ComponentUtils.createRollComponentRows(false, enhanceable))
+                        .addComponents(ComponentUtils.createRollComponentRows(false, enhanceable != null ? enhanceable : pair.getRight()))
                         .replyTo(interactionMessage)
                         .send(interactionMessage.getChannel())
                         .thenAccept(rerollMessage -> Roller.attachListener(user, new RollParameters(pool, discount, enhanceable, opportunity, diceKept), rerollMessage, Pair.of(originalPlotPoints, originalDoomPoints))));

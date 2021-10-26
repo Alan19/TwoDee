@@ -5,7 +5,6 @@ import util.UtilFunctions;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,7 +26,6 @@ public class DicePoolBuilder {
     private boolean opportunitiesEnabled = true;
     private int discount;
     private Boolean enhanceable;
-    private boolean errored;
 
 
     public DicePoolBuilder(String pool, UnaryOperator<String> parseFunction) {
@@ -41,7 +39,6 @@ public class DicePoolBuilder {
 
         enhanceable = null;
         if (pool.isEmpty()) {
-            errored = true;
             return;
         }
 
@@ -119,15 +116,6 @@ public class DicePoolBuilder {
     public DicePoolBuilder withOpportunity(Boolean opportunity) {
         this.opportunitiesEnabled = opportunity;
         return this;
-    }
-
-    public Optional<RollResult> getResults() {
-        if (!errored) {
-            return Optional.of(new RollResult(this));
-        }
-        else {
-            return Optional.empty();
-        }
     }
 
     public List<Integer> getRegularDice() {

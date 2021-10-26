@@ -1,7 +1,6 @@
 package rolling;
 
 import com.google.common.collect.Range;
-import doom.DoomHandler;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 import listeners.RollComponentInteractionListener;
@@ -10,13 +9,13 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
+import org.javacord.api.entity.message.component.HighLevelComponent;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.javacord.api.listener.interaction.ButtonClickListener;
 import org.javacord.api.util.event.ListenerManager;
-import util.ComponentUtils;
 import util.UtilFunctions;
 
 import javax.annotation.Nullable;
@@ -30,17 +29,18 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static rolling.DicePoolBuilder.*;
-import static rolling.RollResult.NONE;
 
 public class Roller {
 
     private static final Random random = new SecureRandom();
+    public static final String NONE = "*none*";
     public static final Pattern SKILL_PATTERN = Pattern.compile("\\b[a-zA-Z]{3,}\\w*");
 
     /**
@@ -140,10 +140,21 @@ public class Roller {
         return newPlotPointFuture.thenApply(newPlotPointValue -> Triple.of(result, newDoomValue, newPlotPointValue));
     }
 
-    public static List<EmbedBuilder> output(Result result, int discount, boolean opportunities, Integer newDoomPoints, Integer newPlotPoints) {
+    /**
+     * Generates the output for the pool based on the results of the roll
+     *
+     * @param result                    The result object to format into an embed.
+     * @param postProcessResultFunction A function that could be used to affect the embed for the roll after it has been created. Usually used to add the author, color, title, description, and footer for the embed.
+     * @param doomPool                  The name of the active doom pool for the user
+     * @param discount                  The plot point discount on the roll. Used to calculate the change in plot points for the plot point expenditure embed.
+     * @param opportunities             If opportunities are triggered, used to generate the plot point and doom point embeds
+     * @param newDoomPoints             The amount of doom points after the roll, to use for the doom point embed
+     * @param newPlotPoints             The amount of plot points the user has after the roll
+     * @return A list of embeds containing the result of the roll
+     */
+    public static List<EmbedBuilder> output(Result result, UnaryOperator<EmbedBuilder> postProcessResultFunction, String doomPool, int discount, boolean opportunities, Integer newDoomPoints, Integer newPlotPoints) {
         List<EmbedBuilder> outputs = new ArrayList<>();
-        // TODO add colors, title, and description
-        outputs.add(new EmbedBuilder()
+        final EmbedBuilder rollEmbed = new EmbedBuilder()
                 .addField("Regular and chaos dice", formatRegularDiceResults(result.getRegularAndChaosDice(), true), true)
                 .addField("Plot dice", formatRegularDiceResults(result.getPlotDice(), true), true)
                 .addField("Kept dice", formatRegularDiceResults(result.getKeptDice(), true), true)
@@ -152,7 +163,8 @@ public class Roller {
                 .addField("Dropped", formatRegularDiceResults(result.getDroppedDice(), false), true)
                 .addField("Total", String.valueOf(result.getTotal()), true)
                 .addField("Tier Hit", getTierHit(result.getTotal()), true)
-                .setFooter("Click on one of the components within the next 60 seconds to enhance or re-roll the roll"));
+                .setFooter("Click on one of the components within the next 60 seconds to enhance or re-roll the roll");
+        outputs.add(postProcessResultFunction.apply(rollEmbed));
         boolean opportunityTriggered = opportunities && result.getOpportunities() > 0;
         final int plotPointsSpent = result.getPlotDiceCost() - discount;
         if (plotPointsSpent != 0) {
@@ -164,7 +176,7 @@ public class Roller {
             outputs.add(new EmbedBuilder()
                     .setTitle("An opportunity!")
                     .addField("Plot points", newPlotPoints - 1 + " → " + newPlotPoints)
-                    .addField(DoomHandler.getActivePool(), newDoomPoints - result.getOpportunities() + " → " + newDoomPoints)
+                    .addField(doomPool, newDoomPoints - result.getOpportunities() + " → " + newDoomPoints)
             );
         }
         return outputs;
@@ -223,34 +235,35 @@ public class Roller {
     }
 
     /**
-     * Sends the result of the roll to the channel the message was sent in
+     * Attaches components to the roll, and then sends it, or sends an ephemeral message if there is an exception
      *
-     * @param enhanceable        The enhancement override setting on the roll.
-     * @param updaterFuture      A CompletableFuture containing the updater object
-     * @param embeds             The embeds that contain the results of the roll
-     * @param throwable          The error for the roll that was added through the Try object
-     * @param isPlotDiceCostZero A boolean for whether the plot dice cost is zero, which determines if the roll is enhanceable
-     * @return A CompletableFuture containing a Try that returns a success if nothing is thrown, with the updater, message, and enhanceable variable of the roll
+     * @param updaterFuture A CompletableFuture containing the updater object
+     * @param embeds        The embeds that contain the results of the roll
+     * @param throwable     The error for the roll that was added through the Try object
+     * @param components    An array of components that typically contains buttons for enhancing and re-rolling
+     * @return A CompletableFuture containing a Try that returns a success if nothing is thrown, with the updater, message, and the calculated enhanceable status of the roll
      */
-    public static CompletableFuture<Try<Pair<Message, Boolean>>> sendResult(@Nullable Boolean enhanceable, CompletableFuture<InteractionOriginalResponseUpdater> updaterFuture, List<EmbedBuilder> embeds, @Nullable Throwable throwable, Boolean isPlotDiceCostZero) {
+    public static CompletableFuture<Try<Message>> sendResult(CompletableFuture<InteractionOriginalResponseUpdater> updaterFuture, List<EmbedBuilder> embeds, @Nullable Throwable throwable, HighLevelComponent[] components) {
         if (throwable != null) {
             return updaterFuture.thenAccept(updater -> updater.setContent(throwable.getMessage()).setFlags(InteractionCallbackDataFlag.EPHEMERAL).update()).thenApply(unused -> Try.failure(throwable));
         }
         else {
             return updaterFuture.thenCompose(updater -> updater.addEmbeds(embeds)
-                    .addComponents(ComponentUtils.createRollComponentRows(true, enhanceable != null ? enhanceable : isPlotDiceCostZero))
-                    .update().thenApply(message -> Try.success(Pair.of(message, isPlotDiceCostZero))));
+                    .addComponents(components)
+                    .update()
+                    .thenApply(Try::success));
         }
     }
 
-    public static CompletableFuture<Try<Pair<Message, Boolean>>> sendResult(@Nullable Boolean enhanceable, TextChannel channel, List<EmbedBuilder> embeds, @Nullable Throwable throwable, Boolean isPlotDiceCostZero) {
+    public static CompletableFuture<Try<Message>> sendResult(TextChannel channel, List<EmbedBuilder> embeds, @Nullable Throwable throwable, HighLevelComponent[] components) {
         if (throwable != null) {
             return channel.sendMessage(throwable.getMessage()).thenApply(message -> Try.failure(throwable));
         }
         else {
             return new MessageBuilder().addEmbeds(embeds)
-                    .addComponents(ComponentUtils.createRollComponentRows(true, enhanceable != null ? enhanceable : isPlotDiceCostZero))
-                    .send(channel).thenApply(message -> Try.success(Pair.of(message, isPlotDiceCostZero)));
+                    .addComponents(components)
+                    .send(channel)
+                    .thenApply(Try::success);
         }
     }
 
