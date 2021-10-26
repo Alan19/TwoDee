@@ -89,9 +89,9 @@ public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
 
     @Override
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final Optional<SlashCommandInteractionOption> mode = event.getOptionByName("mode").flatMap(SlashCommandInteractionOptionsProvider::getFirstOption);
+        final Optional<SlashCommandInteractionOption> mode = event.getOptionByName("mode").flatMap(option -> option.getOptionByIndex(1));
         final Optional<User> mentionedUser = mode.flatMap(slashCommandInteractionOption -> slashCommandInteractionOption.getOptionUserValueByName("name"));
-        final Optional<Integer> count = mode.flatMap(slashCommandInteractionOption -> slashCommandInteractionOption.getOptionIntValueByName("count"));
+        final Optional<Integer> count = mode.flatMap(slashCommandInteractionOption -> slashCommandInteractionOption.getOptionLongValueByName("count").map(Math::toIntExact));
         if (event.getChannel().isPresent()) {
             final CompletableFuture<EmbedBuilder> query = executeCommand(user, mode.map(SlashCommandInteractionOption::getName).orElse("query"), mentionedUser.orElse(user), count.orElse(1), event.getChannel().get());
             event.respondLater().thenAcceptBoth(query, (updater, embed) -> updater.addEmbed(embed).update());

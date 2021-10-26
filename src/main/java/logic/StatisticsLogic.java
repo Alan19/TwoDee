@@ -56,7 +56,7 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final Optional<String> dicepool = event.getOptionStringValueByName("dicepool");
         if (dicepool.isPresent()) {
-            final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new GenerateStatistics(new DicePoolBuilder(dicepool.get(), s -> s).withDiceKept(event.getOptionIntValueByName("dicekept").orElse(2))).getResult());
+            final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new GenerateStatistics(new DicePoolBuilder(dicepool.get(), s -> s).withDiceKept(event.getOptionLongValueByName("dicekept").map(Math::toIntExact).orElse(2))).getResult());
 
             final boolean ephemeral = !event.getOptionBooleanValueByName("nonephemeral").orElse(false);
             event.respondLater(ephemeral).thenAcceptBoth(result, (updater, embedBuilder) -> {

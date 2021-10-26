@@ -163,12 +163,12 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     @Override
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final Boolean opportunity = event.getOptionBooleanValueByName("opportunity").orElse(true);
-        final Integer discount = event.getOptionIntValueByName("discount").orElse(0);
+        final Long discount = event.getOptionLongValueByName("discount").orElse(0L);
         final String dicePool = event.getOptionStringValueByName("dicepool").orElse("");
-        final Integer diceKept = event.getOptionIntValueByName("dicekept").orElse(2);
+        final Long diceKept = event.getOptionLongValueByName("dicekept").orElse(2L);
         final Boolean enhanceable = event.getOptionBooleanValueByName("enhanceable").orElse(null);
 
-        handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, opportunity);
+        handleSlashCommandRoll(event, dicePool, Math.toIntExact(discount), Math.toIntExact(diceKept), enhanceable, opportunity);
     }
 
 }
