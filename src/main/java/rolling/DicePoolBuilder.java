@@ -1,11 +1,16 @@
-package rolling;
+package dicerolling;
 
+import io.vavr.control.Either;
+import org.javacord.api.entity.user.User;
+import sheets.SheetsHandler;
 import util.UtilFunctions;
 
 import javax.annotation.Nullable;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.UnaryOperator;
+import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
@@ -26,10 +31,9 @@ public class DicePoolBuilder {
     private boolean opportunitiesEnabled = true;
     private int discount;
     private Boolean enhanceable;
+    private Either<String, RollResult> result;
 
-
-    public DicePoolBuilder(String pool, UnaryOperator<String> parseFunction) {
-        pool = parseFunction.apply(pool);
+    public DicePoolBuilder(User user, String pool) {
         regularDice = new ArrayList<>();
         plotDice = new ArrayList<>();
         chaosDice = new ArrayList<>();
@@ -39,8 +43,10 @@ public class DicePoolBuilder {
 
         enhanceable = null;
         if (pool.isEmpty()) {
+            result = Either.left("Cannot roll with an empty pool!");
             return;
         }
+        final Optional<Map<String, Integer>> skills = SheetsHandler.getSkills(user);
 
         String[] paramArray = pool.split(" ");
         for (String param : paramArray) {
@@ -58,6 +64,18 @@ public class DicePoolBuilder {
             //Flat penalty
             else if (flatPenaltyMatcher.matches()) {
                 flatBonus.add(-1 * Integer.parseInt(flatPenaltyMatcher.group("value")));
+            }
+            //Skill
+            else {
+                final String lowercaseSkill = param.toLowerCase();
+                final Optional<Integer> skillFacets = skills.flatMap(stringIntegerMap -> stringIntegerMap.containsKey(lowercaseSkill) ? Optional.of(stringIntegerMap.get(lowercaseSkill)) : Optional.empty());
+                if (skillFacets.isPresent()) {
+                    regularDice.addAll(splitSkillFacets(skillFacets.get()));
+                }
+                else {
+                    result = Either.left(MessageFormat.format("Cannot find ''{0}'' on your character sheet!", lowercaseSkill));
+                    return;
+                }
             }
         }
     }
@@ -116,6 +134,10 @@ public class DicePoolBuilder {
     public DicePoolBuilder withOpportunity(Boolean opportunity) {
         this.opportunitiesEnabled = opportunity;
         return this;
+    }
+
+    public Either<String, RollResult> getResults() {
+        return result != null ? result : Either.right(new RollResult(this));
     }
 
     public List<Integer> getRegularDice() {

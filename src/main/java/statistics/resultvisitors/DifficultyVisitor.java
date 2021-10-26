@@ -13,9 +13,9 @@ import java.util.Map;
  */
 public class DifficultyVisitor implements ResultVisitor {
 
-    private Map<Integer, String> difficultyMap = new HashMap<>();
-    private Map<Integer, Long> hitSuccess = new HashMap<>();
-    private Map<Integer, Long> hitExtraordinarySuccess = new HashMap<>();
+    private final Map<Integer, String> difficultyMap = new HashMap<>();
+    private final Map<Integer, Long> hitSuccess = new HashMap<>();
+    private final Map<Integer, Long> hitExtraordinarySuccess = new HashMap<>();
     private long totalCombinations = 0;
 
     public DifficultyVisitor() {
