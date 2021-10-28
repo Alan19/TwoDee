@@ -25,7 +25,9 @@ import java.util.regex.Matcher;
 public class ReplenishLogic implements VelenSlashEvent, VelenEvent {
     public static void setupReplenishCommand(Velen velen) {
         ReplenishLogic replenishLogic = new ReplenishLogic();
-        VelenCommand.ofHybrid("replenish", "Adds plot points for session replenishment, or good role playing", velen, replenishLogic, replenishLogic).addOptions(SlashCommandOption.create(SlashCommandOptionType.ROLE, "party", "the party to add plot points to", true), SlashCommandOption.create(SlashCommandOptionType.INTEGER, "count", "the number of plot points to add", true)).addShortcuts("sr", "sessionreplenishment").attach();
+        VelenCommand.ofHybrid("replenish", "Adds plot points for session replenishment, or good role playing", velen, replenishLogic, replenishLogic)
+                .addOptions(SlashCommandOption.create(SlashCommandOptionType.ROLE, "party", "the party to add plot points to", true), SlashCommandOption.create(SlashCommandOptionType.INTEGER, "count", "the number of plot points to add", true))
+                .addShortcuts("sr", "sessionreplenishment").attach();
     }
 
     /**
