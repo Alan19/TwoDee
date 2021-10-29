@@ -11,11 +11,11 @@ import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
+import org.javacord.api.interaction.SlashCommandOption;
+import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.util.DiscordRegexPattern;
-import pw.mihou.velen.interfaces.VelenArguments;
-import pw.mihou.velen.interfaces.VelenEvent;
-import pw.mihou.velen.interfaces.VelenSlashEvent;
+import pw.mihou.velen.interfaces.*;
 import sheets.PlotPointChangeResult;
 import sheets.PlotPointUtils;
 import sheets.SheetsHandler;
@@ -31,6 +31,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 
 public class BleedLogic implements VelenSlashEvent, VelenEvent {
+    public static void setupBleedCommand(Velen velen) {
+        BleedLogic bleedLogic = new BleedLogic();
+        VelenCommand.ofHybrid("bleed", "Applies plot point bleed!", velen, bleedLogic, bleedLogic)
+                .addOptions(SlashCommandOption.create(SlashCommandOptionType.MENTIONABLE, "target", "The party to bleed", true), SlashCommandOption.create(SlashCommandOptionType.INTEGER, "modifier", "The bonus or penalty on the bleed", false))
+                .attach();
+    }
+
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
         if (args.length > 0) {

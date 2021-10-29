@@ -51,7 +51,7 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
         if (args.length > 0) {
-            // TODO Add pool support when Andy's done
+            // TODO Verify pool support when Andy's done
             String poolName = args[0];
             String bonus = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
             if (Stream.of("vitality", "initiative", "willpower").anyMatch(poolName::equalsIgnoreCase)) {

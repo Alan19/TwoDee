@@ -9,14 +9,17 @@ import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
-import pw.mihou.velen.interfaces.VelenArguments;
-import pw.mihou.velen.interfaces.VelenEvent;
-import pw.mihou.velen.interfaces.VelenSlashEvent;
+import pw.mihou.velen.interfaces.*;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class StopLogic implements VelenSlashEvent, VelenEvent {
+    public static void setupStopCommand(Velen velen) {
+        StopLogic stopLogic = new StopLogic();
+        VelenCommand.ofHybrid("stop", "Shuts down the bot!", velen, stopLogic, stopLogic).attach();
+    }
+
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
         scheduleShutdown(event.getApi());
