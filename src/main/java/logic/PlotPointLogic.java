@@ -28,14 +28,17 @@ import java.util.regex.Matcher;
 public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
 
     public static void registerPlotPointCommand(Velen velen) {
-        PlotPointLogic plotPointLogic = new PlotPointLogic();
-        final List<SlashCommandOption> slashCommandOptions = new ArrayList<>();
-        slashCommandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "add", "Adds to the specified plot point pool(s)", getMentionableOption(), getPlotPointCountOption()));
-        slashCommandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "sub", "Subtracts from the specified plot point pool(s)", getMentionableOption(), getPlotPointCountOption()));
-        slashCommandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "set", "Sets the specified plot point pools to the specified amount", getCountOption().setRequired(true), getMentionableOption()));
-        slashCommandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all plot point pools", getMentionableOption().setDescription("which player to query the plot point pool of")));
+        final List<SlashCommandOption> options = new ArrayList<>();
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "add", "Adds to the specified plot point pool(s)", getMentionableOption(), getPlotPointCountOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "sub", "Subtracts from the specified plot point pool(s)", getMentionableOption(), getPlotPointCountOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "set", "Sets the specified plot point pools to the specified amount", getCountOption().setRequired(true), getMentionableOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all plot point pools", getMentionableOption().setDescription("which player to query the plot point pool of")));
 
-        VelenCommand.ofHybrid("plotpoints", "Adjust plot points", velen, plotPointLogic, plotPointLogic).addShortcuts("p", "pp", "plotpoints").addOption(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND_GROUP, "mode", "how to modify the plot point pools", slashCommandOptions)).attach();
+        PlotPointLogic plotPointLogic = new PlotPointLogic();
+        VelenCommand.ofHybrid("plot", "Adjust plot points", velen, plotPointLogic, plotPointLogic)
+                .addShortcuts("p", "pp", "plotpoints")
+                .addOptions(options.toArray(new SlashCommandOption[]{}))
+                .attach();
     }
 
     private static SlashCommandOptionBuilder getMentionableOption() {
@@ -89,11 +92,12 @@ public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
 
     @Override
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final Optional<SlashCommandInteractionOption> mode = event.getOptionByName("mode").flatMap(option -> option.getOptionByIndex(1));
-        final Optional<User> mentionedUser = mode.flatMap(slashCommandInteractionOption -> slashCommandInteractionOption.getOptionUserValueByName("name"));
-        final Optional<Integer> count = mode.flatMap(slashCommandInteractionOption -> slashCommandInteractionOption.getOptionLongValueByName("count").map(Math::toIntExact));
+        final SlashCommandInteractionOption subcommandOption = event.getOptions().get(0);
+        final String mode = subcommandOption.getName();
+        final Optional<User> mentionedUser = subcommandOption.getOptionUserValueByName("name");
+        final Optional<Integer> count = subcommandOption.getOptionLongValueByName("count").map(Math::toIntExact);
         if (event.getChannel().isPresent()) {
-            final CompletableFuture<EmbedBuilder> query = executeCommand(user, mode.map(SlashCommandInteractionOption::getName).orElse("query"), mentionedUser.orElse(user), count.orElse(1), event.getChannel().get());
+            final CompletableFuture<EmbedBuilder> query = executeCommand(user, mode, mentionedUser.orElse(user), count.orElse(1), event.getChannel().get());
             event.respondLater().thenAcceptBoth(query, (updater, embed) -> updater.addEmbed(embed).update());
         }
         else {

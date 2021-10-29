@@ -14,6 +14,8 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import io.vavr.control.Try;
+import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.user.User;
 import roles.Player;
 import roles.PlayerHandler;
@@ -26,6 +28,7 @@ import java.security.GeneralSecurityException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 public class SheetsHandler {
     private static final String APPLICATION_NAME = "Skill Lookup";
@@ -202,5 +205,46 @@ public class SheetsHandler {
                 .filter(player -> user.getId() == player.getDiscordId())
                 .map(Player::getSheetId)
                 .findFirst();
+    }
+
+    /**
+     * Attempts to retrieve the pool for a Facets attribute roll (initiative, vitality, willpower) for the specified character.
+     *
+     * @param saveType The type of save to retrieve.
+     * @param user     The user attached to the character sheet.
+     * @return A dice pool in the format of `d4 d6 d8`, or an exception if there is an issue with retrieving the pool.
+     */
+    public static Try<String> getSavePool(String saveType, User user) {
+        final Optional<String> spreadsheetForUser = getSpreadsheetForPartyMember(user);
+        if (spreadsheetForUser.isPresent()) {
+            return Try.of(() -> instance.service.spreadsheets().values().get(spreadsheetForUser.get(), saveType).execute()).map(valueRange -> ((String) (valueRange.getValues().get(0).get(0))).replace('+', ' '));
+
+        }
+        return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
+    }
+
+    /**
+     * Attempts to retrieve the pool for a Facets saved roll for the specified character.
+     *
+     * @param poolName The name of the pool to retrieve. The pool name should have all spaces removed.
+     * @param user     The user attached to the character sheet
+     * @return A dice pool in the format of `d4 d6 d8`, or an exception if there is an issue with retrieving the pool.
+     */
+    public static Try<String> getSavedPool(String poolName, User user) {
+        final Optional<String> spreadsheetForUser = getSpreadsheetForPartyMember(user);
+        if (spreadsheetForUser.isPresent()) {
+            return Try.of(() -> instance.service.spreadsheets().values()
+                            .get(spreadsheetForUser.get(), "DicePools")
+                            .execute())
+                    .map(valueRange -> valueRange.getValues().stream()
+                            .filter(objects -> objects.size() == 2)
+                            .flatMap(objects -> Stream.of(Pair.of(((String) (objects.get(0))), (String) (objects.get(1)))))
+                            .filter(pair -> pair.getLeft().equalsIgnoreCase(poolName.replaceAll("\\s", "")))
+                            .findFirst()
+                            .map(Pair::getValue)
+                            .orElseThrow(() -> new NoSuchElementException(MessageFormat.format("Unable to find {0} in list of saved pools!", poolName))));
+
+        }
+        return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
     }
 }
