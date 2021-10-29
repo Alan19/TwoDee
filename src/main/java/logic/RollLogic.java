@@ -47,7 +47,10 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         RollLogic rollLogic = new RollLogic();
         final List<SlashCommandOption> rollCommandOptions = getRollCommandOptions();
         rollCommandOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false));
-        VelenCommand.ofHybrid("roll", "Rolls some dice!", velen, rollLogic, rollLogic).addOptions(rollCommandOptions.toArray(new SlashCommandOption[0])).addShortcuts("r").setServerOnly(true, 468046159781429250L).attach();
+        VelenCommand.ofHybrid("roll", "Rolls some dice!", velen, rollLogic, rollLogic)
+                .addOptions(rollCommandOptions.toArray(new SlashCommandOption[0]))
+                .addShortcuts("r")
+                .attach();
     }
 
     static List<SlashCommandOption> getRollCommandOptions() {
@@ -85,7 +88,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     /**
      * A shortcut for rolling dice, updating the plot points and doom points, and generating the embed. A boolean is returned since the Result object is not carried to the next steps, and we need some way to check if a roll is enhanceable.
      *
-     * @param dicePool    The dice pool to be rolled
+     * @param dicePool    The dice pool to be rolled, skills are converted into dice
      * @param discount    The discount on plot points in the roll
      * @param diceKept    The amount of dice kept
      * @param opportunity If the roll can have opportunities
