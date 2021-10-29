@@ -17,23 +17,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class DoomLogic implements VelenEvent, VelenSlashEvent {
-
-    public static void setupDoomCommand(Velen velen) {
-        final List<SlashCommandOption> options = new ArrayList<>();
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "add", "Adds to the doom pool", getNameOption(), getCountOption()));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "sub", "Subtracts from the doom pool", getNameOption(), getCountOption()));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "set", "Sets from the doom pool to the specified amount", getCountOption().setRequired(true), getNameOption()));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "select", "Chooses the specified doom pool as the active doom pool", getNameOption().setRequired(true)));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all doom pools", getNameOption().setDescription("the name of the doom pool to query")));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "delete", "Deletes the doom pool from the doom pool tracker", getNameOption().setDescription("the name of the doom pool to delete")));
-
-        DoomLogic doomLogic = new DoomLogic();
-        VelenCommand.ofHybrid("doom", "Modifies the doom pool!", velen, doomLogic, doomLogic)
-                .addOptions(options.toArray(new SlashCommandOption[]{}))
-                .addShortcuts("d")
-                .attach();
-    }
-
     private static SlashCommandOptionBuilder getNameOption() {
         return new SlashCommandOptionBuilder()
                 .setType(SlashCommandOptionType.STRING)
@@ -48,6 +31,23 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
                 .setDescription("the amount to modify the doom pool by")
                 .setType(SlashCommandOptionType.INTEGER)
                 .setRequired(false);
+    }
+
+    public static void setupDoomCommand(Velen velen) {
+        final List<SlashCommandOption> options = new ArrayList<>();
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "add", "Adds to the doom pool", getNameOption(), getCountOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "sub", "Subtracts from the doom pool", getNameOption(), getCountOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "set", "Sets from the doom pool to the specified amount", getCountOption().setRequired(true), getNameOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "select", "Chooses the specified doom pool as the active doom pool", getNameOption().setRequired(true)));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all doom pools", getNameOption().setDescription("the name of the doom pool to query")));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "delete", "Deletes the doom pool from the doom pool tracker", getNameOption().setDescription("the name of the doom pool to delete")));
+
+        DoomLogic doomLogic = new DoomLogic();
+        VelenCommand.ofHybrid("doom", "Modifies the doom pool!", velen, doomLogic, doomLogic)
+                .addOption(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND_GROUP, "mode", "how to modify the doom pool", options))
+                .addShortcuts("d")
+
+                .attach();
     }
 
     @Override
@@ -89,11 +89,12 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
 
     @Override
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final String mode = event.getCommandName();
-        final Optional<String> poolName = event.getOptionStringValueByName("name");
-        final Optional<Integer> count = event.getOptionLongValueByName("count").map(Math::toIntExact);
+        final Optional<SlashCommandInteractionOption> mode = event.getOptionByName("mode").flatMap(option -> option.getOptionByIndex(0));
+        final Optional<String> poolName = mode.flatMap(slashCommandInteractionOption -> slashCommandInteractionOption.getOptionStringValueByName("name"));
+        final Optional<Integer> count = mode.flatMap(slashCommandInteractionOption -> slashCommandInteractionOption.getOptionLongValueByName("count").map(Math::toIntExact));
         if (event.getChannel().isPresent()) {
-            final EmbedBuilder query = handleCommand(mode, poolName.orElseGet(() -> mode.equals("query") ? "" : DoomHandler.getActivePool()), count.orElse(1));
+            final String modeAsString = mode.map(SlashCommandInteractionOption::getName).orElse("query");
+            final EmbedBuilder query = handleCommand(modeAsString, poolName.orElseGet(() -> modeAsString.equals("query") ? "" : DoomHandler.getActivePool()), count.orElse(1));
             firstResponder.addEmbed(query.setFooter("Requested by " + UtilFunctions.getUsernameFromSlashEvent(event, user), user.getAvatar())).respond();
         }
         else {
