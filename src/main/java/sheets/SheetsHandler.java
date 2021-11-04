@@ -14,6 +14,7 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import io.vavr.API;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.user.User;
@@ -82,25 +83,24 @@ public class SheetsHandler {
      * @param user The user to lookup
      * @return The skills of a user as a HashMap of skill names to the value of the skill in a valid dice format (3d12, d6, etc.)
      */
-    public static CompletableFuture<Map<String, String>> getSkills(User user) {
+    public static Try<Map<String, String>> getSkills(User user) {
+        return Try.of(() -> getSpreadsheetForPartyMember(user).orElseThrow(() -> new IllegalArgumentException(MessageFormat.format("User `{0}` is not registered in `players.json`!", user.getName()))))
+                .map(API.unchecked(s -> instance.service.spreadsheets().values().get(s, "AllEverything").execute()))
+                .map(SheetsHandler::getSkillMap);
+    }
+
+    /**
+     * Transforms a value range into a HashMap containing the skills and their dice equivalents
+     *
+     * @param valueRange The value range containing a user's skills
+     * @return A Map that contains skills as the key and the dice as the value
+     */
+    private static Map<String, String> getSkillMap(ValueRange valueRange) {
         Map<String, String> skills = new HashMap<>();
-        return CompletableFuture.supplyAsync(() -> {
-            final Optional<String> spreadsheetID = getSpreadsheetForPartyMember(user);
-            if (spreadsheetID.isPresent()) {
-                try {
-                    final ValueRange response = instance.service.spreadsheets().values().get(spreadsheetID.get(), "AllEverything").execute();
-                    response.getValues().stream()
-                            .filter(objects -> objects.size() == 2 && ((String) objects.get(1)).matches("([1-9]\\d*)?[kcp]?d[1-9]\\d?"))
-                            .forEach(objects -> skills.put(((String) objects.get(0)).toLowerCase().replaceAll("\\s", ""), ((String) (objects.get(1)))));
-                    return skills;
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    sneakyThrow(new IllegalArgumentException(MessageFormat.format("Unable to retrieve skill list for user `{0}`!", user.getName())));
-                }
-            }
-            sneakyThrow(new IllegalArgumentException(MessageFormat.format("User `{0}` is not registered in `players.json`!", user.getName())));
-            return new HashMap<>();
-        });
+        valueRange.getValues().stream()
+                .filter(objects -> objects.size() == 2 && ((String) objects.get(1)).matches("([1-9]\\d*)?[kcp]?d[1-9]\\d?"))
+                .forEach(objects -> skills.put(((String) objects.get(0)).toLowerCase().replaceAll("\\s", ""), ((String) (objects.get(1)))));
+        return skills;
     }
 
     /**
