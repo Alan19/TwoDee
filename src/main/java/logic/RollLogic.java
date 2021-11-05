@@ -30,7 +30,10 @@ import util.RandomColor;
 
 import javax.annotation.Nullable;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -128,7 +131,6 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     private static Try<String> convertSkillsToDice(User user, String pool) {
         // We use join to get access to CompletionException, which would allow us to handle the exceptions thrown in the CompletableFuture
         return Try.of(() -> SheetsHandler.getSkills(user).get())
-                .recoverWith(throwable -> throwable instanceof IllegalArgumentException ? Try.success(new HashMap<>()) : Try.failure(throwable))
                 .map(map -> Arrays.stream(pool.split(" ")).map(s -> map.getOrDefault(s, s)).collect(Collectors.joining(" ")));
     }
 

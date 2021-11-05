@@ -84,9 +84,10 @@ public class SheetsHandler {
      * @return The skills of a user as a HashMap of skill names to the value of the skill in a valid dice format (3d12, d6, etc.)
      */
     public static Try<Map<String, String>> getSkills(User user) {
-        return Try.of(() -> getSpreadsheetForPartyMember(user).orElseThrow(() -> new IllegalArgumentException(MessageFormat.format("User `{0}` is not registered in `players.json`!", user.getName()))))
+        return Try.of(() -> getSpreadsheetForPartyMember(user).orElseThrow(() -> new NoSuchElementException(MessageFormat.format("User `{0}` is not registered in `players.json`!", user.getName()))))
                 .map(API.unchecked(s -> instance.service.spreadsheets().values().get(s, "AllEverything").execute()))
-                .map(SheetsHandler::getSkillMap);
+                .map(SheetsHandler::getSkillMap)
+                .recover(NoSuchElementException.class, new HashMap<>());
     }
 
     /**
