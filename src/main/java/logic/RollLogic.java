@@ -2,7 +2,6 @@ package logic;
 
 import discord.TwoDee;
 import doom.DoomHandler;
-import io.vavr.API;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -31,12 +30,12 @@ import util.RandomColor;
 
 import javax.annotation.Nullable;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-
-import static io.vavr.API.$;
 
 /**
  * Rolls a pool of dice based on the input. After rolling, adds doom points to doom pool and makes appropriate changes the player's plot point count based on input options. If the DM is rolling, plot points they spend come from the doom point pool.
@@ -105,7 +104,17 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
                 .thenApply(triple -> Triple.of(Roller.output(triple.getLeft(), builder -> postProcessResult(dicePool, user, builder), PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).orElse(DoomHandler.getActivePool()), discount, opportunity, triple.getMiddle(), triple.getRight()), triple.getLeft().getPlotDiceCost() == 0, triple.getLeft().getTotal()));
     }
 
+    /**
+     * Modifies the embed generated on a roll to include information about the user, a random color, and a random roll title
+     *
+     * @param dicePool The pool that was used to generate the embed
+     * @param user     The user that rolled
+     * @param builder  The EmbedBuilder that contains the results of the dice roll
+     * @return An embed that has information about the user and the dice pool added to it
+     */
     private static EmbedBuilder postProcessResult(String dicePool, User user, EmbedBuilder builder) {
+        // TODO Use server profile and nicknames
+        // TODO Convert skills into dice
         return builder.setAuthor(user)
                 .setColor(RandomColor.getRandomColor())
                 .setTitle(TwoDee.getRollTitleMessage())
@@ -121,9 +130,8 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
      */
     private static Try<String> convertSkillsToDice(User user, String pool) {
         // We use join to get access to CompletionException, which would allow us to handle the exceptions thrown in the CompletableFuture
-        //noinspection unchecked
-        final Try<Map<String, String>> skillMap = Try.of(() -> SheetsHandler.getSkills(user).get()).mapFailure(API.Case($(t -> t instanceof ExecutionException), Throwable::getCause));
-        return skillMap.map(map -> Arrays.stream(pool.split(" ")).map(s -> map.getOrDefault(s, s)).collect(Collectors.joining(" ")));
+        return Try.of(() -> SheetsHandler.getSkills(user).get())
+                .map(map -> Arrays.stream(pool.split(" ")).map(s -> map.getOrDefault(s, s)).collect(Collectors.joining(" ")));
     }
 
     /**

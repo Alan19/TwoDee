@@ -48,10 +48,9 @@ public class DoomHandler {
      * Overloaded version of addDoom that adds doom to the currently active pool
      *
      * @param doomVal The number of doom points to add to the pool
-     * @return An embed that shows the change in doom points for the active doom pool
      */
-    public static EmbedBuilder addDoom(int doomVal) {
-        return addDoom(getActivePool(), doomVal);
+    public static void addDoom(int doomVal) {
+        addDoom(getActivePool(), doomVal);
     }
 
     /**
@@ -62,16 +61,9 @@ public class DoomHandler {
      * @return The new amount of plot points in the doom pool
      */
     public static int addDoom(User user, int count) {
-        final Optional<String> doomPoolOptional = PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool);
-        if (doomPoolOptional.isPresent()) {
-            final String pool = doomPoolOptional.get();
-            addDoom(pool, count);
-            return getDoom(pool);
-        }
-        else {
-            addDoom(count);
-            return getDoom();
-        }
+        final String doomPool = PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).orElse(getActivePool());
+        addDoom(doomPool, count);
+        return getDoom(doomPool);
     }
 
     /**
