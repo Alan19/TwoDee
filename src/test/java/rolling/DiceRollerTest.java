@@ -1,10 +1,12 @@
 package rolling;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -70,5 +72,13 @@ class DiceRollerTest {
 
     @AfterEach
     void tearDown() {
+    }
+
+    @Test
+    void testParsingForInvalidDice() {
+        Try<Pair<List<Dice>, List<Integer>>> invalidRolled = Roller.parse("xd8 d8", s -> Try.failure(new IllegalArgumentException("no stats")));
+
+        Assertions.assertTrue(invalidRolled.isFailure());
+        Assertions.assertEquals(invalidRolled.getCause().getMessage(), "`xd8` does not result in valid dice, or is not registered on the character sheet!");
     }
 }
