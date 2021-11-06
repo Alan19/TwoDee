@@ -95,7 +95,7 @@ public class Roller {
         }
         //Flat penalty
         else if (flatPenaltyMatcher.matches()) {
-            return Try.success(Either.right(Integer.parseInt(flatBonusMatcher.group("value")) * -1));
+            return Try.success(Either.right(Integer.parseInt(flatPenaltyMatcher.group("value")) * -1));
         }
         else {
             return Try.failure(new IllegalArgumentException(MessageFormat.format("`{0}` does not result in valid dice, or is not registered on the character sheet!", s)));
