@@ -36,6 +36,8 @@ dependencies {
     compile 'io.vavr:vavr:0.10.4'
     implementation 'com.google.code.gson:gson:2.8.7'
     implementation 'pw.mihou:Velen:2.1.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
 }
 
 distZip {

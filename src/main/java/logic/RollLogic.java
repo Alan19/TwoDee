@@ -17,6 +17,7 @@ import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
+import org.javacord.api.util.logging.ExceptionLogger;
 import pw.mihou.velen.interfaces.*;
 import roles.Player;
 import roles.PlayerHandler;
@@ -101,7 +102,8 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
                 .map(result -> Roller.handleOpportunities(result, discount, opportunity, value -> DoomHandler.addDoom(user, value), value -> PlotPointUtils.addPlotPointsToPlayer(user, value)))
                 .toCompletableFuture()
                 .thenCompose(future -> future)
-                .thenApply(triple -> Triple.of(Roller.output(triple.getLeft(), builder -> postProcessResult(dicePool, user, builder), PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).orElse(DoomHandler.getActivePool()), discount, opportunity, triple.getMiddle(), triple.getRight()), triple.getLeft().getPlotDiceCost() == 0, triple.getLeft().getTotal()));
+                .thenApply(triple -> Triple.of(Roller.output(triple.getLeft(), builder -> postProcessResult(dicePool, user, builder), PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).orElse(DoomHandler.getActivePool()), discount, opportunity, triple.getMiddle(), triple.getRight()), triple.getLeft().getPlotDiceCost() == 0, triple.getLeft().getTotal()))
+                .exceptionally(ExceptionLogger.get());
     }
 
     /**
