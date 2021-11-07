@@ -75,7 +75,11 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     public static void handleSlashCommandRoll(SlashCommandInteraction event, String dicePool, Integer discount, Integer diceKept, @Nullable Boolean enhanceable, Boolean opportunity) {
         final User user = event.getUser();
         final CompletableFuture<InteractionOriginalResponseUpdater> updater = event.respondLater();
-        Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user).flatMap(integer -> PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).map(s -> Pair.of(integer, DoomHandler.getDoom(s))));
+        Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user)
+                .flatMap(integer -> PlayerHandler.getPlayerFromUser(user)
+                        .map(Player::getDoomPool)
+                        .map(s -> Pair.of(integer, DoomHandler.getDoom(s)))
+                );
         rollDice(dicePool, discount, diceKept, opportunity, user)
                 .handle((triple, throwable) -> {
                     final Boolean canEnhance = enhanceable != null ? enhanceable : triple.getMiddle();
@@ -162,7 +166,15 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     public static void handleTextCommandRoll(User user, TextChannel channel, String pool, boolean opportunity) {
         Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user).flatMap(integer -> PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).map(s -> Pair.of(integer, DoomHandler.getDoom(s))));
         rollDice(pool, 0, 2, opportunity, user)
-                .handle((triple, throwable) -> Roller.sendResult(channel, triple.getLeft(), throwable, ComponentUtils.createRollComponentRows(true, triple.getMiddle(), triple.getRight())))
+                .handle((triple, throwable) -> Roller.sendResult(
+                        channel,
+                        triple != null ? triple.getLeft() : new ArrayList<>(),
+                        throwable,
+                        ComponentUtils.createRollComponentRows(
+                                true,
+                                triple != null ? triple.getMiddle() : false,
+                                triple != null ? triple.getRight() : 0
+                        )))
                 .thenCompose(future -> future)
                 .thenAccept(trySend -> trySend.andThen(message -> Roller.attachListener(user, new RollParameters(pool, 0, null, true, 2), message, originalPointPair.orElse(Pair.of(0, 0)))));
     }
