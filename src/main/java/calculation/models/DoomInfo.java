@@ -4,9 +4,6 @@ import io.vavr.control.Try;
 import org.javacord.api.entity.message.embed.Embed;
 import util.RegexExtractor;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class DoomInfo {
     private final String poolName;
     private final int amount;
@@ -14,6 +11,14 @@ public class DoomInfo {
     public DoomInfo(String poolName, int amount) {
         this.poolName = poolName;
         this.amount = amount;
+    }
+
+    public int getAmount() {
+        return amount;
+    }
+
+    public String getPoolName() {
+        return poolName;
     }
 
     @Override

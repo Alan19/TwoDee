@@ -4,30 +4,55 @@ import io.vavr.control.Try;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedAuthor;
 import org.javacord.api.entity.message.embed.EmbedField;
+import rolling.Dice;
+import rolling.Roller;
 
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ResultInfo {
-    private static final Pattern EXTRACT_POOL = Pattern.compile("\\d*[eEkKcCpP]?[d|D]\\d+");
+    private static final Pattern EXTRACT_POOL = Pattern.compile("\\b\\d*[eEkKcCpP]?[d|D]\\d+");
 
     private final String quote;
     private final String rolledPool;
     private final String playerName;
     private final int total;
     private final int flatBonus;
+    private final List<DiceInfo> dice;
 
-    public ResultInfo(String quote, String rolledPool, String playerName, int total, int flatBonus) {
+    public ResultInfo(String quote, String rolledPool, String playerName, int total, int flatBonus, List<DiceInfo> dice) {
         this.quote = quote;
         this.rolledPool = rolledPool;
         this.playerName = playerName;
         this.total = total;
         this.flatBonus = flatBonus;
+        this.dice = dice;
+    }
+
+    public String getQuote() {
+        return quote;
+    }
+
+    public int getFlatBonus() {
+        return flatBonus;
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
+    public List<DiceInfo> getDice() {
+        return dice;
+    }
+
+    public String getPlayerName() {
+        return playerName;
+    }
+
+    public String getRolledPool() {
+        return rolledPool;
     }
 
     @Override
@@ -38,6 +63,7 @@ public class ResultInfo {
                 ", playerName='" + playerName + '\'' +
                 ", total=" + total +
                 ", flatBonus=" + flatBonus +
+                ", dice=" + dice +
                 '}';
     }
 
@@ -67,25 +93,28 @@ public class ResultInfo {
                     .orElse(0);
 
             int flatBonus = Optional.ofNullable(fieldValues.get("flat bonuses"))
-                    .filter("none"::equalsIgnoreCase)
-                    .map(value -> Arrays.stream(value.split(","))
+                    .filter(value -> !value.contains("none"))
+                    .map(value -> Arrays.stream(value.replace("*", "").split(","))
                             .map(String::trim)
                             .mapToInt(Integer::parseInt)
                             .sum()
                     )
                     .orElse(0);
 
-
             return embed.getDescription()
                     .map(description -> extractPool(description)
-                            .map(pool -> new ResultInfo(
-                                    quote,
-                                    pool,
-                                    playerName,
-                                    total,
-                                    flatBonus))
+                            .flatMap(pool -> extractDice(pool, fieldValues)
+                                    .map(diceInfos -> new ResultInfo(
+                                            quote,
+                                            pool,
+                                            playerName,
+                                            total,
+                                            flatBonus,
+                                            diceInfos
+                                    ))
+                            )
                     )
-                    .orElseGet(() -> Try.failure(new IllegalArgumentException("Emded does not have a description")));
+                    .orElseGet(() -> Try.failure(new IllegalArgumentException("Embed does not have a description")));
         }
         else {
             return Try.failure(new IllegalArgumentException("Embed is not a Valid Result Embed"));
@@ -93,7 +122,7 @@ public class ResultInfo {
     }
 
     public static Try<String> extractPool(String rolledPool) {
-        Matcher matcher = EXTRACT_POOL.matcher(rolledPool);
+        Matcher matcher = EXTRACT_POOL.matcher(" " + rolledPool);
         StringBuilder dice = new StringBuilder();
         while (matcher.find()) {
             for (int i = 0; i <= matcher.groupCount(); i++) {
@@ -108,5 +137,71 @@ public class ResultInfo {
         else {
             return Try.success(pool);
         }
+    }
+
+    public static Try<List<DiceInfo>> extractDice(String pool, Map<String, String> fields) {
+        return Roller.parse(pool, name -> Try.failure(new IllegalArgumentException("no skills allow")))
+                .flatMap(pair -> {
+                    List<DiceInfo> diceInfo = new ArrayList<>();
+                    List<Dice> diceList = pair.getLeft();
+                    Iterator<Integer> regularChaos = getIteratorFromField(fields, "regular and chaos dice");
+                    Iterator<Integer> plotEnhanced = getIteratorFromField(fields, "plot dice");
+                    Iterator<Integer> kept = getIteratorFromField(fields, "kept dice");
+                    for (Dice dice : diceList) {
+                        switch (dice.getType()) {
+                            case REGULAR:
+                            case CHAOS_DIE:
+                                if (regularChaos.hasNext()) {
+                                    diceInfo.add(new DiceInfo(
+                                            dice.getType(),
+                                            dice.getValue(),
+                                            regularChaos.next()
+                                    ));
+                                }
+                                else {
+                                    return Try.failure(new IllegalStateException("Tried to get value for " + dice.getType()));
+                                }
+                                break;
+                            case PLOT_DIE:
+                            case ENHANCED_DIE:
+                                if (plotEnhanced.hasNext()) {
+                                    diceInfo.add(new DiceInfo(
+                                            dice.getType(),
+                                            dice.getValue(),
+                                            plotEnhanced.next()
+                                    ));
+                                }
+                                else {
+                                    return Try.failure(new IllegalStateException("Tried to get value for " + dice.getType()));
+                                }
+                                break;
+                            case KEPT_DIE:
+                                if (kept.hasNext()) {
+                                    diceInfo.add(new DiceInfo(
+                                            dice.getType(),
+                                            dice.getValue(),
+                                            kept.next()
+                                    ));
+                                }
+                                else {
+                                    return Try.failure(new IllegalStateException("Tried to get value for " + dice.getType()));
+                                }
+                                break;
+                        }
+                    }
+                    return Try.success(diceInfo);
+                });
+    }
+
+    public static Iterator<Integer> getIteratorFromField(Map<String, String> fields, String fieldName) {
+        String string = fields.get(fieldName);
+        if (string != null && !string.contains("none")) {
+            return Arrays.stream(string.replace("*", "").split(","))
+                    .map(String::trim)
+                    .mapToInt(Integer::parseInt)
+                    .iterator();
+        }
+
+        return Collections.emptyIterator();
     }
 }

@@ -16,6 +16,18 @@ public class RollInfo {
         this.enhancementAmount = enhancementAmount;
     }
 
+    public ResultInfo getResultInfo() {
+        return resultInfo;
+    }
+
+    public DoomInfo getDoomInfo() {
+        return doomInfo;
+    }
+
+    public int getEnhancementAmount() {
+        return enhancementAmount;
+    }
+
     @Override
     public String toString() {
         return "RollInfo{" +

@@ -15,6 +15,22 @@ public class Dice {
         return name;
     }
 
+    public DiceType getType() {
+        switch (this.getName()) {
+            case "cd":
+                return DiceType.CHAOS_DIE;
+            case "d":
+                return DiceType.REGULAR;
+            case "ed":
+                return DiceType.ENHANCED_DIE;
+            case "kd":
+                return DiceType.KEPT_DIE;
+            case "pd":
+                return DiceType.PLOT_DIE;
+        }
+        throw new IllegalArgumentException("Invalid Dice Type");
+    }
+
     public int getValue() {
         return value;
     }
