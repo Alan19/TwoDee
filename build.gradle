@@ -38,6 +38,7 @@ dependencies {
     implementation 'pw.mihou:Velen:2.1.1'
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
+    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.36.0.3'
 }
 
 distZip {

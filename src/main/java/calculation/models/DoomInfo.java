@@ -1,0 +1,48 @@
+package calculation.models;
+
+import io.vavr.control.Try;
+import org.javacord.api.entity.message.embed.Embed;
+import util.RegexExtractor;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class DoomInfo {
+    private final String poolName;
+    private final int amount;
+
+    public DoomInfo(String poolName, int amount) {
+        this.poolName = poolName;
+        this.amount = amount;
+    }
+
+    @Override
+    public String toString() {
+        return "DoomInfo{" +
+                "poolName='" + poolName + '\'' +
+                ", amount=" + amount +
+                '}';
+    }
+
+    public static boolean isValid(Embed embed) {
+        return embed.getTitle().filter("An opportunity!"::equalsIgnoreCase).isPresent();
+    }
+
+    public static Try<DoomInfo> from(Embed embed) {
+        if (isValid(embed)) {
+            return embed.getFields()
+                    .stream()
+                    .filter(embedField -> !"plot points".equalsIgnoreCase(embedField.getName()))
+                    .findFirst()
+                    .map(poolField -> RegexExtractor.getDifference(poolField.getValue())
+                            .map(value -> new DoomInfo(poolField.getName(), value))
+                    )
+                    .orElseGet(() -> Try.failure(new IllegalStateException("Failed to find Valid Pool Field")));
+
+
+        }
+        else {
+            return Try.failure(new IllegalArgumentException("Embed is not a Valid Doom Embed"));
+        }
+    }
+}

@@ -1,8 +1,12 @@
 package discord;
 
+import org.apache.logging.log4j.message.MessageCollectionMessage;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
+import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
+import org.javacord.api.event.message.reaction.ReactionAddEvent;
+import org.javacord.api.listener.message.reaction.ReactionAddListener;
 import org.javacord.api.util.logging.ExceptionLogger;
 import pw.mihou.velen.interfaces.Velen;
 import slashcommands.SlashCommandRegister;
@@ -28,13 +32,14 @@ public class TwoDee {
             new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
                         // Uncomment this line when a command is altered
                         // TODO do this a smarter way
-                        // velen.registerAllSlashCommands(api);
+                        velen.registerAllSlashCommands(api);
                         //Send startup messsage
                         new MessageBuilder()
                                 .setContent(getStartupMessage())
                                 .send(api.getTextChannelById(channel)
                                         .orElseThrow(() -> new IllegalStateException("Failed to find Channel for Id: " + channel))
                                 );
+
                         // Print the invite url of your bot
                         System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
 
