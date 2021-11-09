@@ -5,7 +5,7 @@ import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.Embed;
 import util.RegexExtractor;
 
-public class RollInfo {
+public class RollInfo extends Info {
     private final ResultInfo resultInfo;
     private final DoomInfo doomInfo;
     private final int enhancementAmount;
