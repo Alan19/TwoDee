@@ -1,9 +1,15 @@
 package calculation.models;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import io.vavr.control.Try;
+import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.Embed;
+import rolling.Roller;
 import util.RegexExtractor;
+
+import java.util.Optional;
 
 public class RollInfo extends Info {
     private final ResultInfo resultInfo;
@@ -35,6 +41,43 @@ public class RollInfo extends Info {
                 ", doomInfo=" + doomInfo +
                 ", enhancedAmount=" + enhancementAmount +
                 '}';
+    }
+
+    @Override
+    public JsonObject toJson() {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("quote", this.resultInfo.getQuote());
+        jsonObject.addProperty("rolledPool", this.resultInfo.getRolledPool());
+        jsonObject.addProperty("playerName", this.resultInfo.getPlayerName());
+        jsonObject.addProperty("total", this.resultInfo.getTotal());
+        jsonObject.addProperty("flatBonus", this.resultInfo.getFlatBonus());
+        Pair<Optional<String>, Optional<String>> tiers = Roller.getTierHit(this.resultInfo.getTotal());
+        jsonObject.addProperty("tier", tiers.getLeft().orElse("None"));
+        tiers.getRight()
+                .ifPresent(exTier -> jsonObject.addProperty("exTier", exTier));
+        if (enhancementAmount > 0) {
+            jsonObject.addProperty("enhancementAmount", this.enhancementAmount);
+            jsonObject.addProperty("enhancementTotal", this.enhancementAmount + this.resultInfo.getTotal());
+            Pair<Optional<String>, Optional<String>> enhancedTiers = Roller.getTierHit(this.resultInfo.getTotal() + this.enhancementAmount);
+            jsonObject.addProperty("enhancedTier", enhancedTiers.getLeft().orElse("None"));
+            enhancedTiers.getRight()
+                    .ifPresent(exTier -> jsonObject.addProperty("enhancedExTier", exTier));
+        }
+        if (doomInfo != null) {
+            jsonObject.addProperty("doomAmount", this.doomInfo.getAmount());
+            jsonObject.addProperty("doomPool", this.doomInfo.getPoolName());
+        }
+        JsonArray diceArray = new JsonArray();
+        for (DiceInfo diceInfo : this.resultInfo.getDice()) {
+            JsonObject diceObject = new JsonObject();
+            diceObject.addProperty("type", diceInfo.getDiceType().getAbbreviation());
+            diceObject.addProperty("rolled", diceInfo.getRolled());
+            diceObject.addProperty("result", diceInfo.getResult());
+            diceArray.add(diceObject);
+        }
+        jsonObject.add("dice", diceArray);
+
+        return jsonObject;
     }
 
     public static boolean isValid(Message message) {

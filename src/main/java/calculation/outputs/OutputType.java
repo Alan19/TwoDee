@@ -13,8 +13,8 @@ public enum OutputType {
     },
     BIG_QUERY {
         @Override
-        public Try<? extends IOutput> setup(String channelName) {
-            return null;
+        public Try<BigQueryOutput> setup(String channelName) {
+            return BigQueryOutput.create(channelName);
         }
     };
 

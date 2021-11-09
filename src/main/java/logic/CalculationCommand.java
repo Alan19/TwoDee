@@ -13,22 +13,51 @@ import org.javacord.api.entity.channel.ChannelType;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
-import org.javacord.api.interaction.SlashCommandInteraction;
-import org.javacord.api.interaction.SlashCommandInteractionOption;
-import org.javacord.api.interaction.SlashCommandOption;
-import org.javacord.api.interaction.SlashCommandOptionType;
+import org.javacord.api.interaction.*;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import pw.mihou.velen.interfaces.*;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class CalculationCommand implements VelenEvent, VelenSlashEvent {
     private final static Logger LOGGER = LogManager.getLogger(CalculationCommand.class);
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
-        CalculationLogic.beginCalculations(OutputType.SQLITE, event.getApi(), event.getChannel(), Long.parseLong(args[0]), message.getId());
+        message.reply("Staring Calculations");
+        Try.of(() -> Long.parseLong(args[0]))
+                .flatMap(start -> CalculationLogic.beginCalculations(
+                        args.length > 1 ? OutputType.getByName(args[1]).orElse(OutputType.SQLITE) : OutputType.SQLITE,
+                        event.getChannel(),
+                        start,
+                        args.length > 2 ? Long.parseLong(args[2]) : message.getId()
+                ))
+                .fold(
+                        throwable -> {
+                            if (throwable instanceof UserException) {
+                                return message.reply("Invalid Input: " + throwable.getMessage());
+                            }
+                            else {
+                                LOGGER.warn("Error while generating Stats", throwable);
+                                return message.reply("Exception while generating Stats. Check Logs");
+                            }
+                        },
+                        stats -> event.getChannel()
+                                .sendMessage("Calculations Complete", stats.getFile())
+                                .thenApply(finishedMessage -> {
+                                    if (stats.getFile() != null) {
+                                        stats.getFile().delete();
+                                    }
+                                    return finishedMessage;
+                                })
+                );
+
+
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -56,7 +85,6 @@ public class CalculationCommand implements VelenEvent, VelenSlashEvent {
                                 ))
                                 .flatMap(tuple -> CalculationLogic.beginCalculations(
                                         tuple._1,
-                                        event.getApi(),
                                         tuple._2,
                                         tuple._3,
                                         tuple._4
@@ -109,6 +137,19 @@ public class CalculationCommand implements VelenEvent, VelenSlashEvent {
                         "the channel to run calculations for",
                         false,
                         Collections.singleton(ChannelType.SERVER_TEXT_CHANNEL)
+                ))
+                .addOption(SlashCommandOption.createWithChoices(
+                        SlashCommandOptionType.STRING,
+                        "output",
+                        "The Output Type for the File",
+                        false,
+                        Arrays.stream(OutputType.values())
+                                .map(type -> new SlashCommandOptionChoiceBuilder()
+                                        .setName(type.name().toLowerCase(Locale.ROOT))
+                                        .setValue(type.name().toLowerCase(Locale.ROOT))
+                                        .build()
+                                )
+                                .collect(Collectors.toList())
                 ))
                 .addShortcut("calc")
                 .attach();

@@ -1,4 +1,7 @@
 package calculation.models;
 
-public class Info {
+import com.google.gson.JsonObject;
+
+public abstract class Info {
+    public abstract JsonObject toJson();
 }
