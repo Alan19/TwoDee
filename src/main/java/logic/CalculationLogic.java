@@ -1,6 +1,9 @@
 package logic;
 
-import calculation.CalculationLogic;
+import calculation.CalculationCollector;
+import calculation.models.CalculationStats;
+import calculation.models.Info;
+import calculation.models.RollInfo;
 import calculation.outputs.OutputType;
 import exceptions.InvalidUserInputException;
 import exceptions.UserException;
@@ -10,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.ChannelType;
+import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
@@ -21,10 +25,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
-public class CalculationCommand implements VelenEvent, VelenSlashEvent {
-    private final static Logger LOGGER = LogManager.getLogger(CalculationCommand.class);
+public class CalculationLogic implements VelenEvent, VelenSlashEvent {
+    private final static Logger LOGGER = LogManager.getLogger(CalculationLogic.class);
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
@@ -122,7 +127,7 @@ public class CalculationCommand implements VelenEvent, VelenSlashEvent {
     }
 
     public static void setup(Velen velen) {
-        CalculationCommand calculationCommand = new CalculationCommand();
+        CalculationLogic calculationCommand = new CalculationLogic();
 
         VelenCommand.ofHybrid("calculation", "Runs Calculations of Roll Results", velen, calculationCommand, calculationCommand)
                 .addOption(SlashCommandOption.create(
@@ -158,5 +163,22 @@ public class CalculationCommand implements VelenEvent, VelenSlashEvent {
                 ))
                 .addShortcut("calc")
                 .attach();
+    }
+
+    public static Try<CalculationStats> beginCalculations(OutputType type, TextChannel channel, Long startingMessage,
+                                                          Long endingMessage, IntConsumer updateHandler) {
+        return type.setup(channel.getIdAsString())
+                .flatMap(consumer ->
+                        channel.getMessagesBetweenAsStream(startingMessage, endingMessage)
+                                .map(message -> {
+                                    if (RollInfo.isValid(message)) {
+                                        return RollInfo.fromMessage(message);
+                                    }
+                                    else {
+                                        return Try.<Info>success(null);
+                                    }
+                                })
+                                .collect(new CalculationCollector(consumer, updateHandler))
+                );
     }
 }
