@@ -24,9 +24,6 @@ public class CalculationLogic {
                                     }
                                 })
                                 .collect(new CalculationCollector(consumer, updateHandler))
-                ).map(calculationStats -> {
-                    System.out.println(calculationStats);
-                    return calculationStats;
-                });
+                );
     }
 }
