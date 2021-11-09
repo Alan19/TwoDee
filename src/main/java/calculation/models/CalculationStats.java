@@ -38,8 +38,8 @@ public class CalculationStats {
         this.skipped.incrementAndGet();
     }
 
-    public void incrementSuccess() {
-        this.success.incrementAndGet();
+    public int incrementSuccess() {
+        return this.success.incrementAndGet();
     }
 
     public int getSuccess() {

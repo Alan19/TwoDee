@@ -29,13 +29,15 @@ public class CalculationCommand implements VelenEvent, VelenSlashEvent {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
-        message.reply("Staring Calculations");
+        Message startingMessage = message.reply("Staring Calculations").join();
         Try.of(() -> Long.parseLong(args[0]))
                 .flatMap(start -> CalculationLogic.beginCalculations(
                         args.length > 1 ? OutputType.getByName(args[1]).orElse(OutputType.SQLITE) : OutputType.SQLITE,
                         event.getChannel(),
                         start,
-                        args.length > 2 ? Long.parseLong(args[2]) : message.getId()
+                        args.length > 2 ? Long.parseLong(args[2]) : message.getId(),
+                        update -> startingMessage.edit("Handled " + update + " Rolls")
+                                .join()
                 ))
                 .fold(
                         throwable -> {
@@ -87,7 +89,10 @@ public class CalculationCommand implements VelenEvent, VelenSlashEvent {
                                         tuple._1,
                                         tuple._2,
                                         tuple._3,
-                                        tuple._4
+                                        tuple._4,
+                                        successes -> updater.setContent("Handled " + successes + " Rolls")
+                                                .update()
+                                                .join()
                                 ))
                                 .fold(throwable -> {
                                             if (throwable instanceof UserException) {

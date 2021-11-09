@@ -7,17 +7,16 @@ import io.vavr.control.Try;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.stream.Collector;
 
 public class CalculationCollector implements Collector<Try<? extends Info>, CalculationStats, Try<CalculationStats>> {
     private final IOutput consumer;
+    private final IntConsumer updateHandler;
 
-    public CalculationCollector(IOutput consumer) {
+    public CalculationCollector(IOutput consumer, IntConsumer updateHandler) {
         this.consumer = consumer;
+        this.updateHandler = updateHandler;
     }
 
     @Override
@@ -35,7 +34,10 @@ public class CalculationCollector implements Collector<Try<? extends Info>, Calc
                 }
                 else {
                     consumer.accept(value);
-                    stats.incrementSuccess();
+                    int successes = stats.incrementSuccess();
+                    if (successes % 100 == 0) {
+                        updateHandler.accept(successes);
+                    }
                 }
             });
         };

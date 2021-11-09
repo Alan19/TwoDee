@@ -7,8 +7,11 @@ import calculation.outputs.OutputType;
 import io.vavr.control.Try;
 import org.javacord.api.entity.channel.TextChannel;
 
+import java.util.function.IntConsumer;
+
 public class CalculationLogic {
-    public static Try<CalculationStats> beginCalculations(OutputType type, TextChannel channel, Long startingMessage, Long endingMessage) {
+    public static Try<CalculationStats> beginCalculations(OutputType type, TextChannel channel, Long startingMessage,
+                                                          Long endingMessage, IntConsumer updateHandler) {
         return type.setup(channel.getIdAsString())
                 .flatMap(consumer ->
                         channel.getMessagesBetweenAsStream(startingMessage, endingMessage)
@@ -20,7 +23,7 @@ public class CalculationLogic {
                                         return Try.<Info>success(null);
                                     }
                                 })
-                                .collect(new CalculationCollector(consumer))
+                                .collect(new CalculationCollector(consumer, updateHandler))
                 ).map(calculationStats -> {
                     System.out.println(calculationStats);
                     return calculationStats;
