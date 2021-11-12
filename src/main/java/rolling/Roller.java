@@ -260,7 +260,8 @@ public class Roller {
             return channel.sendMessage(throwable.getMessage()).thenApply(message -> Try.failure(throwable));
         }
         else {
-            return new MessageBuilder().addEmbeds(embeds)
+            return new MessageBuilder()
+                    .addEmbeds(embeds)
                     .addComponents(components)
                     .send(channel)
                     .thenApply(Try::success);

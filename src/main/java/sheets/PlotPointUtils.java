@@ -1,8 +1,10 @@
 package sheets;
 
+import doom.DoomHandler;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.user.User;
+import roles.Storytellers;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,13 +27,25 @@ public class PlotPointUtils {
         return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    public static CompletableFuture<Integer> addPlotPointsToPlayer(User user, int amount) {
-        final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(user);
-        if (plotPoints.isPresent()) {
-            return Try.success(plotPoints.get()).toCompletableFuture().thenCompose(integer -> SheetsHandler.setPlotPoints(user, integer + amount).thenApply(Optional::get));
+    /**
+     * Handles changes in plot points on a roll. If a Storyteller rolls, use doom points from the active doom pool instead.
+     *
+     * @param user   The user that rolled
+     * @param amount The amount of plot points to add
+     * @return The new amount of plot / doom points. If the user does not have a character sheet, returns the amount of plot points that get added.
+     */
+    public static CompletableFuture<Integer> addPlotPointsOnRoll(User user, int amount) {
+        if (Storytellers.isUserStoryteller(user)) {
+            return CompletableFuture.completedFuture(DoomHandler.addDoom(amount));
         }
         else {
-            return CompletableFuture.completedFuture(amount);
+            final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(user);
+            if (plotPoints.isPresent()) {
+                return Try.success(plotPoints.get()).toCompletableFuture().thenCompose(integer -> SheetsHandler.setPlotPoints(user, integer + amount).thenApply(Optional::get));
+            }
+            else {
+                return CompletableFuture.completedFuture(amount);
+            }
         }
     }
 

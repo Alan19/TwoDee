@@ -6,6 +6,7 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import roles.Player;
 import roles.PlayerHandler;
+import roles.Storytellers;
 
 import java.awt.*;
 import java.io.*;
@@ -48,9 +49,11 @@ public class DoomHandler {
      * Overloaded version of addDoom that adds doom to the currently active pool
      *
      * @param doomVal The number of doom points to add to the pool
+     * @return The new amount of doom in the default doom pool
      */
-    public static void addDoom(int doomVal) {
+    public static int addDoom(int doomVal) {
         addDoom(getActivePool(), doomVal);
+        return getDoom();
     }
 
     /**
@@ -60,10 +63,15 @@ public class DoomHandler {
      * @param count The amount of doom to add
      * @return The new amount of plot points in the doom pool
      */
-    public static int addDoom(User user, int count) {
-        final String doomPool = PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).orElse(getActivePool());
-        addDoom(doomPool, count);
-        return getDoom(doomPool);
+    public static int addDoomOnOpportunity(User user, int count) {
+        if (Storytellers.isUserStoryteller(user)) {
+            return getDoom();
+        }
+        else {
+            final String doomPool = PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).orElse(getActivePool());
+            addDoom(doomPool, count);
+            return getDoom(doomPool);
+        }
     }
 
     /**
