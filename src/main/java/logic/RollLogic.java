@@ -103,6 +103,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         return Roller.parse(dicePool, pool -> convertSkillsToDice(user, pool))
                 .map(Roller::roll)
                 .map(pair -> new Result(pair.getLeft(), pair.getRight(), diceKept))
+                // TODO Convert to CompletableFuture earlier
                 .map(result -> Roller.handleOpportunities(result, discount, opportunity, value -> DoomHandler.addDoomOnOpportunity(user, value), value -> PlotPointUtils.addPlotPointsOnRoll(user, value)))
                 .toCompletableFuture()
                 .thenCompose(future -> future)
