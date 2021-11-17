@@ -20,6 +20,9 @@ import java.sql.Types;
 import java.util.Calendar;
 import java.util.Optional;
 
+/**
+ * Output that creates a SQLite Database with two Tables: rolls and dice with rolls being the parent table
+ */
 public class SQLOutput implements IOutput, AutoCloseable {
     private static final Logger LOGGER = LogManager.getLogger(SQLOutput.class);
 

@@ -4,6 +4,9 @@ import io.vavr.control.Try;
 import org.javacord.api.entity.message.embed.Embed;
 import util.RegexExtractor;
 
+/**
+ * A Holding class for the Results from a Doom Embed. Split out for parsing simplicity
+ */
 public class DoomInfo {
     private final String poolName;
     private final int amount;

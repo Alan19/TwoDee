@@ -3,6 +3,9 @@ package calculation.models;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * The Class that collects the results of all messages processed, simplifying the Output message. All but File are threadsafe.
+ */
 public class CalculationStats {
     private final AtomicInteger errors;
     private final AtomicInteger skipped;

@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Calendar;
 
+/**
+ * Output class for output a json new line delimited form for Google's Big Query. Dice end up being an array object in the Roll Object
+ */
 public class BigQueryOutput implements IOutput {
     private final static Logger LOGGER = LogManager.getLogger(BigQueryOutput.class);
     private final static Gson GSON = new GsonBuilder()

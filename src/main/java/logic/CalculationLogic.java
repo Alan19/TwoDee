@@ -28,6 +28,9 @@ import java.util.Locale;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
+/**
+ *  Command Class for Calculation. Handles IO, as well as streaming all messages into the Collector
+ */
 public class CalculationLogic implements VelenEvent, VelenSlashEvent {
     private final static Logger LOGGER = LogManager.getLogger(CalculationLogic.class);
 
@@ -55,7 +58,14 @@ public class CalculationLogic implements VelenEvent, VelenSlashEvent {
                             }
                         },
                         stats -> event.getChannel()
-                                .sendMessage("Calculations Complete", stats.getFile())
+                                .sendMessage(
+                                        String.format("Calculations Complete: %s Successful, %s Skipped, %s Errored",
+                                                stats.getSuccess(),
+                                                stats.getSkipped(),
+                                                stats.getError()
+                                        ),
+                                        stats.getFile()
+                                )
                                 .thenApply(finishedMessage -> {
                                     if (stats.getFile() != null) {
                                         stats.getFile().delete();
@@ -111,7 +121,12 @@ public class CalculationLogic implements VelenEvent, VelenSlashEvent {
                                                         .update();
                                             }
                                         },
-                                        stats -> updater.setContent("Stats Generated")
+                                        stats -> updater.setContent(String.format(
+                                                        "Calculations Complete: %s Successful, %s Skipped, %s Errored",
+                                                        stats.getSuccess(),
+                                                        stats.getSkipped(),
+                                                        stats.getError()
+                                                ))
                                                 .addAttachment(stats.getFile())
                                                 .update()
                                                 .thenApply(future -> {

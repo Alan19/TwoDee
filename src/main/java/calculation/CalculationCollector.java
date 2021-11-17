@@ -10,6 +10,9 @@ import java.util.Set;
 import java.util.function.*;
 import java.util.stream.Collector;
 
+/**
+ * Collector for adding the RollInfo into an Output/Maintaining Status/Counts
+ */
 public class CalculationCollector implements Collector<Try<? extends Info>, CalculationStats, Try<CalculationStats>> {
     private final IOutput consumer;
     private final IntConsumer updateHandler;
