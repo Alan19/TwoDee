@@ -18,6 +18,7 @@ public class SlashCommandRegister {
         StatisticsLogic.setupStatisticsCommand(velen);
         DamageLogic.setupDamageCommand(velen);
         RollPoolLogic.setupPoolCommand(velen);
+        CalculationLogic.setup(velen);
         return velen;
     }
 
