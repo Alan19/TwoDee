@@ -1,6 +1,5 @@
 package rolling;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.tuple.Pair;
@@ -34,7 +33,7 @@ class DiceRollerTest {
                 new Roll("ed", 12, 6),
                 new Roll("cd", 3),
                 new Roll("kd", 1)), Arrays.asList(6, -3), 2);
-        output = Roller.output(result, builder -> builder, "Doom!", 0, true, 12, 15);
+        output = Roller.output(new PointChange(result, 12, 15), builder -> builder, "Doom!", 0, true).getEmbeds();
     }
 
     @Test

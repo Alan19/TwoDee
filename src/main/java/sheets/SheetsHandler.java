@@ -244,7 +244,6 @@ public class SheetsHandler {
                             .findFirst()
                             .map(Pair::getValue)
                             .orElseThrow(() -> new NoSuchElementException(MessageFormat.format("Unable to find {0} in list of saved pools!", poolName))));
-
         }
         return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
     }

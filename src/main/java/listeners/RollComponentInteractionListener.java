@@ -175,19 +175,20 @@ public class RollComponentInteractionListener implements ButtonClickListener {
      * @param interactionMessage The message the button interaction is attached to
      */
     private void handleReroll(ButtonInteraction interaction, Message interactionMessage) {
-        rollBackChanges().thenCompose(unused -> RollLogic.rollDice(pool, discount, diceKept, opportunity, user))
-                .thenCompose(pair -> interaction.createOriginalMessageUpdater()
+        rollBackChanges().thenApply(unused -> RollLogic.rollDice(pool, discount, diceKept, opportunity, user))
+                .thenCompose(outputs -> interaction.createOriginalMessageUpdater()
                         .removeAllComponents()
                         .addEmbeds(interactionMessage.getEmbeds().get(0).toBuilder().setFooter(""))
                         .update()
                         .thenAccept(unused -> interactionMessage.addReaction(EmojiParser.parseToUnicode(":bulb:")))
-                        .thenApply(unused -> pair))
-                .thenAccept(triple -> new MessageBuilder()
-                        .addEmbeds(triple.getLeft())
-                        .addComponents(ComponentUtils.createRollComponentRows(false, enhanceable != null ? enhanceable : triple.getMiddle(), triple.getRight()))
-                        .replyTo(interactionMessage)
-                        .send(interactionMessage.getChannel())
-                        .thenAccept(rerollMessage -> Roller.attachListener(user, new RollParameters(pool, discount, enhanceable, opportunity, diceKept), rerollMessage, Pair.of(originalPlotPoints, originalDoomPoints))));
+                        .thenApply(unused -> outputs))
+                .thenAccept(triple -> triple.onFailure(throwable -> new MessageBuilder().setContent(throwable.getMessage()).send(message.getChannel()))
+                        .onSuccess(rollOutput -> new MessageBuilder()
+                                .addEmbeds(rollOutput.getEmbeds())
+                                .addComponents(ComponentUtils.createRollComponentRows(false, Optional.ofNullable(enhanceable).orElse(rollOutput.isPlotDiceUsed()), rollOutput.getRollTotal()))
+                                .replyTo(interactionMessage)
+                                .send(interactionMessage.getChannel())
+                                .thenAccept(rerollMessage -> Roller.attachEmotesAndListeners(user, new RollParameters(pool, discount, enhanceable, opportunity, diceKept), Pair.of(originalPlotPoints, originalDoomPoints), rollOutput, rerollMessage))));
     }
 
     /**

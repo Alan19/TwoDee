@@ -4,9 +4,9 @@ import discord.TwoDee;
 import doom.DoomHandler;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
@@ -15,13 +15,12 @@ import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
+import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
-import org.javacord.api.util.logging.ExceptionLogger;
 import pw.mihou.velen.interfaces.*;
-import roles.Player;
-import roles.PlayerHandler;
 import rolling.Result;
+import rolling.RollOutput;
 import rolling.RollParameters;
 import rolling.Roller;
 import sheets.PlotPointUtils;
@@ -74,19 +73,22 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
      */
     public static void handleSlashCommandRoll(SlashCommandInteraction event, String dicePool, Integer discount, Integer diceKept, @Nullable Boolean enhanceable, Boolean opportunity) {
         final User user = event.getUser();
-        final CompletableFuture<InteractionOriginalResponseUpdater> updater = event.respondLater();
+        final RollParameters rollParameters = new RollParameters(dicePool, discount, enhanceable, opportunity, diceKept);
+        final CompletableFuture<InteractionOriginalResponseUpdater> updaterFuture = event.respondLater();
         Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user)
-                .flatMap(integer -> PlayerHandler.getPlayerFromUser(user)
-                        .map(Player::getDoomPool)
+                .flatMap(integer -> DoomHandler.getUserDoomPool(user)
                         .map(s -> Pair.of(integer, DoomHandler.getDoom(s)))
                 );
         rollDice(dicePool, discount, diceKept, opportunity, user)
-                .handle((triple, throwable) -> {
-                    final Boolean canEnhance = enhanceable != null ? enhanceable : triple.getMiddle();
-                    return Roller.sendResult(updater, triple.getLeft(), throwable, ComponentUtils.createRollComponentRows(true, canEnhance, triple.getRight()));
-                })
-                .thenCompose(future -> future)
-                .thenAccept(trySend -> trySend.andThen(message -> Roller.attachListener(user, new RollParameters(dicePool, discount, enhanceable, opportunity, diceKept), message, originalPointPair.orElse(Pair.of(0, 0)))));
+                .onFailure(throwable -> event.getChannel().ifPresent(channel -> updaterFuture.thenAccept(updater -> updater
+                        .setFlags(InteractionCallbackDataFlag.EPHEMERAL)
+                        .setContent(throwable.getMessage())
+                        .update())))
+                .onSuccess(rollOutput -> updaterFuture.thenCompose(updater -> updater.addEmbeds(rollOutput.getEmbeds())
+                        .addComponents(ComponentUtils.createRollComponentRows(true, Optional.ofNullable(enhanceable).orElse(rollOutput.isPlotDiceUsed()), rollOutput.getRollTotal()))
+                        .update()
+                        .thenAccept(message -> Roller.attachEmotesAndListeners(user, rollParameters, originalPointPair.orElse(Pair.of(0, 0)), rollOutput, message)))
+                );
     }
 
     /**
@@ -99,16 +101,13 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
      * @param user        The user who made the roll
      * @return A CompletableFuture that contains a Triple that that has a list of the embeds to send, a boolean states if the roll uses any plot dice, and the total of the roll
      */
-    public static CompletableFuture<Triple<List<EmbedBuilder>, Boolean, Integer>> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, User user) {
+    public static Try<RollOutput> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, User user) {
         return Roller.parse(dicePool, pool -> convertSkillsToDice(user, pool))
                 .map(Roller::roll)
                 .map(pair -> new Result(pair.getLeft(), pair.getRight(), diceKept))
                 // TODO Convert to CompletableFuture earlier
-                .map(result -> Roller.handleOpportunities(result, discount, opportunity, value -> DoomHandler.addDoomOnOpportunity(user, value), value -> PlotPointUtils.addPlotPointsOnRoll(user, value)))
-                .toCompletableFuture()
-                .thenCompose(future -> future)
-                .thenApply(triple -> Triple.of(Roller.output(triple.getLeft(), builder -> postProcessResult(dicePool, user, builder), PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).orElse(DoomHandler.getActivePool()), discount, opportunity, triple.getMiddle(), triple.getRight()), triple.getLeft().getPlotDiceCost() == 0, triple.getLeft().getTotal()))
-                .exceptionally(ExceptionLogger.get());
+                .map(result -> Roller.handlePoints(result, discount, opportunity, value -> DoomHandler.addDoomOnOpportunity(user, value), value -> PlotPointUtils.addPlotPointsOnRoll(user, value)))
+                .map(changes -> Roller.output(changes, builder -> postProcessResult(dicePool, user, builder), DoomHandler.getDoomPoolOrDefault(user), discount, opportunity));
     }
 
     /**
@@ -165,19 +164,15 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
      * @param opportunity If opportunities are enabled
      */
     public static void handleTextCommandRoll(User user, TextChannel channel, String pool, boolean opportunity) {
-        Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user).flatMap(integer -> PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).map(s -> Pair.of(integer, DoomHandler.getDoom(s))));
+        Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user).flatMap(integer -> DoomHandler.getUserDoomPool(user).map(s -> Pair.of(integer, DoomHandler.getDoom(s))));
+        final RollParameters rollParameters = new RollParameters(pool, 0, null, true, 2);
         rollDice(pool, 0, 2, opportunity, user)
-                .handle((triple, throwable) -> Roller.sendResult(
-                        channel,
-                        triple != null ? triple.getLeft() : new ArrayList<>(),
-                        throwable,
-                        ComponentUtils.createRollComponentRows(
-                                true,
-                                triple != null ? triple.getMiddle() : false,
-                                triple != null ? triple.getRight() : 0
-                        )))
-                .thenCompose(future -> future)
-                .thenAccept(trySend -> trySend.andThen(message -> Roller.attachListener(user, new RollParameters(pool, 0, null, true, 2), message, originalPointPair.orElse(Pair.of(0, 0)))));
+                .onFailure(throwable -> channel.sendMessage(throwable.getMessage()))
+                .onSuccess(rollOutput -> new MessageBuilder()
+                        .addEmbeds(rollOutput.getEmbeds())
+                        .addComponents(ComponentUtils.createRollComponentRows(true, rollOutput.isPlotDiceUsed(), rollOutput.getRollTotal()))
+                        .send(channel)
+                        .thenAccept(message -> Roller.attachEmotesAndListeners(user, rollParameters, originalPointPair.orElse(Pair.of(0, 0)), rollOutput, message)));
     }
 
     @Override

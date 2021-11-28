@@ -197,6 +197,14 @@ public class DoomHandler {
         return new EmbedBuilder().setTitle(DOOM).setDescription(MessageFormat.format("I''ve set the active doom pool to ''**{0}**'', which contains {1} doom points.", pool, getDoom(pool)));
     }
 
+    public static Optional<String> getUserDoomPool(User user) {
+        return PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool);
+    }
+
+    public static String getDoomPoolOrDefault(User user) {
+        return getUserDoomPool(user).orElse(getActivePool());
+    }
+
     /**
      * Inner class that stores the representation of doom.json
      */
