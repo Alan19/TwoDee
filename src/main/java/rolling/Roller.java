@@ -15,10 +15,7 @@ import util.UtilFunctions;
 
 import java.security.SecureRandom;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -120,7 +117,7 @@ public class Roller {
      * @param opportunities    If opportunities are enabled
      * @param doomHandler      Function to handle increases in doom from opportunities
      * @param plotPointHandler Function to handle changes in plot points from plot dice and opportunities
-     * @return A CompletableFuture that attempts to contain an object with the result and the changes in plot and doom points
+     * @return An object with the result and the changes in plot and doom points
      */
     public static PointChange handlePoints(Result result, int discount, boolean opportunities, IntFunction<Integer> doomHandler, IntFunction<CompletableFuture<Integer>> plotPointHandler) {
         int doomCount = opportunities ? result.getOpportunities() : 0;
@@ -153,7 +150,7 @@ public class Roller {
                 .addField("Flat bonuses", formatRegularDiceResults(changes.getResult().getFlatBonuses(), false), true)
                 .addField("Dropped", formatRegularDiceResults(changes.getResult().getDroppedDice(), false), true)
                 .addField("Total", String.valueOf(changes.getResult().getTotal()), true)
-                .addField("Tier Hit", getTierHit(changes.getResult().getTotal()), true)
+                .addField("Tier Hit", getTierHitString(changes.getResult().getTotal()), true)
                 .setFooter("Click on one of the components within the next 60 seconds to enhance or re-roll the roll");
         outputs.add(postProcessResultFunction.apply(rollEmbed));
         boolean opportunityTriggered = opportunities && changes.getResult().getOpportunities() > 0;
@@ -177,7 +174,20 @@ public class Roller {
         return MessageFormat.format("{0} → {1}", newPlotPoints + plotPointsSpent - (opportunityTriggered ? 1 : 0), newPlotPoints - (opportunityTriggered ? 1 : 0));
     }
 
-    private static String getTierHit(int total) {
+    public static String getTierHitString(int total) {
+        Pair<Optional<String>, Optional<String>> tiers = getTierHit(total);
+        StringBuilder difficultyString = new StringBuilder();
+        tiers.getLeft()
+                .ifPresent(difficultyString::append);
+        tiers.getRight()
+                .ifPresent(stringRangePair -> difficultyString.append(", Extraordinary ")
+                        .append(stringRangePair)
+                );
+        return difficultyString.toString();
+
+    }
+
+    public static Pair<Optional<String>, Optional<String>> getTierHit(int total) {
         Pair<String, Range<Integer>> noneRange = Pair.of("None", Range.lessThan(3));
         Pair<String, Range<Integer>> easyRange = Pair.of("Easy", Range.closedOpen(3, 7));
         Pair<String, Range<Integer>> averageRange = Pair.of("Average", Range.closedOpen(7, 11));
@@ -188,16 +198,17 @@ public class Roller {
         Pair<String, Range<Integer>> ridiculousRange = Pair.of("Ridiculous", Range.closedOpen(27, 31));
         Pair<String, Range<Integer>> impossibleRange = Pair.of("Impossible", Range.atLeast(31));
         List<Pair<String, Range<Integer>>> difficultyRanges = Arrays.asList(impossibleRange, ridiculousRange, incredibleRange, heroicRange, formidableRange, hardRange, averageRange, easyRange, noneRange);
-        StringBuilder difficultyString = new StringBuilder();
-        difficultyRanges.stream()
-                .filter(difficultyRange -> difficultyRange.getRight().contains(total))
-                .findFirst()
-                .ifPresent(difficultyRange -> difficultyString.append(difficultyRange.getLeft()));
-        difficultyRanges.subList(0, difficultyRanges.size() - 1)
-                .stream()
-                .filter(stringRangePair -> stringRangePair.getRight().contains(total - 7))
-                .findFirst().ifPresent(stringRangePair -> difficultyString.append(", Extraordinary ").append(stringRangePair.getLeft()));
-        return difficultyString.toString();
+        return Pair.of(
+                difficultyRanges.stream()
+                        .filter(difficultyRange -> difficultyRange.getRight().contains(total))
+                        .findFirst()
+                        .map(Pair::getLeft),
+                difficultyRanges.subList(0, difficultyRanges.size() - 1)
+                        .stream()
+                        .filter(stringRangePair -> stringRangePair.getRight().contains(total - 7))
+                        .findFirst()
+                        .map(Pair::getLeft)
+        );
 
     }
 
