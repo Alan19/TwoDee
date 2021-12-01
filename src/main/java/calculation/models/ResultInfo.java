@@ -144,7 +144,7 @@ public class ResultInfo {
                 .flatMap(pair -> {
                     List<DiceInfo> diceInfo = new ArrayList<>();
                     List<Dice> diceList = pair.getLeft();
-                    Iterator<Integer> regularChaos = getIteratorFromField(fields, "regular and chaos dice");
+                    Iterator<Integer> regularChaos = getIteratorFromField(fields, "regular and chaos dice", "regular dice");
                     Iterator<Integer> plotEnhanced = getIteratorFromField(fields, "plot dice");
                     Iterator<Integer> kept = getIteratorFromField(fields, "kept dice");
                     for (Dice dice : diceList) {
@@ -193,10 +193,15 @@ public class ResultInfo {
                 });
     }
 
-    public static Iterator<Integer> getIteratorFromField(Map<String, String> fields, String fieldName) {
-        String string = fields.get(fieldName);
-        if (string != null && !string.contains("none")) {
-            return Arrays.stream(string.replace("*", "").split(","))
+    public static Iterator<Integer> getIteratorFromField(Map<String, String> fields, String... fieldNames) {
+        String resultString = null;
+        Iterator<String> fieldNameIterator = Arrays.asList(fieldNames).listIterator();
+        while (resultString == null && fieldNameIterator.hasNext()) {
+            resultString = fields.get(fieldNameIterator.next());
+        }
+
+        if (resultString != null && !resultString.contains("none")) {
+            return Arrays.stream(resultString.replace("*", "").split(","))
                     .map(String::trim)
                     .mapToInt(Integer::parseInt)
                     .iterator();

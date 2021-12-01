@@ -29,7 +29,7 @@ import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
 /**
- *  Command Class for Calculation. Handles IO, as well as streaming all messages into the Collector
+ * Command Class for Calculation. Handles IO, as well as streaming all messages into the Collector
  */
 public class CalculationLogic implements VelenEvent, VelenSlashEvent {
     private final static Logger LOGGER = LogManager.getLogger(CalculationLogic.class);
@@ -59,10 +59,11 @@ public class CalculationLogic implements VelenEvent, VelenSlashEvent {
                         },
                         stats -> event.getChannel()
                                 .sendMessage(
-                                        String.format("Calculations Complete: %s Successful, %s Skipped, %s Errored",
+                                        String.format("Calculations Complete: %s Successful, %s Skipped, %s Errored, Top Error was '%s'",
                                                 stats.getSuccess(),
                                                 stats.getSkipped(),
-                                                stats.getError()
+                                                stats.getError(),
+                                                stats.getTopError()
                                         ),
                                         stats.getFile()
                                 )
@@ -85,7 +86,7 @@ public class CalculationLogic implements VelenEvent, VelenSlashEvent {
                 .respond()
                 .thenCompose(updater ->
                         Try.of(() -> Tuple.of(
-                                        event.getOptionStringValueByName("type")
+                                        event.getOptionStringValueByName("output")
                                                 .flatMap(OutputType::getByName)
                                                 .orElse(OutputType.SQLITE),
                                         event.getOptionChannelValueByName("channel")
@@ -105,7 +106,7 @@ public class CalculationLogic implements VelenEvent, VelenSlashEvent {
                                         tuple._2,
                                         tuple._3,
                                         tuple._4,
-                                        successes -> updater.setContent("Handled " + successes + " Rolls")
+                                        rolls -> updater.setContent("Handled " + rolls + " Rolls")
                                                 .update()
                                                 .join()
                                 ))
@@ -122,10 +123,11 @@ public class CalculationLogic implements VelenEvent, VelenSlashEvent {
                                             }
                                         },
                                         stats -> updater.setContent(String.format(
-                                                        "Calculations Complete: %s Successful, %s Skipped, %s Errored",
+                                                        "Calculations Complete: %s Successful, %s Skipped, %s Errored, Top Error was '%s'",
                                                         stats.getSuccess(),
                                                         stats.getSkipped(),
-                                                        stats.getError()
+                                                        stats.getError(),
+                                                        stats.getTopError()
                                                 ))
                                                 .addAttachment(stats.getFile())
                                                 .update()

@@ -30,7 +30,12 @@ public class CalculationCollector implements Collector<Try<? extends Info>, Calc
     @Override
     public BiConsumer<CalculationStats, Try<? extends Info>> accumulator() {
         return (stats, info) -> {
-            info.onFailure(throwable -> stats.incrementError());
+            info.onFailure(throwable -> {
+                int errors = stats.incrementError(throwable.getMessage());
+                if ((errors + stats.getSuccess()) % 100 == 0) {
+                    updateHandler.accept(stats.getSuccess() + errors);
+                }
+            });
             info.onSuccess(value -> {
                 if (value == null) {
                     stats.incrementSkipped();
@@ -38,8 +43,8 @@ public class CalculationCollector implements Collector<Try<? extends Info>, Calc
                 else {
                     consumer.accept(value);
                     int successes = stats.incrementSuccess();
-                    if (successes % 100 == 0) {
-                        updateHandler.accept(successes);
+                    if ((successes + stats.getError()) % 100 == 0) {
+                        updateHandler.accept(successes + stats.getError());
                     }
                 }
             });
