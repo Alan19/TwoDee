@@ -32,7 +32,7 @@ public class PlotPointUtils {
      *
      * @param user   The user that rolled
      * @param amount The amount of plot points to add
-     * @return The new amount of plot / doom points. If the user does not have a character sheet, returns the amount of plot points that get added.
+     * @return The new amount of plot / doom points. If the user does not have a character sheet, or the modification fails, returns the amount of plot points that get added.
      */
     public static CompletableFuture<Integer> addPlotPointsOnRoll(User user, int amount) {
         if (Storytellers.isUserStoryteller(user)) {
@@ -41,7 +41,7 @@ public class PlotPointUtils {
         else {
             final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(user);
             if (plotPoints.isPresent()) {
-                return Try.success(plotPoints.get()).toCompletableFuture().thenCompose(integer -> SheetsHandler.setPlotPoints(user, integer + amount).thenApply(Optional::get));
+                return Try.success(plotPoints.get()).toCompletableFuture().thenCompose(integer -> SheetsHandler.setPlotPoints(user, integer + amount).thenApply(newPoints -> newPoints.orElse(amount)));
             }
             else {
                 return CompletableFuture.completedFuture(amount);
