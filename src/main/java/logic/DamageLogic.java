@@ -33,24 +33,24 @@ public class DamageLogic implements VelenSlashEvent {
                 .addChoice("wound", "wound")
                 .setRequired(true));
         options.add(new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.INTEGER)
+                .setType(SlashCommandOptionType.LONG)
                 .setName("count")
                 .setDescription("the amount of damage that is being inflicted")
                 .setRequired(true));
         options.add(new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.INTEGER)
+                .setType(SlashCommandOptionType.LONG)
                 .setName("stun-armor")
                 .setDescription("the amount of stun armor you have"));
         options.add(new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.INTEGER)
+                .setType(SlashCommandOptionType.LONG)
                 .setName("basic-armor")
                 .setDescription("the amount of basic armor you have"));
         options.add(new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.INTEGER)
+                .setType(SlashCommandOptionType.LONG)
                 .setName("wound-armor")
                 .setDescription("the amount of wound armor you have"));
         options.add(new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.INTEGER)
+                .setType(SlashCommandOptionType.LONG)
                 .setName("resilience")
                 .setDescription("the amount of resilience you have"));
 
@@ -82,8 +82,10 @@ public class DamageLogic implements VelenSlashEvent {
             long basicArmor = interaction.getOptionLongValueByName("basic-armor").orElse(0L);
             long woundArmor = interaction.getOptionLongValueByName("wound-armor").orElse(0L);
             long resilience = interaction.getOptionLongValueByName("resilience").orElse(0L);
-
-            final EmbedBuilder embed = createDamageEmbed(type, damageCount, stunArmor, basicArmor, woundArmor, resilience);
+            final long effectiveStunArmor = Math.max(stunArmor, (long) Math.ceil((double) basicArmor / 2));
+            final long effectiveWoundArmor = Math.max(woundArmor, basicArmor / 2);
+            final Triple<Long, Long, Long> damageTriple = calculateDamage(type, damageCount, resilience, effectiveStunArmor, effectiveWoundArmor);
+            final EmbedBuilder embed = createDamageEmbed(damageTriple.getLeft(), damageTriple.getMiddle(), damageTriple.getRight());
             immediateResponseBuilder.addEmbed(embed).setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
         }
         else {
@@ -94,29 +96,25 @@ public class DamageLogic implements VelenSlashEvent {
     /**
      * Creates an embed that specifies the amount of points to mark off
      *
-     * @param type        The type of damage being inflicted
-     * @param damageCount The amount of damage being inflicted
-     * @param stunArmor   Your stun armor rating
-     * @param basicArmor  Your basic armor rating
-     * @param woundArmor  Your wound armor rating
-     * @param resilience  Your resilience
+     * @param resilienceSpent The amount of resilience spent to blunt the damage
+     * @param stun            The amount of stun suffered from the attack
+     * @param wounds          The amount of wounds suffered from the attack
      * @return An embed that specifies the amount of points for resilience, stun, and wounds to mark off
      */
-    private EmbedBuilder createDamageEmbed(DamageType type, long damageCount, long stunArmor, long basicArmor, long woundArmor, long resilience) {
-        final Triple<Long, Long, Long> damageResult = calculateDamage(type, damageCount, resilience, stunArmor, basicArmor, woundArmor);
+    private EmbedBuilder createDamageEmbed(long resilienceSpent, long stun, long wounds) {
         // TODO Add more lines
         final EmbedBuilder embed = new EmbedBuilder()
                 .setColor(RandomColor.getRandomColor())
                 .setTitle("Ouch! That hurt!")
                 .setDescription("Mark off the following from your character sheet:");
-        if (damageResult.getLeft() != 0) {
-            embed.addField("Resilience", String.valueOf(damageResult.getLeft()));
+        if (resilienceSpent != 0) {
+            embed.addField("Resilience", String.valueOf(resilienceSpent));
         }
-        if (damageResult.getMiddle() != 0) {
-            embed.addField("Stun", String.valueOf(damageResult.getMiddle()));
+        if (stun != 0) {
+            embed.addField("Stun", String.valueOf(stun));
         }
-        if (damageResult.getRight() != 0) {
-            embed.addField("Wounds", String.valueOf(damageResult.getRight()));
+        if (wounds != 0) {
+            embed.addField("Wounds", String.valueOf(wounds));
         }
         return embed;
     }
@@ -128,43 +126,16 @@ public class DamageLogic implements VelenSlashEvent {
      * @param count      The amount of damage being inflicted
      * @param resilience The amount of resilience you have
      * @param stunArmor  Your stun armor rating
-     * @param basicArmor Your basic armor rating
      * @param woundArmor Your wound armor rating
      * @return A triple that contains the amount of resilience used on the left, the amount of stun inflicted in the middle, and the amount of wounds inflicted on the right
      */
-    public Triple<Long, Long, Long> calculateDamage(DamageType type, long count, long resilience, long stunArmor, long basicArmor, long woundArmor) {
+    public Triple<Long, Long, Long> calculateDamage(DamageType type, long count, long resilience, long stunArmor, long woundArmor) {
         // Resilience affects the damage count directly, before armor
         final Pair<Long, Long> damage = splitDamage(type, count - resilience);
         long resilienceUsed = Math.min(count, resilience);
         long stunMitigated = Math.min(damage.getLeft(), stunArmor);
         long woundMitigated = Math.min(damage.getRight(), woundArmor);
-        long basicMitigated = calculateBasicMitigation(damage, basicArmor);
-        // Prioritize in the order of basic > wounds > stun in the case of a tie
-        if (basicMitigated >= stunMitigated && basicMitigated >= woundMitigated) {
-            final long basicStunMitigation = Math.min(damage.getLeft(), (int) Math.ceil((double) basicArmor / 2));
-            final long basicWoundMitigation = Math.min(damage.getRight(), basicArmor / 2);
-            return Triple.of(resilienceUsed, damage.getLeft() - basicStunMitigation, damage.getRight() - basicWoundMitigation);
-        }
-        else if (woundMitigated >= stunMitigated) {
-            return Triple.of(resilienceUsed, damage.getLeft(), damage.getRight() - woundMitigated);
-        }
-        else {
-            return Triple.of(resilienceUsed, damage.getLeft() - stunMitigated, damage.getRight());
-        }
-    }
-
-    /**
-     * Calculates the amount of damage basic armor would mitigate
-     *
-     * @param damage     The amount of damage being dealt
-     * @param basicArmor Your basic armor rating
-     * @return The total points of damage being mitigated through basic armor
-     */
-    private long calculateBasicMitigation(Pair<Long, Long> damage, long basicArmor) {
-        // Basic armor and basic damage round up on stun, round down on wounds
-        long stunMitigated = Math.min(damage.getLeft(), (long) Math.ceil((double) basicArmor / 2));
-        long woundsMitigated = Math.min(damage.getRight(), basicArmor / 2);
-        return stunMitigated + woundsMitigated;
+        return Triple.of(resilienceUsed, damage.getLeft() - stunMitigated, damage.getRight() - woundMitigated);
     }
 
     /**
