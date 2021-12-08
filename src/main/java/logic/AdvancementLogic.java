@@ -95,7 +95,7 @@ public class AdvancementLogic implements VelenSlashEvent {
                     .map(specialtySkill -> MessageFormat.format("f{0} ({1} AP)", specialtySkill.getCurrentFacets(), specialtySkill.getAPSpent()))
                     .reduce((s, s2) -> MessageFormat.format("{0}\n{1}", s, s2));
             newSpecialtySkillAdvancement.ifPresent(s -> resultsEmbed.addInlineField("New Specialties", s));
-            resultsEmbed.addField("Total AP Cost", String.valueOf(skills.stream().mapToInt(SpecialtySkill::getAPCost).sum()));
+            resultsEmbed.addField("Total AP Cost", String.valueOf(skills.stream().mapToInt(SpecialtySkill::getAPSpent).sum()));
 
 
             firstResponder.addEmbed(resultsEmbed);

@@ -78,7 +78,12 @@ public class GeneralSkillCalculator {
     }
 
     private int getGeneralSkillFacets() {
-        return Math.min(specialties.stream().mapToInt(SpecialtySkill::getCurrentFacets).sum() / 4, specialties.stream().max(Comparator.comparingInt(SpecialtySkill::getCurrentFacets)).map(SpecialtySkill::getCurrentFacets).orElse(0));
+        if (specialties.stream().mapToInt(SpecialtySkill::getCurrentFacets).sum() / 4 > 12) {
+            return Math.min(specialties.stream().mapToInt(SpecialtySkill::getCurrentFacets).sum() / 4, specialties.stream().max(Comparator.comparingInt(SpecialtySkill::getCurrentFacets)).map(SpecialtySkill::getCurrentFacets).orElse(0));
+        }
+        else {
+            return specialties.stream().mapToInt(SpecialtySkill::getCurrentFacets).sum() / 4;
+        }
     }
 
     private Optional<SpecialtySkill> getHighestNonMaxedSpecialty(long target) {
@@ -104,7 +109,7 @@ public class GeneralSkillCalculator {
         if (nervewrightMana >= baseNewSpecialtyCost) {
             return 0;
         }
-        else if (adolescentInterests && specialties.size() <= 3) {
+        else if (adolescentInterests && specialties.size() < 3) {
             return 2;
         }
         else {
