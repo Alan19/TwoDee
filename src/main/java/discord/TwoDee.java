@@ -1,12 +1,8 @@
 package discord;
 
-import org.apache.logging.log4j.message.MessageCollectionMessage;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
-import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.event.message.reaction.ReactionAddEvent;
-import org.javacord.api.listener.message.reaction.ReactionAddListener;
 import org.javacord.api.util.logging.ExceptionLogger;
 import pw.mihou.velen.interfaces.Velen;
 import slashcommands.SlashCommandRegister;
