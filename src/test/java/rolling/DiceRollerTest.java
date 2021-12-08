@@ -1,10 +1,8 @@
 package rolling;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.tuple.Pair;
-import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +20,6 @@ class DiceRollerTest {
     private Try<Pair<List<Dice>, List<Integer>>> pool;
     private Pair<List<Roll>, List<Integer>> roll;
     private Result result;
-    private List<EmbedBuilder> output;
 
     @BeforeEach
     void setUp() {
@@ -34,7 +31,6 @@ class DiceRollerTest {
                 new Roll("ed", 12, 6),
                 new Roll("cd", 3),
                 new Roll("kd", 1)), Arrays.asList(6, -3), 2);
-        output = Roller.output(result, builder -> builder, "Doom!", 0, true, 12, 15);
     }
 
     @Test
@@ -63,11 +59,6 @@ class DiceRollerTest {
     @Test
     void testResult() {
         assertEquals(29, result.getTotal());
-    }
-
-    @Test
-    void testOutput() {
-        assertEquals(3, output.size());
     }
 
     @AfterEach
