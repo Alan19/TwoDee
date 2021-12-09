@@ -28,7 +28,7 @@ public class TwoDee {
             new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
                         // Uncomment this line when a command is altered
                         // TODO do this a smarter way
-                        velen.registerAllSlashCommands(api);
+                        // velen.registerAllSlashCommands(api);
                         //Send startup messsage
                         new MessageBuilder()
                                 .setContent(getStartupMessage())

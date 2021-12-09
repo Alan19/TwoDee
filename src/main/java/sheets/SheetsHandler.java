@@ -218,7 +218,11 @@ public class SheetsHandler {
     public static Try<String> getSavePool(String saveType, User user) {
         final Optional<String> spreadsheetForUser = getSpreadsheetForPartyMember(user);
         if (spreadsheetForUser.isPresent()) {
-            return Try.of(() -> instance.service.spreadsheets().values().get(spreadsheetForUser.get(), saveType).execute()).map(valueRange -> ((String) (valueRange.getValues().get(0).get(0))).replace('+', ' '));
+            return Try.of(() -> instance.service.spreadsheets()
+                            .values()
+                            .get(spreadsheetForUser.get(), saveType)
+                            .execute())
+                    .map(valueRange -> ((String) (valueRange.getValues().get(0).get(0))).replace(" + ", " "));
 
         }
         return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
@@ -242,7 +246,8 @@ public class SheetsHandler {
                             .flatMap(objects -> Stream.of(Pair.of(((String) (objects.get(0))), (String) (objects.get(1)))))
                             .filter(pair -> pair.getLeft().equalsIgnoreCase(poolName.replaceAll("\\s", "")))
                             .findFirst()
-                            .map(Pair::getValue)
+                            .map(Pair::getRight)
+                            .map(s -> s.replace(" + ", " "))
                             .orElseThrow(() -> new NoSuchElementException(MessageFormat.format("Unable to find {0} in list of saved pools!", poolName))));
         }
         return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
