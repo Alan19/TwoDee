@@ -188,15 +188,15 @@ public class Roller {
     }
 
     public static Pair<Optional<String>, Optional<String>> getTierHit(int total) {
-        Pair<String, Range<Integer>> noneRange = Pair.of("None", Range.lessThan(3));
-        Pair<String, Range<Integer>> easyRange = Pair.of("Easy", Range.closedOpen(3, 7));
-        Pair<String, Range<Integer>> averageRange = Pair.of("Average", Range.closedOpen(7, 11));
-        Pair<String, Range<Integer>> hardRange = Pair.of("Hard", Range.closedOpen(11, 15));
-        Pair<String, Range<Integer>> formidableRange = Pair.of("Formidable", Range.closedOpen(15, 19));
-        Pair<String, Range<Integer>> heroicRange = Pair.of("Heroic", Range.closedOpen(19, 23));
-        Pair<String, Range<Integer>> incredibleRange = Pair.of("Incredible", Range.closedOpen(23, 27));
-        Pair<String, Range<Integer>> ridiculousRange = Pair.of("Ridiculous", Range.closedOpen(27, 31));
-        Pair<String, Range<Integer>> impossibleRange = Pair.of("Impossible", Range.atLeast(31));
+        Pair<String, Range<Integer>> noneRange = Pair.of("None (0)", Range.lessThan(3));
+        Pair<String, Range<Integer>> easyRange = Pair.of("Easy (1)", Range.closedOpen(3, 7));
+        Pair<String, Range<Integer>> averageRange = Pair.of("Average (2)", Range.closedOpen(7, 11));
+        Pair<String, Range<Integer>> hardRange = Pair.of("Hard (3)", Range.closedOpen(11, 15));
+        Pair<String, Range<Integer>> formidableRange = Pair.of("Formidable (4)", Range.closedOpen(15, 19));
+        Pair<String, Range<Integer>> heroicRange = Pair.of("Heroic (5)", Range.closedOpen(19, 23));
+        Pair<String, Range<Integer>> incredibleRange = Pair.of("Incredible (6)", Range.closedOpen(23, 27));
+        Pair<String, Range<Integer>> ridiculousRange = Pair.of("Ridiculous (7)", Range.closedOpen(27, 31));
+        Pair<String, Range<Integer>> impossibleRange = Pair.of("Impossible (8)", Range.atLeast(31));
         List<Pair<String, Range<Integer>>> difficultyRanges = Arrays.asList(impossibleRange, ridiculousRange, incredibleRange, heroicRange, formidableRange, hardRange, averageRange, easyRange, noneRange);
         return Pair.of(
                 difficultyRanges.stream()
