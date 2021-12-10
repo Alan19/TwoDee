@@ -64,9 +64,19 @@ public class GeneralSkillCalculator {
         return specialties.stream().max(Comparator.comparingInt(SpecialtySkill::getCurrentFacets));
     }
 
-    // Advances the cheapest specialty skill in the list
+    /**
+     * Advances the cheapest specialty in the list of specialties. If for some reason the cheapest specialty cannot be found, throw an exception since the program is stuck in an infinite loop
+     */
     private void advanceCheapestSpecialty() {
-        getCheapestSpecialty().ifPresent(SpecialtySkill::advance);
+        if (getCheapestSpecialty().isPresent()) {
+            getCheapestSpecialty().get().advance();
+        }
+        else {
+            throw new IllegalStateException("Unable to continue!\nSkills:" + specialties.stream()
+                    .map(SpecialtySkill::getCurrentFacets)
+                    .map(String::valueOf)
+                    .collect(Collectors.joining("\n- ")));
+        }
     }
 
     private Optional<SpecialtySkill> getCheapestSpecialty() {
