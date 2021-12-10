@@ -2,6 +2,10 @@ package logic;
 
 import advancement.GeneralSkillCalculator;
 import advancement.SpecialtySkill;
+import io.vavr.Tuple4;
+import io.vavr.collection.Seq;
+import io.vavr.control.Try;
+import io.vavr.control.Validation;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.*;
@@ -61,51 +65,85 @@ public class AdvancementLogic implements VelenSlashEvent {
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "wide", "Calculates the skill array to reach a given general skill facet as cheaply as possible.", targetFacets, startingArray, targetExpert, nervewrightMana, adolescentInterests, nonEphemeral));
         VelenCommand.ofSlash("advancement", "Calculates the AP cost to get a general skill", velen, new AdvancementLogic())
                 .addOptions(options.toArray(new SlashCommandOption[]{}))
-                .setServerOnly(true, 468046159781429250L)
+                .setServerOnly(true, 817619574450028554L)
                 .attach();
     }
 
     @Override
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
+        // Generate Validation objects on objects that need validation
         final SlashCommandInteractionOption subcommandOption = event.getOptions().get(0);
         final Optional<Long> targetFacets = subcommandOption.getOptionLongValueByName("target-facets");
-        if (targetFacets.isPresent()) {
-            final Boolean expert = subcommandOption.getOptionBooleanValueByName("target-expert").orElse(false);
-            final List<Integer> startingArray = subcommandOption.getOptionStringValueByName("starting-array")
-                    .map(s -> Arrays.stream(s.split(" ")).map(Integer::parseInt).collect(Collectors.toList()))
-                    .orElse(new ArrayList<>());
-            final long minimumFacets = subcommandOption.getOptionLongValueByName("minimum-facets").orElse(12L);
-            final boolean tall = subcommandOption.getName().equals("tall");
-            final Boolean adolescentInterests = subcommandOption.getOptionBooleanValueByName("adolescent-interests").orElse(false);
-            final long nervewrightMana = subcommandOption.getOptionLongValueByName("nervewright-mana").orElse(0L);
-            final boolean nonEphemeral = subcommandOption.getOptionBooleanValueByName("non-ephemeral").orElse(false);
+        final Validation<Throwable, Long> targetFacetsTry = targetFacets.map(Try::success)
+                .orElseGet(() -> Try.failure(new IllegalStateException("target-facets: Unable to find target facets")))
+                .flatMap(aLong -> isValidFacetCount(aLong, "target-facets"))
+                .toValidation();
+        final Validation<Throwable, Seq<Long>> startingArrayValidation = Try.of(() -> getStartingArray(subcommandOption))
+                // TODO Try to map the exception to prepend the parameter
+                .flatMap(integers -> Try.sequence(integers.stream().map(aLong -> isValidFacetCount(aLong, "target-facets")).collect(Collectors.toList())))
+                .toValidation();
+        final Validation<Throwable, Long> validateMinimum = Try.success(subcommandOption.getOptionLongValueByName("minimum-facets").orElse(12L))
+                .flatMap(aLong -> isValidFacetCount(aLong, "minimum-facets"))
+                .toValidation();
+        final Validation<Throwable, Long> manaValidation = Try.success(subcommandOption.getOptionLongValueByName("nervewright-mana").orElse(0L))
+                .flatMap(aLong -> flatMapPositiveLong(aLong, "nervewright-mana"))
+                .toValidation();
 
-            final Long targetFacetsActual = targetFacets.get();
-            List<SpecialtySkill> skills = new GeneralSkillCalculator(startingArray, expert, tall, minimumFacets, adolescentInterests, nervewrightMana).generate(targetFacetsActual);
-            EmbedBuilder resultsEmbed = new EmbedBuilder();
-            resultsEmbed.setTitle("How to get this general skill to f" + targetFacetsActual);
-            resultsEmbed.setDescription("In order to advance this general skill and go " + subcommandOption.getName() + ", you can raise the specialty skills under the general skill like this (assuming you have a high enough attribute or mentors):");
-            final Optional<String> existingSpecialtyAdvancement = skills.stream()
-                    .filter(specialtySkill -> specialtySkill.getStartingFacets() != 0)
-                    .map(specialtySkill -> MessageFormat.format("f{0} → f{1} ({2} AP)", specialtySkill.getStartingFacets(), specialtySkill.getCurrentFacets(), specialtySkill.getAPSpent()))
-                    .reduce((s, s2) -> MessageFormat.format("{0}\n{1}", s, s2));
-            existingSpecialtyAdvancement.ifPresent(s -> resultsEmbed.addInlineField("Existing Specialties", s));
-            final Optional<String> newSpecialtySkillAdvancement = skills.stream()
-                    .filter(specialtySkill -> specialtySkill.getStartingFacets() == 0)
-                    .map(specialtySkill -> MessageFormat.format("f{0} ({1} AP)", specialtySkill.getCurrentFacets(), specialtySkill.getAPSpent()))
-                    .reduce((s, s2) -> MessageFormat.format("{0}\n{1}", s, s2));
-            newSpecialtySkillAdvancement.ifPresent(s -> resultsEmbed.addInlineField("New Specialties", s));
-            resultsEmbed.addField("Total AP Cost", String.valueOf(skills.stream().mapToInt(SpecialtySkill::getAPSpent).sum()));
+        // Gather params that don't need validation and then generate and send output on success, or send error message on failure
+        Validation.combine(targetFacetsTry, startingArrayValidation, validateMinimum, manaValidation)
+                .ap((target, longs, minimum, mana) -> new Tuple4<>(target, longs.map(Math::toIntExact).asJava(), minimum, mana))
+                .fold(throwables -> firstResponder.setFlags(InteractionCallbackDataFlag.EPHEMERAL).setContent(throwables.map(Throwable::getMessage).collect(Collectors.joining("\n"))).respond(),
+                        tuple -> {
+                            final boolean nonEphemeral = subcommandOption.getOptionBooleanValueByName("non-ephemeral").orElse(false);
+                            final boolean tall = subcommandOption.getName().equals("tall");
+                            final Boolean expert = subcommandOption.getOptionBooleanValueByName("target-expert").orElse(false);
+                            final Boolean adolescentInterests = subcommandOption.getOptionBooleanValueByName("adolescent-interests").orElse(false);
 
+                            List<SpecialtySkill> skills = new GeneralSkillCalculator(tuple._2, expert, tall, tuple._3, adolescentInterests, tuple._4).generate(tuple._1);
+                            EmbedBuilder resultsEmbed = getResultEmbed(subcommandOption, tuple._1, skills);
 
-            firstResponder.addEmbed(resultsEmbed);
-            if (!nonEphemeral) {
-                firstResponder.setFlags(InteractionCallbackDataFlag.EPHEMERAL);
-            }
-            firstResponder.respond();
+                            firstResponder.addEmbed(resultsEmbed);
+                            if (!nonEphemeral) {
+                                firstResponder.setFlags(InteractionCallbackDataFlag.EPHEMERAL);
+                            }
+                            return firstResponder.respond();
+                        });
+
+    }
+
+    private EmbedBuilder getResultEmbed(SlashCommandInteractionOption subcommandOption, Long target, List<SpecialtySkill> skills) {
+        EmbedBuilder resultsEmbed = new EmbedBuilder();
+        resultsEmbed.setTitle("How to get this general skill to f" + target);
+        resultsEmbed.setDescription("In order to advance this general skill and go " + subcommandOption.getName() + ", you can raise the specialty skills under the general skill like this (assuming you have a high enough attribute or mentors):");
+        final String existingSpecialtyAdvancement = skills.stream()
+                .filter(specialtySkill -> specialtySkill.getStartingFacets() != 0)
+                .map(specialtySkill -> MessageFormat.format("f{0} → f{1} ({2} AP)", specialtySkill.getStartingFacets(), specialtySkill.getCurrentFacets(), specialtySkill.getAPSpent()))
+                .collect(Collectors.joining("\n"));
+        if (!existingSpecialtyAdvancement.trim().isEmpty()) {
+            resultsEmbed.addInlineField("Existing Specialties", existingSpecialtyAdvancement);
         }
-        else {
-            firstResponder.setContent("Desired general skill facet not set!").setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
+        final String newSpecialtySkillAdvancement = skills.stream()
+                .filter(specialtySkill -> specialtySkill.getStartingFacets() == 0)
+                .map(specialtySkill -> MessageFormat.format("f{0} ({1} AP)", specialtySkill.getCurrentFacets(), specialtySkill.getAPSpent()))
+                .collect(Collectors.joining("\n"));
+        if (!newSpecialtySkillAdvancement.trim().isEmpty()) {
+            resultsEmbed.addInlineField("New Specialties", newSpecialtySkillAdvancement);
         }
+        resultsEmbed.addField("Total AP Cost", String.valueOf(skills.stream().mapToInt(SpecialtySkill::getAPSpent).sum()));
+        return resultsEmbed;
+    }
+
+    private Try<Long> flatMapPositiveLong(Long aLong, String parameterName) {
+        return aLong >= 0 ? Try.success(aLong) : Try.failure(new IllegalArgumentException(parameterName + ": Cannot enter negative mana!"));
+    }
+
+    private List<Long> getStartingArray(SlashCommandInteractionOption subcommandOption) {
+        return subcommandOption.getOptionStringValueByName("starting-array")
+                .map(s -> Arrays.stream(s.split(" ")).map(Long::parseLong).collect(Collectors.toList()))
+                .orElseGet(ArrayList::new);
+    }
+
+    private Try<Long> isValidFacetCount(Long aLong, String parameterName) {
+        return aLong >= 4 && aLong % 2 == 0 ? Try.success(aLong) : Try.failure(new IllegalStateException(parameterName + ": Facets must be even and greater than or equal to 4"));
     }
 }
