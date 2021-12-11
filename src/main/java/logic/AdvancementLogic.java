@@ -65,7 +65,6 @@ public class AdvancementLogic implements VelenSlashEvent {
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "wide", "Calculates the skill array to reach a given general skill facet as cheaply as possible.", targetFacets, startingArray, targetExpert, nervewrightMana, adolescentInterests, nonEphemeral));
         VelenCommand.ofSlash("advancement", "Calculates the AP cost to get a general skill", velen, new AdvancementLogic())
                 .addOptions(options.toArray(new SlashCommandOption[]{}))
-                .setServerOnly(true, 817619574450028554L)
                 .attach();
     }
 
