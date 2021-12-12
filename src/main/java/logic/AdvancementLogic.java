@@ -81,7 +81,8 @@ public class AdvancementLogic implements VelenSlashEvent {
                 // TODO Try to map the exception to prepend the parameter
                 .flatMap(integers -> Try.sequence(integers.stream().map(aLong -> isValidFacetCount(aLong, "target-facets")).collect(Collectors.toList())))
                 .toValidation();
-        final Validation<Throwable, Long> validateMinimum = Try.success(subcommandOption.getOptionLongValueByName("minimum-facets").orElse(12L))
+        final boolean tall = subcommandOption.getName().equals("tall");
+        final Validation<Throwable, Long> validateMinimum = Try.success(subcommandOption.getOptionLongValueByName("minimum-facets").orElse(tall ? 12L : 4L))
                 .flatMap(aLong -> isValidFacetCount(aLong, "minimum-facets"))
                 .toValidation();
         final Validation<Throwable, Long> manaValidation = Try.success(subcommandOption.getOptionLongValueByName("nervewright-mana").orElse(0L))
@@ -94,11 +95,10 @@ public class AdvancementLogic implements VelenSlashEvent {
                 .fold(throwables -> firstResponder.setFlags(InteractionCallbackDataFlag.EPHEMERAL).setContent(throwables.map(Throwable::getMessage).collect(Collectors.joining("\n"))).respond(),
                         tuple -> {
                             final boolean nonEphemeral = subcommandOption.getOptionBooleanValueByName("non-ephemeral").orElse(false);
-                            final boolean tall = subcommandOption.getName().equals("tall");
                             final Boolean expert = subcommandOption.getOptionBooleanValueByName("target-expert").orElse(false);
                             final Boolean adolescentInterests = subcommandOption.getOptionBooleanValueByName("adolescent-interests").orElse(false);
 
-                            List<SpecialtySkill> skills = new GeneralSkillCalculator(tuple._2, expert, tall, tuple._3, adolescentInterests, tuple._4).generate(tuple._1);
+                            List<SpecialtySkill> skills = new GeneralSkillCalculator(tuple._2, expert, tuple._3, adolescentInterests, tuple._4).generate(tuple._1);
                             EmbedBuilder resultsEmbed = getResultEmbed(subcommandOption, tuple._1, skills);
 
                             firstResponder.addEmbed(resultsEmbed);

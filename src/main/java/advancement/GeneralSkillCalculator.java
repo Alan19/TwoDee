@@ -8,15 +8,13 @@ import java.util.stream.Collectors;
 public class GeneralSkillCalculator {
     private final boolean attemptExpert;
     private final List<SpecialtySkill> specialties;
-    private final boolean tall;
     private final long minimumFacets;
     private final boolean adolescentInterests;
     private final long nervewrightMana;
 
-    public GeneralSkillCalculator(List<Integer> specialtyFacets, boolean attemptExpert, boolean tall, long minimumFacets, boolean adolescentInterests, long nervewrightMana) {
+    public GeneralSkillCalculator(List<Integer> specialtyFacets, boolean attemptExpert, long minimumFacets, boolean adolescentInterests, long nervewrightMana) {
         this.attemptExpert = attemptExpert;
         specialties = specialtyFacets.stream().map(SpecialtySkill::new).collect(Collectors.toList());
-        this.tall = tall;
         this.minimumFacets = minimumFacets;
         this.adolescentInterests = adolescentInterests;
         this.nervewrightMana = nervewrightMana;
@@ -25,19 +23,11 @@ public class GeneralSkillCalculator {
     private void nextStep(long targetFacets) {
         final boolean hasExpert = specialties.stream().anyMatch(specialtySkill -> specialtySkill.getCurrentFacets() >= 14);
         if ((!attemptExpert || hasExpert) && (specialties.stream().anyMatch(specialtySkill -> specialtySkill.getCurrentFacets() >= targetFacets) || targetFacets < 14)) {
-            if (tall) {
-                final Optional<SpecialtySkill> max = getHighestNonMaxedSpecialty(minimumFacets);
-                if (max.isPresent()) {
-                    max.get().advance();
-                }
-                else if (canBuyNewSpecialty()) {
-                    buyNewSpecialty();
-                }
-                else {
-                    advanceCheapestSpecialty();
-                }
+            final Optional<SpecialtySkill> max = getHighestNonMaxedSpecialty(minimumFacets);
+            if (max.isPresent()) {
+                max.get().advance();
             }
-            else if (canBuyNewSpecialty() && getCheapestSpecialty().map(SpecialtySkill::getAPCost).map(cost -> cost / 2 > getNewSpecialtyCost() / 4).orElse(true)) {
+            else if (canBuyNewSpecialty()) {
                 buyNewSpecialty();
             }
             else {
