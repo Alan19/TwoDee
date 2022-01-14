@@ -29,7 +29,7 @@ import java.security.GeneralSecurityException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 public class SheetsHandler {
     private static final String APPLICATION_NAME = "Skill Lookup";
@@ -236,19 +236,23 @@ public class SheetsHandler {
      * @return A dice pool in the format of `d4 d6 d8`, or an exception if there is an issue with retrieving the pool.
      */
     public static Try<String> getSavedPool(String poolName, User user) {
-        final Optional<String> spreadsheetForUser = getSpreadsheetForPartyMember(user);
-        if (spreadsheetForUser.isPresent()) {
+        return getSavedPools(user).flatMapTry(pairs -> Try.of(() -> pairs.stream()
+                .filter(pair -> pair.getLeft().equalsIgnoreCase(poolName))
+                .findFirst()
+                .map(Pair::getRight)
+                .orElseThrow(() -> new NoSuchElementException(MessageFormat.format("Unable to find {0} in list of saved pools!", poolName)))));
+    }
+
+    public static Try<List<Pair<String, String>>> getSavedPools(User user) {
+        final Optional<String> spreadsheetID = getSpreadsheetForPartyMember(user);
+        if (spreadsheetID.isPresent()) {
             return Try.of(() -> instance.service.spreadsheets().values()
-                            .get(spreadsheetForUser.get(), "DicePools")
+                            .get(spreadsheetID.get(), "DicePools")
                             .execute())
                     .map(valueRange -> valueRange.getValues().stream()
                             .filter(objects -> objects.size() == 2)
-                            .flatMap(objects -> Stream.of(Pair.of(((String) (objects.get(0))), (String) (objects.get(1)))))
-                            .filter(pair -> pair.getLeft().equalsIgnoreCase(poolName.replaceAll("\\s", "")))
-                            .findFirst()
-                            .map(Pair::getRight)
-                            .map(s -> s.replace(" + ", " "))
-                            .orElseThrow(() -> new NoSuchElementException(MessageFormat.format("Unable to find {0} in list of saved pools!", poolName))));
+                            .map(objects -> Pair.of(((String) (objects.get(0))).replaceAll("\\s", ""), ((String) (objects.get(1))).replace(" + ", " ")))
+                            .collect(Collectors.toList()));
         }
         return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
     }

@@ -2,6 +2,7 @@ package logic;
 
 import org.apache.commons.lang3.StringUtils;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.*;
@@ -9,6 +10,7 @@ import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import pw.mihou.velen.interfaces.*;
 import sheets.SheetsHandler;
+import util.RandomColor;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -29,7 +31,6 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
         rollOptions.add(SlashCommandOption.create(SlashCommandOptionType.LONG, "dice-kept", "The number of dice kept. Keeps two dice by default.", false));
         rollOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "enhanceable", "Allows the roll to be enhanced after the roll.", false));
 
-
         List<SlashCommandOption> saveOptions = new ArrayList<>();
         saveOptions.add(new SlashCommandOptionBuilder().setName("save-type").setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("The save pool to roll, with a choice of initiative, vitality, and willpower").addChoice("initiative", "Initiative").addChoice("vitality", "Vitality").addChoice("willpower", "Willpower").build());
         saveOptions.addAll(rollOptions);
@@ -41,9 +42,12 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
         poolOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false));
         commandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "saved-pool", "Rolls a saved dice pool in your saved dice pools sheet or combat tracker", poolOptions));
 
+        commandOptions.add(SlashCommandOption.create(SlashCommandOptionType.SUB_COMMAND, "query", "Query your saved pools"));
+
         VelenCommand.ofHybrid("roll-pool", "Rolls a predefined dice pool from your character sheet", velen, rollPoolLogic, rollPoolLogic)
                 .addShortcuts("rollp", "testp")
                 .addOptions(commandOptions.toArray(new SlashCommandOption[0]))
+                .setServerOnly(true, 817619574450028554L)
                 .attach();
     }
 
@@ -87,6 +91,16 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
                     .onFailure(throwable -> event.createImmediateResponder().setContent(throwable.getMessage()).setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond())
                     .onSuccess(dicePool -> RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false));
         }
+        else if (mode.equals("query")) {
+            event.respondLater(true).thenAccept(updater -> SheetsHandler.getSavedPools(user).onSuccess(strings -> {
+                EmbedBuilder builder = new EmbedBuilder()
+                        .setTitle("Your list of saved pools")
+                        .setColor(RandomColor.getRandomColor())
+                        .setAuthor(user);
+                strings.forEach(pair -> builder.addField(pair.getLeft(), pair.getRight()));
+                updater.addEmbed(builder).update();
+            }).onFailure(throwable -> updater.setContent(throwable.getMessage()).update()));
+        }
         else {
             Boolean opportunity = subcommandOption.getOptionBooleanValueByName("opportunity").orElse(true);
             //noinspection OptionalGetWithoutIsPresent
@@ -94,7 +108,6 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
                     .map(defaultPool -> MessageFormat.format("{0} {1}", defaultPool, bonuses.orElse("")))
                     .onFailure(throwable -> event.createImmediateResponder().setContent(throwable.getMessage()).setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond())
                     .onSuccess(dicePool -> RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, opportunity));
-
         }
     }
 }
