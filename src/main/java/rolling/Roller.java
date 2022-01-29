@@ -58,7 +58,7 @@ public class Roller {
      * @param skillReplacerFunction A function that takes the input string and outputs another string with the skills replaced.
      * @return A Try that contains the replaced string. If there are no skills, the Try is guaranteed to be a success but if not, the function passed in the parameter may return an exception.
      */
-    private static Try<String> preprocessPool(String pool, Function<String, Try<String>> skillReplacerFunction) {
+    public static Try<String> preprocessPool(String pool, Function<String, Try<String>> skillReplacerFunction) {
         final boolean anySkills = Arrays.stream(pool.split(" ")).anyMatch(s -> SKILL_PATTERN.matcher(s).matches());
         return anySkills ? skillReplacerFunction.apply(pool) : Try.success(pool);
     }

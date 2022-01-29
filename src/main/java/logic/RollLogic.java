@@ -27,6 +27,7 @@ import sheets.PlotPointUtils;
 import sheets.SheetsHandler;
 import util.ComponentUtils;
 import util.RandomColor;
+import util.UtilFunctions;
 
 import javax.annotation.Nullable;
 import java.text.MessageFormat;
@@ -79,7 +80,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
                 .flatMap(integer -> DoomHandler.getUserDoomPool(user)
                         .map(s -> Pair.of(integer, DoomHandler.getDoom(s)))
                 );
-        rollDice(dicePool, discount, diceKept, opportunity, user)
+        rollDice(dicePool, discount, diceKept, opportunity, user, UtilFunctions.getUsernameFromSlashEvent(event, user))
                 .onFailure(throwable -> event.getChannel().ifPresent(channel -> updaterFuture.thenAccept(updater -> updater
                         .setFlags(InteractionCallbackDataFlag.EPHEMERAL)
                         .setContent(throwable.getMessage())
@@ -101,30 +102,31 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
      * @param user        The user who made the roll
      * @return A CompletableFuture that contains a Triple that that has a list of the embeds to send, a boolean states if the roll uses any plot dice, and the total of the roll
      */
-    public static Try<RollOutput> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, User user) {
+    public static Try<RollOutput> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, User user, String username) {
         return Roller.parse(dicePool, pool -> convertSkillsToDice(user, pool))
                 .map(Roller::roll)
                 .map(pair -> new Result(pair.getLeft(), pair.getRight(), diceKept))
                 // TODO Convert to CompletableFuture earlier
                 .map(result -> Roller.handlePoints(result, discount, opportunity, value -> DoomHandler.addDoomOnOpportunity(user, value), value -> PlotPointUtils.addPlotPointsOnRoll(user, value)))
-                .map(changes -> Roller.output(changes, builder -> postProcessResult(dicePool, user, builder), DoomHandler.getDoomPoolOrDefault(user), discount, opportunity));
+                .map(changes -> Roller.output(changes, builder -> postProcessResult(dicePool, user, builder, username), DoomHandler.getDoomPoolOrDefault(user), discount, opportunity));
     }
 
     /**
      * Modifies the embed generated on a roll to include information about the user, a random color, and a random roll title
      *
-     * @param dicePool The pool that was used to generate the embed
+     * @param dicePool The pool of dice that was rolled, after conversion
      * @param user     The user that rolled
      * @param builder  The EmbedBuilder that contains the results of the dice roll
+     * @param username The display name for the user, generally their nickname
      * @return An embed that has information about the user and the dice pool added to it
      */
-    private static EmbedBuilder postProcessResult(String dicePool, User user, EmbedBuilder builder) {
+    private static EmbedBuilder postProcessResult(String dicePool, User user, EmbedBuilder builder, String username) {
         // TODO Use server profile and nicknames
-        // TODO Convert skills into dice
-        return builder.setAuthor(user)
+        final Try<String> processedDicePool = Roller.preprocessPool(dicePool, s -> convertSkillsToDice(user, s));
+        return builder.setAuthor(username, null, user.getAvatar())
                 .setColor(RandomColor.getRandomColor())
                 .setTitle(TwoDee.getRollTitleMessage())
-                .setDescription(MessageFormat.format("Here are the results for **{0}**", dicePool));
+                .setDescription(MessageFormat.format("Here are the results for **{0}**", processedDicePool.getOrElse(dicePool)));
     }
 
     /**
@@ -166,7 +168,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     public static void handleTextCommandRoll(User user, TextChannel channel, String pool, boolean opportunity) {
         Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user).flatMap(integer -> DoomHandler.getUserDoomPool(user).map(s -> Pair.of(integer, DoomHandler.getDoom(s))));
         final RollParameters rollParameters = new RollParameters(pool, 0, null, true, 2);
-        rollDice(pool, 0, 2, opportunity, user)
+        rollDice(pool, 0, 2, opportunity, user, UtilFunctions.getUsernameInChannel(user, channel))
                 .onFailure(throwable -> channel.sendMessage(throwable.getMessage()))
                 .onSuccess(rollOutput -> new MessageBuilder()
                         .addEmbeds(rollOutput.getEmbeds())
