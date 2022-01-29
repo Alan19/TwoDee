@@ -1,5 +1,6 @@
 package discord;
 
+import io.vavr.control.Try;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -22,23 +23,18 @@ public class TwoDee {
             Properties prop = new Properties();
             prop.load(new FileInputStream("resources/bot.properties"));
             String token = prop.getProperty("token");
-            // TODO Un hard-code this
-            String channel = prop.getProperty("channel", "484544303247523840");
             final Velen velen = SlashCommandRegister.setupVelen();
             new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
+                        System.out.println("You can invite the bot by using the following url: " + api.createBotInvite() + "&scope=bot%20applications.commands");
                         // Uncomment this line when a command is altered
                         // TODO do this a smarter way
                         velen.registerAllSlashCommands(api);
                         //Send startup messsage
-                        new MessageBuilder()
-                                .setContent(getStartupMessage())
-                                .send(api.getTextChannelById(channel)
-                                        .orElseThrow(() -> new IllegalStateException("Failed to find Channel for Id: " + channel))
-                                );
-
-                        // Print the invite url of your bot
-                        System.out.println("You can invite the bot by using the following url: " + api.createBotInvite());
-
+                        Try.of(() -> prop.getProperty("main_channel_id"))
+                                .onFailure(Throwable::printStackTrace)
+                                .onSuccess(s -> new MessageBuilder()
+                                        .setContent(getStartupMessage())
+                                        .send(api.getTextChannelById(s).orElseThrow(() -> new IllegalStateException("Failed to find channel for ID: " + s))));
                     })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
