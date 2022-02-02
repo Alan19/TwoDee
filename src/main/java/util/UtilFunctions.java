@@ -2,7 +2,7 @@ package util;
 
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.user.User;
-import org.javacord.api.interaction.SlashCommandInteraction;
+import org.javacord.api.interaction.InteractionBase;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,7 +49,7 @@ public class UtilFunctions {
         });
     }
 
-    public static String getUsernameFromSlashEvent(SlashCommandInteraction event, User user) {
+    public static String getUsernameFromSlashEvent(InteractionBase event, User user) {
         return event.getChannel().map(channel -> getUsernameInChannel(user, channel)).orElse(user.getName());
     }
 }

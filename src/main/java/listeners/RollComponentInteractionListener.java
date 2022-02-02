@@ -175,7 +175,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
      * @param interactionMessage The message the button interaction is attached to
      */
     private void handleReroll(ButtonInteraction interaction, Message interactionMessage) {
-        rollBackChanges().thenApply(unused -> RollLogic.rollDice(pool, discount, diceKept, opportunity, user))
+        rollBackChanges().thenApply(unused -> RollLogic.rollDice(pool, discount, diceKept, opportunity, user, UtilFunctions.getUsernameFromSlashEvent(interaction, interaction.getUser())))
                 .thenCompose(outputs -> interaction.createOriginalMessageUpdater()
                         .removeAllComponents()
                         .addEmbeds(interactionMessage.getEmbeds().get(0).toBuilder().setFooter(""))
