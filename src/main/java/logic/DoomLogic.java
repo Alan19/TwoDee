@@ -46,7 +46,7 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
         return new SlashCommandOptionBuilder()
                 .setName("count")
                 .setDescription("the amount to modify the doom pool by")
-                .setType(SlashCommandOptionType.LONG)
+                .setType(SlashCommandOptionType.NUMBER)
                 .setRequired(false);
     }
 

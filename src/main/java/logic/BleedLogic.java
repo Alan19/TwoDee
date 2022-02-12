@@ -34,7 +34,7 @@ public class BleedLogic implements VelenSlashEvent, VelenEvent {
     public static void setupBleedCommand(Velen velen) {
         BleedLogic bleedLogic = new BleedLogic();
         VelenCommand.ofHybrid("bleed", "Applies plot point bleed!", velen, bleedLogic, bleedLogic)
-                .addOptions(SlashCommandOption.create(SlashCommandOptionType.MENTIONABLE, "target", "The party to bleed", true), SlashCommandOption.create(SlashCommandOptionType.LONG, "modifier", "The bonus or penalty on the bleed", false))
+                .addOptions(SlashCommandOption.create(SlashCommandOptionType.MENTIONABLE, "target", "The party to bleed", true), SlashCommandOption.create(SlashCommandOptionType.NUMBER, "modifier", "The bonus or penalty on the bleed", false))
                 .attach();
     }
 

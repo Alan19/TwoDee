@@ -33,24 +33,24 @@ public class DamageLogic implements VelenSlashEvent {
                 .addChoice("wound", "wound")
                 .setRequired(true));
         options.add(new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.LONG)
+                .setType(SlashCommandOptionType.NUMBER)
                 .setName("count")
                 .setDescription("the amount of damage that is being inflicted")
                 .setRequired(true));
         options.add(new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.LONG)
+                .setType(SlashCommandOptionType.NUMBER)
                 .setName("stun-armor")
                 .setDescription("the amount of stun armor you have"));
         options.add(new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.LONG)
+                .setType(SlashCommandOptionType.NUMBER)
                 .setName("basic-armor")
                 .setDescription("the amount of basic armor you have"));
         options.add(new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.LONG)
+                .setType(SlashCommandOptionType.NUMBER)
                 .setName("wound-armor")
                 .setDescription("the amount of wound armor you have"));
         options.add(new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.LONG)
+                .setType(SlashCommandOptionType.NUMBER)
                 .setName("resilience")
                 .setDescription("the amount of resilience you have"));
 
