@@ -26,6 +26,7 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "select", "Chooses the specified doom pool as the active doom pool", getNameOption().setRequired(true)));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all doom pools", getNameOption().setDescription("the name of the doom pool to query")));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "delete", "Deletes the doom pool from the doom pool tracker", getNameOption().setDescription("the name of the doom pool to delete")));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "create", "Create new doom pool", getNameOption().setRequired(true), getCountOption()));
 
         DoomLogic doomLogic = new DoomLogic();
         VelenCommand.ofHybrid("doom", "Modifies the doom pool!", velen, doomLogic, doomLogic)
@@ -46,7 +47,7 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
         return new SlashCommandOptionBuilder()
                 .setName("count")
                 .setDescription("the amount to modify the doom pool by")
-                .setType(SlashCommandOptionType.NUMBER)
+                .setType(SlashCommandOptionType.INTEGER)
                 .setRequired(false);
     }
 
@@ -82,6 +83,8 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
                 return DoomHandler.setDoom(poolName, count);
             case "delete":
                 return DoomHandler.deletePool(poolName);
+            case "create":
+                return DoomHandler.createPool(poolName, count);
             default:
                 return poolName.equals("") ? DoomHandler.generateDoomEmbed() : DoomHandler.generateDoomEmbed(poolName);
         }

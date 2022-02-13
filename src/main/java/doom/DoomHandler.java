@@ -40,6 +40,11 @@ public class DoomHandler {
      */
     public static EmbedBuilder addDoom(String pool, int doomVal) {
         final int oldDoom = getDoom(pool);
+        if (oldDoom == 0) {
+            return new EmbedBuilder()
+                    .setTitle("Error")
+                    .setDescription("No Doom Pool with Name ''**" + pool + "**'' exists.");
+        }
         final int newDoom = instance.doomConfigs.getDoomPools().compute(pool, (s, integer) -> integer != null ? integer + doomVal : doomVal);
         serializePools();
         return generateDoomEmbed(pool, oldDoom, newDoom);
@@ -101,6 +106,11 @@ public class DoomHandler {
      */
     public static EmbedBuilder setDoom(String pool, int newDoom) {
         int oldDoom = getDoom(pool);
+        if (oldDoom == 0) {
+            return new EmbedBuilder()
+                    .setTitle("Error")
+                    .setDescription("No Doom Pool with Name ''**" + pool + "**'' exists.");
+        }
         instance.doomConfigs.getDoomPools().put(pool, newDoom);
         serializePools();
         return generateDoomEmbed(pool, oldDoom, newDoom);
@@ -203,6 +213,14 @@ public class DoomHandler {
 
     public static String getDoomPoolOrDefault(User user) {
         return getUserDoomPool(user).orElse(getActivePool());
+    }
+
+    public static EmbedBuilder createPool(String poolName, int count) {
+        instance.doomConfigs.getDoomPools().put(poolName, count);
+        serializePools();
+        return new EmbedBuilder()
+                .setTitle(DOOM)
+                .setDescription(MessageFormat.format("I''ve created the doom pool ''**{0}**'', which contains {1} doom points.", poolName, count));
     }
 
     /**
