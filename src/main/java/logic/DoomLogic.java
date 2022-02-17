@@ -27,6 +27,8 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all doom pools", getNameOption().setDescription("the name of the doom pool to query")));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "delete", "Deletes the doom pool from the doom pool tracker", getNameOption().setDescription("the name of the doom pool to delete")));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "create", "Create new doom pool", getNameOption().setRequired(true), getCountOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "list", "List Doom Pools"));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "info", "Doom Pool Info", getNameOption().setRequired(true)));
 
         DoomLogic doomLogic = new DoomLogic();
         VelenCommand.ofHybrid("doom", "Modifies the doom pool!", velen, doomLogic, doomLogic)
@@ -72,21 +74,38 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
     }
 
     private EmbedBuilder handleCommand(String mode, String poolName, int count) {
-        switch (mode) {
-            case "add":
-                return DoomHandler.addDoom(poolName, count);
-            case "sub":
-                return DoomHandler.addDoom(poolName, count * -1);
-            case "select":
-                return DoomHandler.setActivePool(poolName);
-            case "set":
-                return DoomHandler.setDoom(poolName, count);
-            case "delete":
-                return DoomHandler.deletePool(poolName);
-            case "create":
-                return DoomHandler.createPool(poolName, count);
-            default:
-                return poolName.equals("") ? DoomHandler.generateDoomEmbed() : DoomHandler.generateDoomEmbed(poolName);
+        String actualPoolName = DoomHandler.findPool(poolName);
+        if (actualPoolName == null) {
+            if (mode == null || mode.isEmpty() || mode.equalsIgnoreCase("list")) {
+                return DoomHandler.generateDoomEmbed();
+            }
+            else {
+                return new EmbedBuilder()
+                        .setTitle("Error")
+                        .setDescription("No Doom Pool with Name ''**" + poolName + "**'' exists.");
+            }
+        }
+        else {
+            switch (mode) {
+                case "add":
+                    return DoomHandler.addDoom(actualPoolName, count);
+                case "sub":
+                    return DoomHandler.addDoom(actualPoolName, count * -1);
+                case "select":
+                    return DoomHandler.setActivePool(actualPoolName);
+                case "set":
+                    return DoomHandler.setDoom(actualPoolName, count);
+                case "delete":
+                    return DoomHandler.deletePool(actualPoolName);
+                case "create":
+                    return DoomHandler.createPool(actualPoolName, count);
+                case "list":
+                    return DoomHandler.generateDoomEmbed();
+                case "info":
+                    return DoomHandler.generateDoomEmbed(actualPoolName);
+                default:
+                    return actualPoolName.equals("") ? DoomHandler.generateDoomEmbed() : DoomHandler.generateDoomEmbed(actualPoolName);
+            }
         }
     }
 
