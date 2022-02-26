@@ -1,7 +1,6 @@
 package doom;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import roles.Player;
@@ -11,22 +10,19 @@ import roles.Storytellers;
 import java.awt.*;
 import java.io.*;
 import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 public class DoomHandler {
 
     public static final String DOOM = "Doom!";
     private static final DoomHandler instance = new DoomHandler();
-    private DoomConfigs doomConfigs;
+    private DoomPools doomConfigs;
 
     private DoomHandler() {
         try {
-            doomConfigs = new Gson().fromJson(new BufferedReader(new FileReader("resources/doom.json")), new TypeToken<DoomConfigs>() {
-            }.getType());
+            doomConfigs = new Gson().fromJson(new BufferedReader(new FileReader("resources/doom.json")), DoomPools.class);
         } catch (FileNotFoundException e) {
-            doomConfigs = new DoomConfigs();
+            doomConfigs = new DoomPools();
         }
     }
 
@@ -203,30 +199,5 @@ public class DoomHandler {
 
     public static String getDoomPoolOrDefault(User user) {
         return getUserDoomPool(user).orElse(getActivePool());
-    }
-
-    /**
-     * Inner class that stores the representation of doom.json
-     */
-    private static class DoomConfigs {
-        private final Map<String, Integer> doomPools;
-        private String activePool;
-
-        public DoomConfigs() {
-            doomPools = new HashMap<>();
-            activePool = "Doom!";
-        }
-
-        public Map<String, Integer> getDoomPools() {
-            return doomPools;
-        }
-
-        public String getActivePool() {
-            return activePool;
-        }
-
-        public void setActivePool(String activePool) {
-            this.activePool = activePool;
-        }
     }
 }
