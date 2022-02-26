@@ -1,6 +1,13 @@
 package doom;
 
-public record DoomPool(String name, int amount, long roleId) {
+public final class DoomPool {
+    private final long roleId;
+    private int amount;
+
+    DoomPool(String name, int amount, long roleId) {
+        this.amount = amount;
+        this.roleId = roleId;
+    }
 
     public long getRoleId() {
         return roleId;
@@ -10,7 +17,8 @@ public record DoomPool(String name, int amount, long roleId) {
         return amount;
     }
 
-    public String getName() {
-        return name;
+    public DoomPool setAmount(int amount) {
+        this.amount = amount;
+        return this;
     }
 }

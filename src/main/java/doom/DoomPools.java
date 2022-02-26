@@ -1,22 +1,23 @@
 package doom;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DoomPools {
     private final String activePool;
-    private List<DoomPool> pools;
+    private final Map<String, DoomPool> pools;
 
     public DoomPools() {
-        this.activePool = "";
-        this.pools = new ArrayList<>();
+        this.activePool = "Doom!";
+        this.pools = new HashMap<>();
+    }
+
+    public Map<String, DoomPool> getDoomPools() {
+        return pools;
     }
 
     public String getActivePool() {
         return activePool;
     }
 
-    public List<DoomPool> getPools() {
-        return pools;
-    }
 }
