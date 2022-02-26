@@ -17,8 +17,8 @@ public final class DoomPool {
         return amount;
     }
 
-    public DoomPool setAmount(int amount) {
+    public int setAndGetAmount(int amount) {
         this.amount = amount;
-        return this;
+        return amount;
     }
 }

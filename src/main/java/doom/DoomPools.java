@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DoomPools {
-    private final String activePool;
     private final Map<String, DoomPool> pools;
+    private String activePool;
 
     public DoomPools() {
         this.activePool = "Doom!";
@@ -18,6 +18,10 @@ public class DoomPools {
 
     public String getActivePool() {
         return activePool;
+    }
+
+    public void setActivePool(String activePool) {
+        this.activePool = activePool;
     }
 
 }
