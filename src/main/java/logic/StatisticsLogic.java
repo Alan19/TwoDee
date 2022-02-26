@@ -33,7 +33,7 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
         final StatisticsLogic statisticsLogic = new StatisticsLogic();
         List<SlashCommandOption> options = new ArrayList<>();
         options.add(SlashCommandOption.create(SlashCommandOptionType.STRING, "dicepool", "The dice pool to roll with.", true));
-        options.add(SlashCommandOption.create(SlashCommandOptionType.LONG, "dicekept", "The number of dice kept. Keeps two dice by default.", false));
+        options.add(SlashCommandOption.create(SlashCommandOptionType.INTEGER, "dicekept", "The number of dice kept. Keeps two dice by default.", false));
         options.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "nonephemeral", "Makes the statistics for the roll visible. Defaults to false.", false));
         VelenCommand.ofHybrid("statistics", "Generates the statistics for a dice pool!", velen, statisticsLogic, statisticsLogic).addOptions(options.toArray(new SlashCommandOption[0])).addShortcuts("s", "stat", "stats").attach();
     }

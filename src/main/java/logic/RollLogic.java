@@ -56,8 +56,8 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     static List<SlashCommandOption> getRollCommandOptions() {
         List<SlashCommandOption> options = new ArrayList<>();
         options.add(SlashCommandOption.create(SlashCommandOptionType.STRING, "dicepool", "The dice pool to roll with.", true));
-        options.add(SlashCommandOption.create(SlashCommandOptionType.LONG, "discount", "The number of plot points to discount (negative results in a plot point cost increase).", false));
-        options.add(SlashCommandOption.create(SlashCommandOptionType.LONG, "dicekept", "The number of dice kept. Keeps two dice by default.", false));
+        options.add(SlashCommandOption.create(SlashCommandOptionType.INTEGER, "discount", "The number of plot points to discount (negative results in a plot point cost increase).", false));
+        options.add(SlashCommandOption.create(SlashCommandOptionType.INTEGER, "dicekept", "The number of dice kept. Keeps two dice by default.", false));
         options.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "enhanceable", "Allows the roll to be enhanced after the roll.", false));
         return options;
     }
