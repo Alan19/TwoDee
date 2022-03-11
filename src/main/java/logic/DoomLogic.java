@@ -26,7 +26,7 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "select", "Chooses the specified doom pool as the active doom pool", getNameOption().setRequired(true)));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all doom pools", getNameOption().setDescription("the name of the doom pool to query")));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "delete", "Deletes the doom pool from the doom pool tracker", getNameOption().setDescription("the name of the doom pool to delete")));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "create", "Create new doom pool", getNameOption().setRequired(true), getCountOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "create", "Create new doom pool", getNameOption().setDescription("the name of the doom pool to create").setRequired(true), getCountOption()));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "list", "List Doom Pools"));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "info", "Doom Pool Info", getNameOption().setRequired(true)));
 
@@ -49,7 +49,7 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
         return new SlashCommandOptionBuilder()
                 .setName("count")
                 .setDescription("the amount to modify the doom pool by")
-                .setType(SlashCommandOptionType.INTEGER)
+                .setType(SlashCommandOptionType.LONG)
                 .setRequired(false);
     }
 
@@ -79,6 +79,9 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
             if (mode == null || mode.isEmpty() || mode.equalsIgnoreCase("list")) {
                 return DoomHandler.generateDoomEmbed();
             }
+            else if (mode.equals("create")) {
+                return DoomHandler.createPool(poolName, count);
+            }
             else {
                 return new EmbedBuilder()
                         .setTitle("Error")
@@ -97,8 +100,6 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
                     return DoomHandler.setDoom(actualPoolName, count);
                 case "delete":
                     return DoomHandler.deletePool(actualPoolName);
-                case "create":
-                    return DoomHandler.createPool(actualPoolName, count);
                 case "list":
                     return DoomHandler.generateDoomEmbed();
                 case "info":

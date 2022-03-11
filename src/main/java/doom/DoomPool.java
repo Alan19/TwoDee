@@ -1,15 +1,17 @@
 package doom;
 
+import javax.annotation.Nullable;
+
 public final class DoomPool {
-    private final long roleId;
+    private final Long roleId;
     private int amount;
 
-    DoomPool(String name, int amount, long roleId) {
+    DoomPool(int amount, @Nullable Long roleId) {
         this.amount = amount;
         this.roleId = roleId;
     }
 
-    public long getRoleId() {
+    public Long getRoleId() {
         return roleId;
     }
 

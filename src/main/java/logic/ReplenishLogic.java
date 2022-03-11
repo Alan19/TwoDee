@@ -1,5 +1,6 @@
 package logic;
 
+import doom.DoomHandler;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -32,7 +33,7 @@ public class ReplenishLogic implements VelenSlashEvent, VelenEvent {
     }
 
     /**
-     * Adds the specified number of plot points to all players with the input roles, and return an embed with the results
+     * Adds the specified number of plot points to all players with the input roles, and return an embed with the results. Attempts to set the doom pool based on the input role.
      * <p>
      * The embed will list players that the bot cannot successfully edit
      *
@@ -43,7 +44,7 @@ public class ReplenishLogic implements VelenSlashEvent, VelenEvent {
      * @return A future that contains the embed with the result for the plot point changes
      */
     private CompletableFuture<EmbedBuilder> replenishParties(User author, Role role, Integer count, TextChannel channel) {
-        return PlotPointUtils.addPlotPointsToUsers(role.getUsers(), count).thenApply(plotPointChangeResult -> plotPointChangeResult.getReplenishEmbed(channel).setFooter("Requested by " + UtilFunctions.getUsernameInChannel(author, channel), author.getAvatar()));
+        return PlotPointUtils.addPlotPointsToUsers(role.getUsers(), count).thenApply(plotPointChangeResult -> plotPointChangeResult.getReplenishEmbed(channel).setFooter("Requested by " + UtilFunctions.getUsernameInChannel(author, channel), author.getAvatar())).whenComplete((embedBuilder, throwable) -> DoomHandler.setActivePool(role));
     }
 
     @Override

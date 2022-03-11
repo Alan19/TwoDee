@@ -198,7 +198,7 @@ public class DoomHandler {
         final EmbedBuilder embedBuilder = new EmbedBuilder().setTitle(DOOM)
                 .setDescription(MessageFormat.format("Here are the values of all doom pools.\nThe current active doom pool is ''**{0}**'' with {1} doom points", getActivePool(), getDoom(getActivePool())))
                 .setColor(new Color((int) (getDoom() % DOOM_DANGER_CAP * (2.55))));
-        instance.doomPoolsInstance.getDoomPools().forEach((key, value) -> embedBuilder.addField(key, String.valueOf(value)));
+        instance.doomPoolsInstance.getDoomPools().forEach((key, value) -> embedBuilder.addField(key, String.valueOf(value.getAmount())));
         return embedBuilder;
     }
 
@@ -231,8 +231,8 @@ public class DoomHandler {
         return getUserDoomPool(user).orElse(getActivePool());
     }
 
-    public static EmbedBuilder createPool(String poolName, int count, Role role) {
-        instance.doomPoolsInstance.getDoomPools().put(poolName, new DoomPool(poolName, count, role.getId()));
+    public static EmbedBuilder createPool(String poolName, int count) {
+        instance.doomPoolsInstance.getDoomPools().put(poolName, new DoomPool(count, null));
         serializePools();
         return new EmbedBuilder()
                 .setTitle(DOOM)
@@ -272,4 +272,10 @@ public class DoomHandler {
         }
     }
 
+    public static Optional<EmbedBuilder> setActivePool(Role role) {
+        return instance.doomPoolsInstance.getDoomPools().entrySet().stream()
+                .filter(entry -> entry.getValue().getRoleId() == role.getId())
+                .findFirst()
+                .map(entry -> setActivePool(entry.getKey()));
+    }
 }
