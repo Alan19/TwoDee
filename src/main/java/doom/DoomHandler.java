@@ -1,21 +1,30 @@
 package doom;
 
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import discord.TwoDee;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import roles.Player;
 import roles.PlayerHandler;
 import roles.Storytellers;
+import util.DamerauLevenshtein;
 
+import javax.annotation.Nullable;
 import java.awt.*;
 import java.io.*;
 import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class DoomHandler {
+
+    private static Logger LOGGER = LogManager.getLogger(DoomHandler.class);
 
     public static final String DOOM = "Doom!";
     private static final DoomHandler instance = new DoomHandler();
@@ -40,6 +49,11 @@ public class DoomHandler {
      */
     public static EmbedBuilder addDoom(String pool, int doomVal) {
         final int oldDoom = getDoom(pool);
+        if (oldDoom == 0) {
+            return new EmbedBuilder()
+                    .setTitle("Error")
+                    .setDescription("No Doom Pool with Name ''**" + pool + "**'' exists.");
+        }
         final int newDoom = instance.doomConfigs.getDoomPools().compute(pool, (s, integer) -> integer != null ? integer + doomVal : doomVal);
         serializePools();
         return generateDoomEmbed(pool, oldDoom, newDoom);
@@ -101,6 +115,11 @@ public class DoomHandler {
      */
     public static EmbedBuilder setDoom(String pool, int newDoom) {
         int oldDoom = getDoom(pool);
+        if (oldDoom == 0) {
+            return new EmbedBuilder()
+                    .setTitle("Error")
+                    .setDescription("No Doom Pool with Name ''**" + pool + "**'' exists.");
+        }
         instance.doomConfigs.getDoomPools().put(pool, newDoom);
         serializePools();
         return generateDoomEmbed(pool, oldDoom, newDoom);
@@ -203,6 +222,52 @@ public class DoomHandler {
 
     public static String getDoomPoolOrDefault(User user) {
         return getUserDoomPool(user).orElse(getActivePool());
+    }
+
+    public static EmbedBuilder createPool(String poolName, int count) {
+        instance.doomConfigs.getDoomPools().put(poolName, count);
+        serializePools();
+        return new EmbedBuilder()
+                .setTitle(DOOM)
+                .setDescription(MessageFormat.format("I''ve created the doom pool ''**{0}**'', which contains {1} doom points.", poolName, count));
+    }
+
+    @Nullable
+    public static String findPool(String poolName) {
+        if (instance.doomConfigs.getDoomPools().containsKey(poolName)) {
+            return poolName;
+        }
+        else {
+            List<String> potentialPoolNames = Lists.newArrayList();
+            int currentDistance = Integer.MAX_VALUE;
+            for (String existingPool : instance.doomConfigs.getDoomPools().keySet()) {
+                int distance = DamerauLevenshtein.calculateDistance(poolName, existingPool);
+                if (distance < currentDistance) {
+                    potentialPoolNames.clear();
+                    potentialPoolNames.add(existingPool);
+                    currentDistance = distance;
+                }
+                else if (distance == currentDistance) {
+                    potentialPoolNames.add(existingPool);
+                }
+            }
+
+            if (potentialPoolNames.isEmpty()) {
+                return null;
+            }
+            else if (potentialPoolNames.size() == 1) {
+                if (currentDistance <= 2) {
+                    return potentialPoolNames.get(0);
+                }
+                else {
+                    return null;
+                }
+            }
+            else {
+                LOGGER.warn("Found multiple doom pool names with same level of similarity");
+                return null;
+            }
+        }
     }
 
     /**
