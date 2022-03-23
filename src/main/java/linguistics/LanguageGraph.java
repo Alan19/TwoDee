@@ -1,14 +1,22 @@
 package linguistics;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.ImmutableGraph;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.guava.ImmutableGraphAdapter;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("ALL")
 public class LanguageGraph {
-    public static final Language ABYSSAL = new Language("Abyssal").setFamily().setDescription("");
+    public static final Language ABYSSAL = new Language("Abyssal").setFamily().setDescription("Abyssal languages presume that you are in floating in water");
     public static final Language CETACEAN = new Language("Cetacean");
     public static final Language ATLANTEAN = new Language("Atlantean").setFamily();
     public static final Language JANNORI = new Language("Jannori");
@@ -197,7 +205,31 @@ public class LanguageGraph {
         return instance.languages;
     }
 
+    public static Optional<Language> lookupLanguage(String target) {
+        return instance.languages.nodes().stream().filter(language -> language.getName().equalsIgnoreCase(target)).findFirst();
+    }
+
     public static Graph<Language, EndpointPair<Language>> getGraphAdapter() {
         return graphAdapter;
+    }
+
+    public static List<Language> getShortestPathFromLanguagesKnown(List<Language> knownLanguages, Language destination) {
+        if (knownLanguages.contains(destination)) {
+            return ImmutableList.of(destination, destination);
+        }
+        final List<EndpointPair<Language>> collect = knownLanguages.stream()
+                .map(language -> DijkstraShortestPath.findPathBetween(getGraphAdapter(), language, destination))
+                .sorted(Comparator.comparingInt(value -> value.size()))
+                .findFirst()
+                .orElseThrow(IllegalStateException::new)
+                .stream()
+                .collect(Collectors.toList());
+        List<Language> solution = new ArrayList<>();
+        solution.add(collect.get(0).nodeV());
+        solution.add(collect.get(0).nodeU());
+        for (int i = 1; i < collect.size(); i++) {
+            solution.add(collect.get(i).nodeU());
+        }
+        return solution;
     }
 }

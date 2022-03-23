@@ -85,7 +85,7 @@ public class SheetsHandler {
      */
     public static Try<Map<String, String>> getSkills(User user) {
         return Try.of(() -> getSpreadsheetForPartyMember(user).orElseThrow(() -> new NoSuchElementException(MessageFormat.format("User `{0}` is not registered in `players.json`!", user.getName()))))
-                .map(API.unchecked(s -> instance.service.spreadsheets().values().get(s, "AllEverything").execute()))
+                .map(API.unchecked(s -> getRange(s, "AllEverything")))
                 .map(SheetsHandler::getSkillMap)
                 .recover(NoSuchElementException.class, new HashMap<>());
     }
@@ -114,7 +114,7 @@ public class SheetsHandler {
         final Optional<String> spreadsheetForUser = getSpreadsheetForPartyMember(user);
         if (spreadsheetForUser.isPresent()) {
             try {
-                return Optional.of(instance.service.spreadsheets().values().get(spreadsheetForUser.get(), "PlotPoints").execute());
+                return Optional.of(getRange(spreadsheetForUser.get(), "PlotPoints"));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -187,7 +187,7 @@ public class SheetsHandler {
         final Optional<String> spreadsheetForUser = getSpreadsheetForPartyMember(user);
         if (spreadsheetForUser.isPresent()) {
             try {
-                return Optional.of(instance.service.spreadsheets().values().get(spreadsheetForUser.get(), "PlotPointBleed").execute()).map(valueRange -> Integer.parseInt((String) valueRange.getValues().get(0).get(0)));
+                return Optional.of(getRange(spreadsheetForUser.get(), "PlotPointBleed")).map(valueRange -> Integer.parseInt((String) valueRange.getValues().get(0).get(0)));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -218,10 +218,7 @@ public class SheetsHandler {
     public static Try<String> getSavePool(String saveType, User user) {
         final Optional<String> spreadsheetForUser = getSpreadsheetForPartyMember(user);
         if (spreadsheetForUser.isPresent()) {
-            return Try.of(() -> instance.service.spreadsheets()
-                            .values()
-                            .get(spreadsheetForUser.get(), saveType)
-                            .execute())
+            return Try.of(() -> getRange(spreadsheetForUser.get(), saveType))
                     .map(valueRange -> ((String) (valueRange.getValues().get(0).get(0))).replace(" + ", " "));
 
         }
@@ -246,14 +243,41 @@ public class SheetsHandler {
     public static Try<List<Pair<String, String>>> getSavedPools(User user) {
         final Optional<String> spreadsheetID = getSpreadsheetForPartyMember(user);
         if (spreadsheetID.isPresent()) {
-            return Try.of(() -> instance.service.spreadsheets().values()
-                            .get(spreadsheetID.get(), "DicePools")
-                            .execute())
+            return Try.of(() -> getRange(spreadsheetID.get(), "DicePools"))
                     .map(valueRange -> valueRange.getValues().stream()
                             .filter(objects -> objects.size() == 2)
                             .map(objects -> Pair.of(((String) (objects.get(0))).replaceAll("\\s", ""), ((String) (objects.get(1))).replace(" + ", " ")))
                             .collect(Collectors.toList()));
         }
         return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
+    }
+
+    /**
+     * Returns the list of languages for a user
+     *
+     * @param user The user to search
+     * @return A list of languages as strings
+     */
+    public static Try<String> getLanguages(User user) {
+        final Optional<String> spreadsheetID = getSpreadsheetForPartyMember(user);
+        if (spreadsheetID.isPresent()) {
+            return Try.of(() -> getRange(spreadsheetID.get(), "Languages"))
+                    .map(valueRange -> (String) valueRange.getValues().get(0).get(0));
+        }
+        return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
+
+    }
+
+    /**
+     * Returns a range for the given spreadsheet
+     *
+     * @param spreadsheetID The ID of the spreadsheet
+     * @param range         The range to return
+     * @return A ValueRange that contains the information of the given range
+     */
+    private static ValueRange getRange(String spreadsheetID, String range) throws IOException {
+        return instance.service.spreadsheets().values()
+                .get(spreadsheetID, range)
+                .execute();
     }
 }

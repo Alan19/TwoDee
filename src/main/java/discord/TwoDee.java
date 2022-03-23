@@ -1,6 +1,7 @@
 package discord;
 
 import io.vavr.control.Try;
+import listeners.LanguageAutocomplete;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -24,11 +25,17 @@ public class TwoDee {
             prop.load(new FileInputStream("resources/bot.properties"));
             String token = prop.getProperty("token");
             final Velen velen = SlashCommandRegister.setupVelen();
-            new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
+            new DiscordApiBuilder()
+                    .setToken(token)
+                    .setAllIntentsExcept(Intent.GUILD_PRESENCES)
+                    .setUserCacheEnabled(true)
+                    .addListener(velen)
+                    .login().thenAccept(api -> {
                         System.out.println("You can invite the bot by using the following url: " + api.createBotInvite() + "&scope=bot%20applications.commands");
+                        api.addListener(new LanguageAutocomplete());
                         // Uncomment this line when a command is altered
                         // TODO do this a smarter way
-                        velen.registerAllSlashCommands(api);
+                        velen.registerAllSlashCommands(api).exceptionally(ExceptionLogger.get());
                         //Send startup messsage
                         Try.of(() -> prop.getProperty("main_channel_id"))
                                 .onFailure(Throwable::printStackTrace)

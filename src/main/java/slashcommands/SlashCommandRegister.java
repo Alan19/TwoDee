@@ -20,6 +20,7 @@ public class SlashCommandRegister {
         RollPoolLogic.setupPoolCommand(velen);
         CalculationLogic.setup(velen);
         AdvancementLogic.setupAdvancementCommand(velen);
+        LinguisticsLogic.setupLinguisticsCommand(velen);
         return velen;
     }
 
