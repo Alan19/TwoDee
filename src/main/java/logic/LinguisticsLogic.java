@@ -114,12 +114,12 @@ public class LinguisticsLogic implements VelenSlashEvent {
     private void calculateManualEntry(User user, InteractionImmediateResponseBuilder firstResponder, SlashCommandInteractionOption manualOption) {
         final List<Language> languagePool = manualOption.getOptionStringValueByName(LANGUAGES).map(this::getLanguagePool).orElseThrow(IllegalArgumentException::new);
         final Language targetLanguage = manualOption.getOptionStringValueByName(LANGUAGES).map(s -> getTargetLanguage(manualOption)).orElseThrow(IllegalArgumentException::new);
-        final EmbedBuilder builder = getUserTranslationPath(user, languagePool, targetLanguage);
+        List<Language> path = LanguageGraph.getShortestPathFromLanguagesKnown(languagePool, targetLanguage);
+        final EmbedBuilder builder = getUserTranslationPath(user, path, targetLanguage);
         firstResponder.addEmbed(builder).respond();
     }
 
-    private EmbedBuilder getUserTranslationPath(User user, List<Language> languagePool, Language targetLanguage) {
-        List<Language> path = LanguageGraph.getShortestPathFromLanguagesKnown(languagePool, targetLanguage);
+    private EmbedBuilder getUserTranslationPath(User user, List<Language> path, Language targetLanguage) {
         return new EmbedBuilder()
                 .setTitle("Shortest Path to " + targetLanguage.getName())
                 .setAuthor(user)
