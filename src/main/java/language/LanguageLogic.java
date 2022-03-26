@@ -7,6 +7,7 @@ import com.google.gson.*;
 import io.vavr.control.Try;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import util.DamerauLevenshtein;
 import util.GsonHelper;
 
 import javax.annotation.Nonnull;
@@ -15,6 +16,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -38,13 +40,50 @@ public class LanguageLogic {
 
     public Try<Language> add(@Nonnull Language language) {
         if (languages.containsKey(language.getName())) {
-            return Try.failure(new IllegalStateException("Language with Name: " + language.getName() + " already exists"));
+            return Try.failure(new IllegalArgumentException("Language with Name: " + language.getName() + " already exists"));
         }
         else {
             languages.put(language.getName(), language);
             languageGraph.addNode(language);
             onUpdate.accept(languageGraph);
             return Try.success(language);
+        }
+    }
+
+    public Try<Void> remove(@Nonnull Language language) {
+        if (languageGraph.removeNode(language)) {
+            languages.remove(language.getName());
+            return Try.success(null);
+        }
+        else {
+            return Try.failure(new IllegalArgumentException("Language " + language.getName() + "does not exist in Graph"));
+        }
+    }
+
+    public Try<Void> connect(@Nonnull Language languageU, @Nonnull Language languageV) {
+        if (!languages.containsKey(languageU.getName())) {
+            return Try.failure(new IllegalArgumentException("Language " + languageU.getName() + "does not exist in Graph"));
+        }
+        else if (!languages.containsKey(languageV.getName())) {
+            return Try.failure(new IllegalArgumentException("Language " + languageV.getName() + "does not exist in Graph"));
+        }
+        else {
+            if (languageGraph.putEdge(languageU, languageV)) {
+                return Try.success(null);
+            }
+            else {
+                return Try.failure(new IllegalArgumentException("Languages are already connected"));
+            }
+        }
+    }
+
+    public Optional<Language> getByName(@Nonnull String name) {
+        if (languages.containsKey(name)) {
+            return Optional.of(languages.get(name));
+        }
+        else {
+            return DamerauLevenshtein.getClosest(name, languages.keySet(), true)
+                    .map(languages::get);
         }
     }
 
@@ -56,6 +95,16 @@ public class LanguageLogic {
                         .collect(Collectors.toMap(Language::getName, Function.identity())),
                 graph -> {
                 }
+        );
+    }
+
+    public static LanguageLogic of(MutableGraph<Language> languageGraph, Consumer<MutableGraph<Language>> onUpdate) {
+        return new LanguageLogic(
+                languageGraph,
+                languageGraph.nodes()
+                        .stream()
+                        .collect(Collectors.toMap(Language::getName, Function.identity())),
+                onUpdate
         );
     }
 

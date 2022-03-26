@@ -3,6 +3,8 @@ package language;
 import com.google.gson.JsonObject;
 import util.GsonHelper;
 
+import java.util.Objects;
+
 public class Language {
     private final String name;
     private final String description;
@@ -11,6 +13,10 @@ public class Language {
     private final boolean family;
     private final boolean regional;
     private final boolean vulgar;
+
+    public Language(String name) {
+        this(name, null, false, false, false, false, false);
+    }
 
     public Language(String name, String description, boolean constellation, boolean court, boolean family,
                     boolean regional, boolean vulgar) {
@@ -51,6 +57,21 @@ public class Language {
         return vulgar;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Language language = (Language) o;
+        return constellation == language.constellation && court == language.court && family == language.family &&
+                regional == language.regional && vulgar == language.vulgar && name.equals(language.name) &&
+                Objects.equals(description, language.description);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, description, constellation, court, family, regional, vulgar);
+    }
+
     public JsonObject toJson() {
         JsonObject languageObject = new JsonObject();
         languageObject.addProperty("name", this.getName());
@@ -64,7 +85,7 @@ public class Language {
         if (this.isCourt()) {
             languageObject.addProperty("court", true);
         }
-        if (this.isFamily())  {
+        if (this.isFamily()) {
             languageObject.addProperty("family", true);
         }
         if (this.isRegional()) {

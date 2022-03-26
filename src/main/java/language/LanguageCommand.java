@@ -26,7 +26,7 @@ public class LanguageCommand implements VelenSlashEvent {
     public static void setup(Velen velen, LanguageLogic languageLogic) {
         VelenCommand.ofSlash(
                 "language",
-                "Query, Create, Remove Facets Languages",
+                "Query, Create, Connect, Remove Facets Languages",
                 velen,
                 new LanguageCommand(languageLogic)
         ).addOption(
