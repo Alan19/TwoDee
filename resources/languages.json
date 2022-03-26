@@ -1,0 +1,668 @@
+{
+  "languages": [
+    {
+      "name": "Abyssal",
+      "description": "Abyssal languages presume that you are in floating in water",
+      "family": true
+    },
+    {
+      "name": "Cetacean"
+    },
+    {
+      "name": "Jannori"
+    },
+    {
+      "name": "Merish"
+    },
+    {
+      "name": "Neptunian"
+    },
+    {
+      "name": "Atlantean",
+      "family": true
+    },
+    {
+      "name": "Punctua",
+      "description": "A rhythmic / musical variation"
+    },
+    {
+      "name": "Naga"
+    },
+    {
+      "name": "Olympian"
+    },
+    {
+      "name": "Asphodel"
+    },
+    {
+      "name": "Greek",
+      "description": "Common language of Arkipol"
+    },
+    {
+      "name": "Macedonian"
+    },
+    {
+      "name": "Chthonic"
+    },
+    {
+      "name": "Romantic English"
+    },
+    {
+      "name": "Mountain of Perfection",
+      "description": "Always spoken by residents of the Mountain of Ideals",
+      "constellation": true
+    },
+    {
+      "name": "Nguvu"
+    },
+    {
+      "name": "Balislav",
+      "family": true
+    },
+    {
+      "name": "Polish"
+    },
+    {
+      "name": "Rauski",
+      "description": "Commonly spoken by members of Rauski cultures"
+    },
+    {
+      "name": "Celestial",
+      "family": true
+    },
+    {
+      "name": "Court Chaos",
+      "description": "Often spoken by Courtiers of Chaos",
+      "constellation": true
+    },
+    {
+      "name": "Infernal"
+    },
+    {
+      "name": "Dural"
+    },
+    {
+      "name": "Cosma",
+      "family": true
+    },
+    {
+      "name": "Federation",
+      "description": "Common language of Tetropol"
+    },
+    {
+      "name": "Coimperial"
+    },
+    {
+      "name": "Voidtalk"
+    },
+    {
+      "name": "Metallic"
+    },
+    {
+      "name": "Imperial English"
+    },
+    {
+      "name": "Draconic",
+      "description": "The nonverbal part of these languages requires wings or similar limbs, a long neck and tail.",
+      "family": true
+    },
+    {
+      "name": "Chromatic"
+    },
+    {
+      "name": "Dov"
+    },
+    {
+      "name": "Spectracant",
+      "description": "Official language of the Lumina Republics"
+    },
+    {
+      "name": "Krillu"
+    },
+    {
+      "name": "English",
+      "family": true
+    },
+    {
+      "name": "Starword",
+      "description": "Commonly spoken by members of the Quizerog"
+    },
+    {
+      "name": "Vulgar English",
+      "vulgar": true
+    },
+    {
+      "name": "Court Sintic",
+      "court": true
+    },
+    {
+      "name": "Esseni",
+      "family": true
+    },
+    {
+      "name": "Nohhixhin"
+    },
+    {
+      "name": "Masui",
+      "description": "Commonly spoken by members of Harmonia cultures"
+    },
+    {
+      "name": "Eldrish",
+      "description": "Dominant language of the Harmony Fellowship"
+    },
+    {
+      "name": "Elvish",
+      "family": true
+    },
+    {
+      "name": "Sylvan"
+    },
+    {
+      "name": "Telleran",
+      "description": "Often spoken by Arcadians",
+      "constellation": true
+    },
+    {
+      "name": "Ellelan",
+      "description": "Commonly spoken by the city of Jalipol"
+    },
+    {
+      "name": "Rikki",
+      "family": true
+    },
+    {
+      "name": "Flammentish",
+      "description": "A visual language family, limited to species who can produce light naturally and flexibly. Common among Lumina.",
+      "family": true
+    },
+    {
+      "name": "Lambentish",
+      "description": "Official language of the Radhi Consolidation"
+    },
+    {
+      "name": "Hindi",
+      "family": true
+    },
+    {
+      "name": "Daevic"
+    },
+    {
+      "name": "Formal Hindi"
+    },
+    {
+      "name": "Regional Hindi",
+      "regional": true
+    },
+    {
+      "name": "Iroko",
+      "family": true
+    },
+    {
+      "name": "World Tree"
+    },
+    {
+      "name": "Borellian"
+    },
+    {
+      "name": "Censerviti",
+      "description": "Dominant language of the Censerviti"
+    },
+    {
+      "name": "Mayan"
+    },
+    {
+      "name": "Yggic",
+      "description": "Common language for Shinopol"
+    },
+    {
+      "name": "Guan"
+    },
+    {
+      "name": "Sintic",
+      "family": true
+    },
+    {
+      "name": "Kiswahili",
+      "description": "Common language for Lounopol",
+      "family": true
+    },
+    {
+      "name": "Swahili"
+    },
+    {
+      "name": "Regional Kiswahili"
+    },
+    {
+      "name": "Aphros"
+    },
+    {
+      "name": "Nori"
+    },
+    {
+      "name": "Regional Sintic"
+    },
+    {
+      "name": "Sabranish",
+      "description": "Dominant language of its namesake",
+      "family": true
+    },
+    {
+      "name": "Court Sabranish",
+      "court": true
+    },
+    {
+      "name": "Srillian"
+    },
+    {
+      "name": "Regional Sabranish"
+    },
+    {
+      "name": "Salamandi",
+      "family": true
+    },
+    {
+      "name": "Tokalaki",
+      "description": "Dominant language of its namesake",
+      "family": true
+    },
+    {
+      "name": "Roothi"
+    },
+    {
+      "name": "Peathi"
+    },
+    {
+      "name": "Pummthi"
+    }
+  ],
+  "connections": [
+    {
+      "from": "Cetacean",
+      "to": "Abyssal"
+    },
+    {
+      "from": "Jannori",
+      "to": "Abyssal"
+    },
+    {
+      "from": "Merish",
+      "to": "Abyssal"
+    },
+    {
+      "from": "Neptunian",
+      "to": "Abyssal"
+    },
+    {
+      "from": "Atlantean",
+      "to": "Cetacean"
+    },
+    {
+      "from": "Punctua",
+      "to": "Jannori"
+    },
+    {
+      "from": "Nori",
+      "to": "Jannori"
+    },
+    {
+      "from": "Naga",
+      "to": "Merish"
+    },
+    {
+      "from": "Aphros",
+      "to": "Merish"
+    },
+    {
+      "from": "Olympian",
+      "to": "Neptunian"
+    },
+    {
+      "from": "Eldrish",
+      "to": "Neptunian"
+    },
+    {
+      "from": "Asphodel",
+      "to": "Atlantean"
+    },
+    {
+      "from": "Greek",
+      "to": "Atlantean"
+    },
+    {
+      "from": "Olympian",
+      "to": "Atlantean"
+    },
+    {
+      "from": "Macedonian",
+      "to": "Atlantean"
+    },
+    {
+      "from": "Voidtalk",
+      "to": "Punctua"
+    },
+    {
+      "from": "Flammentish",
+      "to": "Punctua"
+    },
+    {
+      "from": "Hindi",
+      "to": "Naga"
+    },
+    {
+      "from": "Regional Kiswahili",
+      "to": "Naga"
+    },
+    {
+      "from": "Mountain of Perfection",
+      "to": "Olympian"
+    },
+    {
+      "from": "Chthonic",
+      "to": "Asphodel"
+    },
+    {
+      "from": "Romantic English",
+      "to": "Greek"
+    },
+    {
+      "from": "Nguvu",
+      "to": "Macedonian"
+    },
+    {
+      "from": "Celestial",
+      "to": "Chthonic"
+    },
+    {
+      "from": "Dural",
+      "to": "Chthonic"
+    },
+    {
+      "from": "English",
+      "to": "Romantic English"
+    },
+    {
+      "from": "Celestial",
+      "to": "Mountain of Perfection"
+    },
+    {
+      "from": "Kiswahili",
+      "to": "Nguvu"
+    },
+    {
+      "from": "Polish",
+      "to": "Balislav"
+    },
+    {
+      "from": "Rauski",
+      "to": "Balislav"
+    },
+    {
+      "from": "Pummthi",
+      "to": "Balislav"
+    },
+    {
+      "from": "Federation",
+      "to": "Polish"
+    },
+    {
+      "from": "Ellelan",
+      "to": "Polish"
+    },
+    {
+      "from": "Vulgar English",
+      "to": "Rauski"
+    },
+    {
+      "from": "Court Chaos",
+      "to": "Celestial"
+    },
+    {
+      "from": "Infernal",
+      "to": "Celestial"
+    },
+    {
+      "from": "Daevic",
+      "to": "Infernal"
+    },
+    {
+      "from": "Cosma",
+      "to": "Dural"
+    },
+    {
+      "from": "Metallic",
+      "to": "Dural"
+    },
+    {
+      "from": "Peathi",
+      "to": "Dural"
+    },
+    {
+      "from": "Federation",
+      "to": "Cosma"
+    },
+    {
+      "from": "Coimperial",
+      "to": "Cosma"
+    },
+    {
+      "from": "Voidtalk",
+      "to": "Cosma"
+    },
+    {
+      "from": "Guan",
+      "to": "Cosma"
+    },
+    {
+      "from": "Imperial English",
+      "to": "Coimperial"
+    },
+    {
+      "from": "Starword",
+      "to": "Voidtalk"
+    },
+    {
+      "from": "Draconic",
+      "to": "Metallic"
+    },
+    {
+      "from": "Krillu",
+      "to": "Metallic"
+    },
+    {
+      "from": "Nohhixhin",
+      "to": "Metallic"
+    },
+    {
+      "from": "English",
+      "to": "Imperial English"
+    },
+    {
+      "from": "Court Sintic",
+      "to": "Imperial English"
+    },
+    {
+      "from": "Chromatic",
+      "to": "Draconic"
+    },
+    {
+      "from": "Dov",
+      "to": "Draconic"
+    },
+    {
+      "from": "Spectracant",
+      "to": "Chromatic"
+    },
+    {
+      "from": "Flammentish",
+      "to": "Spectracant"
+    },
+    {
+      "from": "Esseni",
+      "to": "Krillu"
+    },
+    {
+      "from": "Starword",
+      "to": "English"
+    },
+    {
+      "from": "Vulgar English",
+      "to": "English"
+    },
+    {
+      "from": "Salamandi",
+      "to": "English"
+    },
+    {
+      "from": "Sintic",
+      "to": "Court Sintic"
+    },
+    {
+      "from": "Nohhixhin",
+      "to": "Esseni"
+    },
+    {
+      "from": "Masui",
+      "to": "Esseni"
+    },
+    {
+      "from": "Eldrish",
+      "to": "Masui"
+    },
+    {
+      "from": "Elvish",
+      "to": "Eldrish"
+    },
+    {
+      "from": "Sylvan",
+      "to": "Elvish"
+    },
+    {
+      "from": "Telleran",
+      "to": "Elvish"
+    },
+    {
+      "from": "Ellelan",
+      "to": "Elvish"
+    },
+    {
+      "from": "Rikki",
+      "to": "Sylvan"
+    },
+    {
+      "from": "Yggic",
+      "to": "Sylvan"
+    },
+    {
+      "from": "Roothi",
+      "to": "Sylvan"
+    },
+    {
+      "from": "Aphros",
+      "to": "Rikki"
+    },
+    {
+      "from": "Nori",
+      "to": "Rikki"
+    },
+    {
+      "from": "Lambentish",
+      "to": "Flammentish"
+    },
+    {
+      "from": "Daevic",
+      "to": "Hindi"
+    },
+    {
+      "from": "Formal Hindi",
+      "to": "Hindi"
+    },
+    {
+      "from": "Regional Hindi",
+      "to": "Hindi"
+    },
+    {
+      "from": "World Tree",
+      "to": "Iroko"
+    },
+    {
+      "from": "Borellian",
+      "to": "Iroko"
+    },
+    {
+      "from": "Censerviti",
+      "to": "Iroko"
+    },
+    {
+      "from": "Mayan",
+      "to": "Iroko"
+    },
+    {
+      "from": "Yggic",
+      "to": "Iroko"
+    },
+    {
+      "from": "Guan",
+      "to": "Borellian"
+    },
+    {
+      "from": "Srillian",
+      "to": "Borellian"
+    },
+    {
+      "from": "Sintic",
+      "to": "Censerviti"
+    },
+    {
+      "from": "Swahili",
+      "to": "Yggic"
+    },
+    {
+      "from": "Sintic",
+      "to": "Guan"
+    },
+    {
+      "from": "Regional Sintic",
+      "to": "Sintic"
+    },
+    {
+      "from": "Swahili",
+      "to": "Kiswahili"
+    },
+    {
+      "from": "Regional Kiswahili",
+      "to": "Kiswahili"
+    },
+    {
+      "from": "Court Sabranish",
+      "to": "Sabranish"
+    },
+    {
+      "from": "Srillian",
+      "to": "Sabranish"
+    },
+    {
+      "from": "Regional Sabranish",
+      "to": "Sabranish"
+    },
+    {
+      "from": "Salamandi",
+      "to": "Sabranish"
+    },
+    {
+      "from": "Tokalaki",
+      "to": "Salamandi"
+    },
+    {
+      "from": "Roothi",
+      "to": "Tokalaki"
+    },
+    {
+      "from": "Peathi",
+      "to": "Tokalaki"
+    },
+    {
+      "from": "Pummthi",
+      "to": "Tokalaki"
+    }
+  ]
+}
