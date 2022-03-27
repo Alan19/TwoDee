@@ -1,5 +1,6 @@
 package language;
 
+import com.google.api.client.util.Maps;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
@@ -104,6 +105,15 @@ public class LanguageLogic {
                 languageGraph.nodes()
                         .stream()
                         .collect(Collectors.toMap(Language::getName, Function.identity())),
+                onUpdate
+        );
+    }
+
+    public static LanguageLogic of(Consumer<MutableGraph<Language>> onUpdate) {
+        return new LanguageLogic(
+                GraphBuilder.undirected()
+                        .build(),
+                Maps.newHashMap(),
                 onUpdate
         );
     }

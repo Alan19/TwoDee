@@ -1,6 +1,9 @@
 package discord;
 
 import io.vavr.control.Try;
+import language.LanguageLogic;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -8,22 +11,27 @@ import org.javacord.api.util.logging.ExceptionLogger;
 import pw.mihou.velen.interfaces.Velen;
 import slashcommands.SlashCommandRegister;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
 
 public class TwoDee {
+    private static final Logger LOGGER = LogManager.getLogger(TwoDee.class);
 
     public static void main(String[] args) {
         try {
             Properties prop = new Properties();
             prop.load(new FileInputStream("resources/bot.properties"));
             String token = prop.getProperty("token");
-            final Velen velen = SlashCommandRegister.setupVelen();
+
+            LanguageLogic languageLogic = LanguageLogic.of(new File("resources/languages.json"))
+                    .onFailure(error -> LOGGER.error("Failed to load language file", error))
+                    .getOrElse(() -> LanguageLogic.of(
+                            graph -> LOGGER.warn("Failed to handle update. Errored loading language file"))
+                    );
+
+            final Velen velen = SlashCommandRegister.setupVelen(languageLogic);
             new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
                         System.out.println("You can invite the bot by using the following url: " + api.createBotInvite() + "&scope=bot%20applications.commands");
                         // Uncomment this line when a command is altered
