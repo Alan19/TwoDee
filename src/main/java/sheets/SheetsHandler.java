@@ -256,4 +256,33 @@ public class SheetsHandler {
         }
         return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
     }
+
+    /**
+     * Returns the list of languages for a user
+     *
+     * @param user The user to search
+     * @return A list of languages as strings
+     */
+    public static Try<Collection<String>> getLanguages(Player player) {
+        return Try.of(() -> getRange(player.getSheetId(), "Languages"))
+                .map(valueRange -> (String) valueRange.getValues().get(0).get(0))
+                .map(value -> Arrays.stream(value.split(","))
+                        .map(String::trim)
+                        .collect(Collectors.toSet())
+                );
+    }
+
+    /**
+     * Returns a range for the given spreadsheet
+     *
+     * @param spreadsheetID The ID of the spreadsheet
+     * @param range         The range to return
+     * @return A ValueRange that contains the information of the given range
+     */
+    @SuppressWarnings("SameParameterValue")
+    private static ValueRange getRange(String spreadsheetID, String range) throws IOException {
+        return instance.service.spreadsheets().values()
+                .get(spreadsheetID, range)
+                .execute();
+    }
 }

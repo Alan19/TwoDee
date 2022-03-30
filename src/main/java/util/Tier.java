@@ -18,4 +18,10 @@ public enum Tier {
         this.name = name;
         this.min = min;
     }
+
+    public static Tier getByIndex(int index) {
+        int actual = Math.max(0, Math.min(Tier.values().length, index));
+
+        return Tier.values()[actual];
+    }
 }

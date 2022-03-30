@@ -1,11 +1,14 @@
 package language;
 
+import com.google.common.collect.Sets;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import io.vavr.control.Try;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -109,7 +112,10 @@ public class LanguageLogicTest {
 
         Assertions.assertEquals(
                 languageLogic.connect(TEST_LANG_1, newConnection),
-                Try.success(null)
+                Try.success(Pair.of(
+                        TEST_LANG_1,
+                        newConnection
+                ))
         );
     }
 
@@ -140,7 +146,7 @@ public class LanguageLogicTest {
 
         Assertions.assertEquals(
                 languageLogic.remove(TEST_LANG_1),
-                Try.success(null)
+                Try.success(TEST_LANG_1)
         );
     }
 
@@ -151,6 +157,24 @@ public class LanguageLogicTest {
         Assertions.assertThrows(
                 IllegalArgumentException.class,
                 languageLogic.remove(new Language("not_found"))::get
+        );
+    }
+
+    @Test
+    void testValidConnections() {
+        Assertions.assertEquals(
+                LanguageLogic.of(createTestGraph()).getConnections(TEST_LANG_1),
+                Sets.newHashSet(
+                        TEST_LANG_2
+                )
+        );
+    }
+
+    @Test
+    void testNotInGraphConnections() {
+        Assertions.assertEquals(
+                LanguageLogic.of(createTestGraph()).getConnections(new Language("not_found")),
+                Collections.emptyList()
         );
     }
 }

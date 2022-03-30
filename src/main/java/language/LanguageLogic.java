@@ -1,13 +1,18 @@
 package language;
 
-import com.google.api.client.util.Maps;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.gson.*;
 import io.vavr.control.Try;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jgrapht.Graph;
+import org.jgrapht.alg.DijkstraShortestPath;
+import org.jgrapht.graph.guava.MutableGraphAdapter;
 import util.DamerauLevenshtein;
 import util.GsonHelper;
 
@@ -16,8 +21,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -32,11 +36,13 @@ public class LanguageLogic {
     private final MutableGraph<Language> languageGraph;
     private final Map<String, Language> languages;
     private final Consumer<MutableGraph<Language>> onUpdate;
+    private final Graph<Language, EndpointPair<Language>> graphAdapter;
 
     public LanguageLogic(MutableGraph<Language> languageGraph, Map<String, Language> languages, Consumer<MutableGraph<Language>> onUpdate) {
         this.languageGraph = languageGraph;
         this.languages = languages;
         this.onUpdate = onUpdate;
+        this.graphAdapter = new MutableGraphAdapter<>(languageGraph);
     }
 
     public Try<Language> add(@Nonnull Language language) {
@@ -51,17 +57,17 @@ public class LanguageLogic {
         }
     }
 
-    public Try<Void> remove(@Nonnull Language language) {
+    public Try<Language> remove(@Nonnull Language language) {
         if (languageGraph.removeNode(language)) {
             languages.remove(language.getName());
-            return Try.success(null);
+            return Try.success(language);
         }
         else {
             return Try.failure(new IllegalArgumentException("Language " + language.getName() + "does not exist in Graph"));
         }
     }
 
-    public Try<Void> connect(@Nonnull Language languageU, @Nonnull Language languageV) {
+    public Try<Pair<Language, Language>> connect(@Nonnull Language languageU, @Nonnull Language languageV) {
         if (!languages.containsKey(languageU.getName())) {
             return Try.failure(new IllegalArgumentException("Language " + languageU.getName() + "does not exist in Graph"));
         }
@@ -70,7 +76,7 @@ public class LanguageLogic {
         }
         else {
             if (languageGraph.putEdge(languageU, languageV)) {
-                return Try.success(null);
+                return Try.success(Pair.of(languageU, languageV));
             }
             else {
                 return Try.failure(new IllegalArgumentException("Languages are already connected"));
@@ -86,6 +92,32 @@ public class LanguageLogic {
             return DamerauLevenshtein.getClosest(name, languages.keySet(), true)
                     .map(languages::get);
         }
+    }
+
+    public Collection<Language> getConnections(@Nonnull Language language) {
+        if (languageGraph.nodes().contains(language)) {
+            return languageGraph.adjacentNodes(language);
+        }
+        else {
+            return Collections.emptyList();
+        }
+    }
+
+    public Try<List<Language>> getPath(@Nonnull Language target, Collection<Language> startPoints) {
+        if (startPoints.contains(target)) {
+            return Try.success(Lists.newArrayList(target, target));
+        }
+        final List<EndpointPair<Language>> collect = new ArrayList<>(startPoints.stream()
+                .map(language -> DijkstraShortestPath.findPathBetween(graphAdapter, language, target))
+                .min(Comparator.comparingInt(List::size))
+                .orElseThrow(IllegalStateException::new));
+        List<Language> solution = new ArrayList<>();
+        solution.add(collect.get(0).nodeV());
+        solution.add(collect.get(0).nodeU());
+        for (int i = 1; i < collect.size(); i++) {
+            solution.add(collect.get(i).nodeU());
+        }
+        return Try.success(solution);
     }
 
     public static LanguageLogic of(MutableGraph<Language> languageGraph) {
