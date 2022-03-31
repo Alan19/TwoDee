@@ -267,13 +267,13 @@ public class LanguageCommand implements VelenSlashEvent {
     public static void setup(Velen velen, LanguageLogic languageLogic) {
         VelenCommand.ofSlash(
                 "language",
-                "Query, Create, Connect, Remove Facets Languages",
+                "Query, Create, Connect, Remove Facets Languages.",
                 velen,
                 new LanguageCommand(languageLogic),
                 new SlashCommandOptionBuilder()
                         .setType(SlashCommandOptionType.SUB_COMMAND)
                         .setName("add")
-                        .setDescription("Add a New Language")
+                        .setDescription("Add a New Language.")
                         .setOptions(Lists.newArrayList(
                                 SlashCommandOption.create(
                                         SlashCommandOptionType.STRING,
@@ -315,7 +315,7 @@ public class LanguageCommand implements VelenSlashEvent {
                 new SlashCommandOptionBuilder()
                         .setType(SlashCommandOptionType.SUB_COMMAND)
                         .setName("remove")
-                        .setDescription("Remove Language")
+                        .setDescription("Remove Language.")
                         .setOptions(Lists.newArrayList(
                                 SlashCommandOption.create(
                                         SlashCommandOptionType.STRING,
@@ -339,7 +339,7 @@ public class LanguageCommand implements VelenSlashEvent {
                 new SlashCommandOptionBuilder()
                         .setType(SlashCommandOptionType.SUB_COMMAND)
                         .setName("connect")
-                        .setDescription("Connect Languages")
+                        .setDescription("Connect Languages.")
                         .setOptions(Lists.newArrayList(
                                 SlashCommandOption.create(
                                         SlashCommandOptionType.STRING,
@@ -357,7 +357,7 @@ public class LanguageCommand implements VelenSlashEvent {
                 new SlashCommandOptionBuilder()
                         .setType(SlashCommandOptionType.SUB_COMMAND)
                         .setName("calculate")
-                        .setDescription("Calculates the difficulty of linguistics checks, will use User as default input")
+                        .setDescription("Calculates the difficulty of linguistics checks, will use User as default input.")
                         .setOptions(Lists.newArrayList(
                                 SlashCommandOption.create(
                                         SlashCommandOptionType.STRING,
