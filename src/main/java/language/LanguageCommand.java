@@ -19,6 +19,7 @@ import util.RandomColor;
 import util.Tier;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,25 +32,31 @@ public class LanguageCommand implements VelenSlashEvent {
 
     @Override
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
+        Consumer<EmbedBuilder> consumer = ((Consumer<EmbedBuilder>) embedBuilder -> {
+            embedBuilder.setAuthor(user);
+            embedBuilder.setColor(RandomColor.getRandomColor());
+        }).andThen(firstResponder::addEmbed);
+
+
         args.getOptionWithName("add")
                 .map(this::handleAdd)
-                .ifPresent(firstResponder::addEmbed);
+                .ifPresent(consumer);
 
         args.getOptionWithName("remove")
                 .map(this::handleRemove)
-                .ifPresent(firstResponder::addEmbed);
+                .ifPresent(consumer);
 
         args.getOptionWithName("connect")
                 .map(this::handleConnect)
-                .ifPresent(firstResponder::addEmbed);
+                .ifPresent(consumer);
 
         args.getOptionWithName("query")
                 .map(this::handleQuery)
-                .ifPresent(firstResponder::addEmbed);
+                .ifPresent(consumer);
 
         args.getOptionWithName("calculate")
                 .map(option -> handleCalculate(user, event, option))
-                .ifPresent(firstResponder::addEmbed);
+                .ifPresent(consumer);
 
         firstResponder.respond();
     }
@@ -219,13 +226,11 @@ public class LanguageCommand implements VelenSlashEvent {
 
                 return new EmbedBuilder()
                         .setTitle("Shortest Path to " + targetLanguageOpt.get())
-                        .setAuthor(user)
                         .setDescription("The shortest path to " + targetLanguageOpt.get().getName() +
                                 " with this party is:\n" + joinPartyLinguisticsPaths(foundPaths)
                         )
                         .addField("Real Time Translation (Wits) / Grasp Idioms (Vision)", getGroupDifficultyString(foundPaths, 1))
-                        .addField("Translate Behind Conversation (Reason)", getGroupDifficultyString(foundPaths, 0))
-                        .setColor(RandomColor.getRandomColor());
+                        .addField("Translate Behind Conversation (Reason)", getGroupDifficultyString(foundPaths, 0));
             }
         }
         else {
