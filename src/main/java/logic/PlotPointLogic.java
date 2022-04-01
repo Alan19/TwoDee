@@ -53,7 +53,7 @@ public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
         return new SlashCommandOptionBuilder()
                 .setName("count")
                 .setDescription("the amount to modify the doom pool by")
-                .setType(SlashCommandOptionType.INTEGER)
+                .setType(SlashCommandOptionType.LONG)
                 .setRequired(false);
     }
 
@@ -61,7 +61,7 @@ public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
         return new SlashCommandOptionBuilder()
                 .setName("count")
                 .setDescription("the amount to modify the plot point pool by")
-                .setType(SlashCommandOptionType.INTEGER)
+                .setType(SlashCommandOptionType.LONG)
                 .setRequired(false);
     }
 

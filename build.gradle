@@ -26,7 +26,7 @@ dependencies {
     implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
     compile group: 'org.codehaus.mojo', name: 'exec-maven-plugin', version: '3.0.0'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.12.4'
-    compile group: 'org.javacord', name: 'javacord', version: '3.4.0-SNAPSHOT'
+    compile group: 'org.javacord', name: 'javacord', version: '3.4.0'
     compile group: 'com.google.api-client', name: 'google-api-client', version: '1.30.4'
     compile group: 'com.google.oauth-client', name: 'google-oauth-client-jetty', version: '1.30.6'
     compile group: 'com.google.apis', name: 'google-api-services-sheets', version: 'v4-rev539-1.25.0'
