@@ -1,6 +1,17 @@
 package util;
 
+import com.google.common.collect.Lists;
+import doom.DoomHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+
 public class DamerauLevenshtein {
+    private static final Logger LOGGER = LogManager.getLogger(DamerauLevenshtein.class);
+
     /**
      * Calculates the string distance between source and target strings using
      * the Damerau-Levenshtein algorithm. The distance is case-sensitive.
@@ -38,5 +49,37 @@ public class DamerauLevenshtein {
             }
         }
         return dist[sourceLength][targetLength];
+    }
+
+    public static Optional<String> getClosest(String name, Collection<String> values, boolean allowMultiple) {
+        List<String> potentialPoolNames = Lists.newArrayList();
+        int currentDistance = Integer.MAX_VALUE;
+        for (String existingPool : values) {
+            int distance = DamerauLevenshtein.calculateDistance(name, existingPool);
+            if (distance < currentDistance) {
+                potentialPoolNames.clear();
+                potentialPoolNames.add(existingPool);
+                currentDistance = distance;
+            }
+            else if (distance == currentDistance) {
+                potentialPoolNames.add(existingPool);
+            }
+        }
+
+        if (potentialPoolNames.isEmpty()) {
+            return Optional.empty();
+        }
+        else if (potentialPoolNames.size() == 1 || allowMultiple) {
+            if (currentDistance <= 2) {
+                return Optional.of(potentialPoolNames.get(0));
+            }
+            else {
+                return Optional.empty();
+            }
+        }
+        else {
+            LOGGER.warn("Found multiple names with same level of similarity");
+            return Optional.empty();
+        }
     }
 }
