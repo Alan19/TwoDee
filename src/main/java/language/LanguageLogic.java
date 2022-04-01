@@ -84,6 +84,10 @@ public class LanguageLogic {
         }
     }
 
+    public Set<String> getLanguages() {
+        return languages.keySet();
+    }
+
     public Optional<Language> getByName(@Nonnull String name) {
         if (languages.containsKey(name)) {
             return Optional.of(languages.get(name));

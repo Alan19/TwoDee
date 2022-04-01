@@ -2,6 +2,7 @@ package discord;
 
 import io.vavr.control.Try;
 import language.LanguageLogic;
+import listeners.LanguageAutocompleteListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.DiscordApiBuilder;
@@ -43,6 +44,7 @@ public class TwoDee {
                                 .onSuccess(s -> new MessageBuilder()
                                         .setContent(getStartupMessage())
                                         .send(api.getTextChannelById(s).orElseThrow(() -> new IllegalStateException("Failed to find channel for ID: " + s))));
+                        api.addListener(new LanguageAutocompleteListener(languageLogic));
                     })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
