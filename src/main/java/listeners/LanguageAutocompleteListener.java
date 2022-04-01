@@ -36,13 +36,8 @@ public class LanguageAutocompleteListener implements AutocompleteCreateListener 
 
             event.getAutocompleteInteraction()
                     .respondWithChoices(
-                            languageLogic.getLanguages()
-                                    .stream()
-                                    .filter(slashCommandOptionChoice -> slashCommandOptionChoice.toLowerCase()
-                                            .contains(optionValue)
-                                    )
-                                    .limit(25)
-                                    .map(s -> SlashCommandOptionChoice.create(s, s))
+                            languageLogic.findPossibilities(optionValue)
+                                    .map(s -> SlashCommandOptionChoice.create(s.getName(), s.getName()))
                                     .collect(Collectors.toList())
                     );
         }

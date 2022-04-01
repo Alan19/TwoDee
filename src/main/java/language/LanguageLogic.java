@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @SuppressWarnings("UnstableApiUsage")
 public class LanguageLogic {
@@ -85,8 +86,14 @@ public class LanguageLogic {
         }
     }
 
-    public Set<String> getLanguages() {
-        return languages.keySet();
+    public Stream<Language> findPossibilities(String attempt) {
+        return this.languages.entrySet()
+                .stream()
+                .filter(slashCommandOptionChoice -> slashCommandOptionChoice.getKey()
+                        .contains(attempt)
+                )
+                .map(Map.Entry::getValue)
+                .limit(25);
     }
 
     public Optional<Language> getByName(@Nonnull String name) {

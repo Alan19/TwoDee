@@ -12,6 +12,7 @@ import util.Match;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("UnstableApiUsage")
 public class LanguageLogicTest {
@@ -200,6 +201,29 @@ public class LanguageLogicTest {
         Assertions.assertEquals(
                 LanguageLogic.of(createTestGraph()).checkMatch("NOT CLOSE"),
                 Match.NONE
+        );
+    }
+
+    @Test
+    void testValidPossibilities() {
+        Assertions.assertEquals(
+                LanguageLogic.of(createTestGraph())
+                        .findPossibilities(TEST_LANG_1.getName().substring(0, 2))
+                        .collect(Collectors.toSet()),
+                Sets.newHashSet(
+                        TEST_LANG_1,
+                        TEST_LANG_2
+                )
+        );
+    }
+
+    @Test
+    void testNoPossibilities() {
+        Assertions.assertEquals(
+                LanguageLogic.of(createTestGraph())
+                        .findPossibilities("NOTHING")
+                        .collect(Collectors.toSet()),
+                Collections.emptySet()
         );
     }
 }
