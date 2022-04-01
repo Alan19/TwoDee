@@ -2,6 +2,7 @@ package discord;
 
 import io.vavr.control.Try;
 import language.LanguageLogic;
+import listeners.DoomPoolAutocomplete;
 import listeners.LanguageAutocompleteListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,6 +46,7 @@ public class TwoDee {
                                         .setContent(getStartupMessage())
                                         .send(api.getTextChannelById(s).orElseThrow(() -> new IllegalStateException("Failed to find channel for ID: " + s))));
                         api.addListener(new LanguageAutocompleteListener(languageLogic));
+                        api.addListener(new DoomPoolAutocomplete());
                     })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());

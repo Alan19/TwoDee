@@ -3,7 +3,6 @@ package doom;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import discord.TwoDee;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -54,7 +53,7 @@ public class DoomHandler {
                     .setTitle("Error")
                     .setDescription("No Doom Pool with Name ''**" + pool + "**'' exists.");
         }
-        final int newDoom = instance.doomConfigs.getDoomPools().compute(pool, (s, integer) -> integer != null ? integer + doomVal : doomVal);
+        final int newDoom = getDoomPools().compute(pool, (s, integer) -> integer != null ? integer + doomVal : doomVal);
         serializePools();
         return generateDoomEmbed(pool, oldDoom, newDoom);
     }
@@ -95,7 +94,7 @@ public class DoomHandler {
      * @return The number of doom points in that pool
      */
     public static int getDoom(String pool) {
-        return instance.doomConfigs.getDoomPools().getOrDefault(pool, 0);
+        return getDoomPools().getOrDefault(pool, 0);
     }
 
     /**
@@ -120,7 +119,7 @@ public class DoomHandler {
                     .setTitle("Error")
                     .setDescription("No Doom Pool with Name ''**" + pool + "**'' exists.");
         }
-        instance.doomConfigs.getDoomPools().put(pool, newDoom);
+        getDoomPools().put(pool, newDoom);
         serializePools();
         return generateDoomEmbed(pool, oldDoom, newDoom);
     }
@@ -175,7 +174,7 @@ public class DoomHandler {
      * @return An embed containing information about the deleted doom pool and the number of doom points it had
      */
     public static EmbedBuilder deletePool(String pool) {
-        final Integer removedDoom = instance.doomConfigs.getDoomPools().remove(pool);
+        final Integer removedDoom = getDoomPools().remove(pool);
         final String description = Optional.ofNullable(removedDoom).map(doom -> MessageFormat.format("I''ve removed the ''**{0}**'' doom pool, which contained {1} doom points.", pool, doom)).orElseGet(() -> MessageFormat.format("I was unable to find the ''**{0}**'' doom pool", pool));
         serializePools();
         return new EmbedBuilder()
@@ -191,8 +190,12 @@ public class DoomHandler {
      */
     public static EmbedBuilder generateDoomEmbed() {
         final EmbedBuilder embedBuilder = new EmbedBuilder().setTitle(DOOM).setDescription(MessageFormat.format("Here are the values of all doom pools.\nThe current active doom pool is ''**{0}**'' with {1} doom points", getActivePool(), getDoom(getActivePool()))).setColor(new Color((int) (getDoom() % 101 * (2.55))));
-        instance.doomConfigs.getDoomPools().forEach((key, value) -> embedBuilder.addField(key, String.valueOf(value)));
+        getDoomPools().forEach((key, value) -> embedBuilder.addField(key, String.valueOf(value)));
         return embedBuilder;
+    }
+
+    public static Map<String, Integer> getDoomPools() {
+        return instance.doomConfigs.getDoomPools();
     }
 
     /**
@@ -225,7 +228,7 @@ public class DoomHandler {
     }
 
     public static EmbedBuilder createPool(String poolName, int count) {
-        instance.doomConfigs.getDoomPools().put(poolName, count);
+        getDoomPools().put(poolName, count);
         serializePools();
         return new EmbedBuilder()
                 .setTitle(DOOM)
@@ -234,13 +237,13 @@ public class DoomHandler {
 
     @Nullable
     public static String findPool(String poolName) {
-        if (instance.doomConfigs.getDoomPools().containsKey(poolName)) {
+        if (getDoomPools().containsKey(poolName)) {
             return poolName;
         }
         else {
             List<String> potentialPoolNames = Lists.newArrayList();
             int currentDistance = Integer.MAX_VALUE;
-            for (String existingPool : instance.doomConfigs.getDoomPools().keySet()) {
+            for (String existingPool : getDoomPools().keySet()) {
                 int distance = DamerauLevenshtein.calculateDistance(poolName, existingPool);
                 if (distance < currentDistance) {
                     potentialPoolNames.clear();

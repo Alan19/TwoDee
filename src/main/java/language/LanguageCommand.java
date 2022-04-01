@@ -86,9 +86,8 @@ public class LanguageCommand implements VelenSlashEvent {
                         .setDescription("Add a new Language.")
                         .setOptions(Lists.newArrayList(
                                 SlashCommandOption.createStringOption(
-                                        "name",
+                                        LANGUAGE_NAME,
                                         "The name of the language to create",
-                                        true,
                                         true
                                 ),
                                 SlashCommandOption.create(
@@ -196,7 +195,7 @@ public class LanguageCommand implements VelenSlashEvent {
     }
 
     private EmbedBuilder handleAdd(SlashCommandInteractionOption option) {
-        Optional<String> nameOpt = option.getOptionStringValueByName("name");
+        Optional<String> nameOpt = option.getOptionStringValueByName(LANGUAGE_NAME);
         if (nameOpt.isPresent()) {
             return languageLogic.add(new Language(
                     nameOpt.get(),
