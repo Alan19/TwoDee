@@ -384,7 +384,8 @@ public class LanguageCommand implements VelenSlashEvent {
                         stringListEntry.getValue()
                                 .fold(
                                         Throwable::getMessage,
-                                        languages -> Tier.getTierTextByIndex(languages.size() + modifier)
+                                        languages -> Tier.getByIndex(languages.size() + modifier)
+                                                .toText()
                                 )
                 ))
                 .collect(Collectors.joining("\n"));

@@ -19,14 +19,12 @@ public enum Tier {
         this.min = min;
     }
 
-    public static Tier getByIndex(int index) {
-        int actual = Math.max(0, Math.min(Tier.values().length, index));
-
-        return Tier.values()[actual];
+    public String toText() {
+        return String.format("%s (%d)", this.name, this.min);
     }
 
-    public static String getTierTextByIndex(int index) {
-        final Tier tier = getByIndex(index);
-        return String.format("%s (%d)", tier.name, tier.min);
+    public static Tier getByIndex(int index) {
+        int actual = Math.max(0, Math.min(Tier.values().length, index));
+        return Tier.values()[actual];
     }
 }
