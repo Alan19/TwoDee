@@ -2,6 +2,8 @@ package language;
 
 import com.google.api.client.util.Maps;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -15,6 +17,7 @@ import pw.mihou.velen.interfaces.VelenSlashEvent;
 import roles.PlayerHandler;
 import sheets.SheetsHandler;
 import util.DiscordHelper;
+import util.Match;
 import util.RandomColor;
 import util.Tier;
 
@@ -36,33 +39,39 @@ public class LanguageCommand implements VelenSlashEvent {
 
     @Override
     public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        Consumer<EmbedBuilder> consumer = ((Consumer<EmbedBuilder>) embedBuilder -> {
-            embedBuilder.setAuthor(user);
-            embedBuilder.setColor(RandomColor.getRandomColor());
-        }).andThen(firstResponder::addEmbed);
+        event.respondLater()
+                .thenAccept(updater -> {
+                    Consumer<EmbedBuilder> consumer = ((Consumer<EmbedBuilder>) embedBuilder -> {
+                        embedBuilder.setAuthor(user);
+                        embedBuilder.setColor(RandomColor.getRandomColor());
+                    }).andThen(updater::addEmbed);
 
+                    args.getOptionWithName("add")
+                            .map(this::handleAdd)
+                            .ifPresent(consumer);
 
-        args.getOptionWithName("add")
-                .map(this::handleAdd)
-                .ifPresent(consumer);
+                    args.getOptionWithName("remove")
+                            .map(this::handleRemove)
+                            .ifPresent(consumer);
 
-        args.getOptionWithName("remove")
-                .map(this::handleRemove)
-                .ifPresent(consumer);
+                    args.getOptionWithName("connect")
+                            .map(this::handleConnect)
+                            .ifPresent(consumer);
 
-        args.getOptionWithName("connect")
-                .map(this::handleConnect)
-                .ifPresent(consumer);
+                    args.getOptionWithName("query")
+                            .map(this::handleQuery)
+                            .ifPresent(consumer);
 
-        args.getOptionWithName("query")
-                .map(this::handleQuery)
-                .ifPresent(consumer);
+                    args.getOptionWithName("calculate")
+                            .map(option -> handleCalculate(user, event, option))
+                            .ifPresent(consumer);
 
-        args.getOptionWithName("calculate")
-                .map(option -> handleCalculate(user, event, option))
-                .ifPresent(consumer);
+                    args.getOptionWithName("validate")
+                            .map(option -> handleValidate(user))
+                            .ifPresent(consumer);
 
-        firstResponder.respond();
+                    updater.update();
+                });
     }
 
     public static void setup(Velen velen, LanguageLogic languageLogic) {
@@ -178,7 +187,11 @@ public class LanguageCommand implements VelenSlashEvent {
                                         "A comma separated list of languages to use as manual input for a custom language pool",
                                         false
                                 )
-                        ))
+                        )),
+                new SlashCommandOptionBuilder()
+                        .setType(SlashCommandOptionType.SUB_COMMAND)
+                        .setName("validate")
+                        .setDescription("Check that a character's languages are considered valid and findable.")
         ).attach();
     }
 
@@ -220,11 +233,11 @@ public class LanguageCommand implements VelenSlashEvent {
                                     .setDescription("Failed with error: " + error.getMessage()),
                             language -> new EmbedBuilder()
                                     .setTitle("Language Removed")
-                                    .setDescription("Removed Language " + language.getName() + " to graph with no connections")
+                                    .setDescription("Removed language " + language.getName() + " from graph")
                     ))
                     .orElseGet(() -> new EmbedBuilder()
                             .setTitle("Failed to Remove Language")
-                            .setDescription("No Language named '" + nameOpt.get() + "' was found")
+                            .setDescription("No language named '" + nameOpt.get() + "' was found")
                     );
         }
         else {
@@ -390,5 +403,38 @@ public class LanguageCommand implements VelenSlashEvent {
                                 )
                 ))
                 .collect(Collectors.joining("\n"));
+    }
+
+    private EmbedBuilder handleValidate(User user) {
+        return PlayerHandler.getPlayerFromUser(user)
+                .map(SheetsHandler::getLanguages)
+                .map(languagesTry -> languagesTry.fold(
+                        error -> new EmbedBuilder()
+                                .setTitle("Failed to Validate")
+                                .setDescription("Failed to find languages to validate"),
+                        languages -> {
+                            Multimap<Match, String> matches = Multimaps.index(languages, languageLogic::checkMatch);
+
+                            EmbedBuilder embedBuilder = new EmbedBuilder()
+                                    .setTitle("Validations")
+                                    .setDescription("Lists of Matches");
+
+                            if (matches.containsKey(Match.EXACT)) {
+                                embedBuilder.addField(Match.EXACT.getText(), String.join(", ", matches.get(Match.EXACT)));
+                            }
+                            if (matches.containsKey(Match.CLOSE)) {
+                                embedBuilder.addField(Match.CLOSE.getText(), String.join(", ", matches.get(Match.CLOSE)));
+                            }
+                            if (matches.containsKey(Match.NONE)) {
+                                embedBuilder.addField(Match.NONE.getText(), String.join(", ", matches.get(Match.NONE)));
+                            }
+
+                            return embedBuilder;
+                        }
+                ))
+                .orElseGet(() -> new EmbedBuilder()
+                        .setTitle("Failed to Validate")
+                        .setDescription("Failed to find Player to validate")
+                );
     }
 }

@@ -7,6 +7,7 @@ import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import util.Match;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -175,6 +176,30 @@ public class LanguageLogicTest {
         Assertions.assertEquals(
                 LanguageLogic.of(createTestGraph()).getConnections(new Language("not_found")),
                 Collections.emptyList()
+        );
+    }
+
+    @Test
+    void testExactMatch() {
+        Assertions.assertEquals(
+                LanguageLogic.of(createTestGraph()).checkMatch(TEST_LANG_1.getName()),
+                Match.EXACT
+        );
+    }
+
+    @Test
+    void testCloseMatch() {
+        Assertions.assertEquals(
+                LanguageLogic.of(createTestGraph()).checkMatch(TEST_LANG_1.getName().substring(2)),
+                Match.CLOSE
+        );
+    }
+
+    @Test
+    void testNoneMatch() {
+        Assertions.assertEquals(
+                LanguageLogic.of(createTestGraph()).checkMatch("NOT CLOSE"),
+                Match.NONE
         );
     }
 }

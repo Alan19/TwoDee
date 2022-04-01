@@ -15,6 +15,7 @@ import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.guava.MutableGraphAdapter;
 import util.DamerauLevenshtein;
 import util.GsonHelper;
+import util.Match;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -104,6 +105,17 @@ public class LanguageLogic {
         }
         else {
             return Collections.emptyList();
+        }
+    }
+
+    @Nonnull
+    public Match checkMatch(@Nonnull String name) {
+        if (languages.containsKey(name)) {
+            return Match.EXACT;
+        } else {
+            return DamerauLevenshtein.getClosest(name, this.languages.keySet(), true)
+                    .map(value -> Match.CLOSE)
+                    .orElse(Match.NONE);
         }
     }
 
