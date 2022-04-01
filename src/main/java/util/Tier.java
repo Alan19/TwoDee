@@ -24,4 +24,9 @@ public enum Tier {
 
         return Tier.values()[actual];
     }
+
+    public static String getTierTextByIndex(int index) {
+        final Tier tier = getByIndex(index);
+        return String.format("%s (%d)", tier.name, tier.min);
+    }
 }

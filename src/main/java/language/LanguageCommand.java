@@ -24,6 +24,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class LanguageCommand implements VelenSlashEvent {
+    public static final String LANGUAGE_NAME = "language-name";
+    public static final String TARGET = "target-language";
+    public static final String LANGUAGE_1 = "language1";
+    public static final String LANGUAGE_2 = "language2";
     private final LanguageLogic languageLogic;
 
     public LanguageCommand(LanguageLogic languageLogic) {
@@ -61,8 +65,125 @@ public class LanguageCommand implements VelenSlashEvent {
         firstResponder.respond();
     }
 
+    public static void setup(Velen velen, LanguageLogic languageLogic) {
+        VelenCommand.ofSlash(
+                "language",
+                "Query, create, connect, and remove Facets Languages.",
+                velen,
+                new LanguageCommand(languageLogic),
+                new SlashCommandOptionBuilder()
+                        .setType(SlashCommandOptionType.SUB_COMMAND)
+                        .setName("add")
+                        .setDescription("Add a new Language.")
+                        .setOptions(Lists.newArrayList(
+                                SlashCommandOption.createStringOption(
+                                        LANGUAGE_NAME,
+                                        "The name of the language to create",
+                                        true,
+                                        true
+                                ),
+                                SlashCommandOption.create(
+                                        SlashCommandOptionType.STRING,
+                                        "description",
+                                        "The new language's description"
+                                ),
+                                SlashCommandOption.create(
+                                        SlashCommandOptionType.BOOLEAN,
+                                        "constellation",
+                                        "If the new language is spoken by members of another constellation"
+                                ),
+                                SlashCommandOption.create(
+                                        SlashCommandOptionType.BOOLEAN,
+                                        "court",
+                                        "If the new language is a court dialect"
+                                ),
+                                SlashCommandOption.create(
+                                        SlashCommandOptionType.BOOLEAN,
+                                        "family",
+                                        "If the new language is the parent of a language family"
+                                ),
+                                SlashCommandOption.create(
+                                        SlashCommandOptionType.BOOLEAN,
+                                        "regional",
+                                        "If the new language a regional dialect"
+                                ),
+                                SlashCommandOption.create(
+                                        SlashCommandOptionType.BOOLEAN,
+                                        "vulgar",
+                                        "If the new language is a vulgar dialect"
+                                )
+                        )),
+                new SlashCommandOptionBuilder()
+                        .setType(SlashCommandOptionType.SUB_COMMAND)
+                        .setName("remove")
+                        .setDescription("Remove a Language.")
+                        .setOptions(Lists.newArrayList(
+                                SlashCommandOption.createStringOption(
+                                        LANGUAGE_NAME,
+                                        "The name of the language to be removed",
+                                        true,
+                                        true
+                                )
+                        )),
+                new SlashCommandOptionBuilder()
+                        .setType(SlashCommandOptionType.SUB_COMMAND)
+                        .setName("query")
+                        .setDescription("Displays information on a language, and its immediate relatives.")
+                        .setOptions(Lists.newArrayList(
+                                SlashCommandOption.createStringOption(
+                                        LANGUAGE_NAME,
+                                        "The name of the Language to query",
+                                        true,
+                                        true
+                                )
+                        )),
+                new SlashCommandOptionBuilder()
+                        .setType(SlashCommandOptionType.SUB_COMMAND)
+                        .setName("connect")
+                        .setDescription("Connects two Languages together in the map.")
+                        .setOptions(Lists.newArrayList(
+                                SlashCommandOption.createStringOption(
+                                        LANGUAGE_1,
+                                        "One of the Languages to be linked",
+                                        true,
+                                        true
+                                ),
+                                SlashCommandOption.createStringOption(
+                                        LANGUAGE_2,
+                                        "The second Language to be linked",
+                                        true,
+                                        true
+                                )
+                        )),
+                new SlashCommandOptionBuilder()
+                        .setType(SlashCommandOptionType.SUB_COMMAND)
+                        .setName("calculate")
+                        .setDescription("Calculates the difficulty of linguistics checks, will use User as default input.")
+                        .setOptions(Lists.newArrayList(
+                                SlashCommandOption.createStringOption(
+                                        TARGET,
+                                        "The Language to Target",
+                                        true,
+                                        true
+                                ),
+                                SlashCommandOption.create(
+                                        SlashCommandOptionType.MENTIONABLE,
+                                        "characters",
+                                        "The Character or Party to pull languages from as input",
+                                        false
+                                ),
+                                SlashCommandOption.create(
+                                        SlashCommandOptionType.STRING,
+                                        "languages",
+                                        "A comma separated list of languages to use as manual input for a custom language pool",
+                                        false
+                                )
+                        ))
+        ).attach();
+    }
+
     private EmbedBuilder handleAdd(SlashCommandInteractionOption option) {
-        Optional<String> nameOpt = option.getOptionStringValueByName("name");
+        Optional<String> nameOpt = option.getOptionStringValueByName(LANGUAGE_NAME);
         if (nameOpt.isPresent()) {
             return languageLogic.add(new Language(
                     nameOpt.get(),
@@ -89,7 +210,7 @@ public class LanguageCommand implements VelenSlashEvent {
     }
 
     private EmbedBuilder handleRemove(SlashCommandInteractionOption option) {
-        Optional<String> nameOpt = option.getOptionStringValueByName("name");
+        Optional<String> nameOpt = option.getOptionStringValueByName(LANGUAGE_NAME);
         if (nameOpt.isPresent()) {
             return nameOpt.flatMap(languageLogic::getByName)
                     .map(languageLogic::remove)
@@ -114,21 +235,21 @@ public class LanguageCommand implements VelenSlashEvent {
     }
 
     private EmbedBuilder handleConnect(SlashCommandInteractionOption option) {
-        Optional<Language> languageU = option.getOptionStringValueByName("language1")
+        Optional<Language> languageU = option.getOptionStringValueByName(LANGUAGE_1)
                 .flatMap(languageLogic::getByName);
 
-        Optional<Language> languageV = option.getOptionStringValueByName("language2")
+        Optional<Language> languageV = option.getOptionStringValueByName(LANGUAGE_2)
                 .flatMap(languageLogic::getByName);
 
         if (!languageU.isPresent()) {
             return new EmbedBuilder()
                     .setTitle("Failed to Connect Languages")
-                    .setDescription(option.getOptionStringValueByName("language1").orElse("NONE") + " was not found");
+                    .setDescription(option.getOptionStringValueByName(LANGUAGE_1).orElse("NONE") + " was not found");
         }
         else if (!languageV.isPresent()) {
             return new EmbedBuilder()
                     .setTitle("Failed to Connect Languages")
-                    .setDescription(option.getOptionStringValueByName("language2").orElse("NONE") + " was not found");
+                    .setDescription(option.getOptionStringValueByName(LANGUAGE_2).orElse("NONE") + " was not found");
         }
         else {
             return languageLogic.connect(languageU.get(), languageV.get())
@@ -147,7 +268,7 @@ public class LanguageCommand implements VelenSlashEvent {
     }
 
     private EmbedBuilder handleQuery(SlashCommandInteractionOption option) {
-        return option.getOptionStringValueByName("name")
+        return option.getOptionStringValueByName(LANGUAGE_NAME)
                 .flatMap(languageLogic::getByName)
                 .map(language -> {
                     Collection<Language> connections = languageLogic.getConnections(language);
@@ -162,12 +283,27 @@ public class LanguageCommand implements VelenSlashEvent {
                 })
                 .orElseGet(() -> new EmbedBuilder()
                         .setTitle("Failed to Query Language")
-                        .setDescription("No Language '" + option.getOptionStringValueByName("name").orElse("NONE") + "' exists")
+                        .setDescription("No Language '" + option.getOptionStringValueByName(LANGUAGE_NAME).orElse("NONE") + "' exists")
                 );
     }
 
+    private String joinPartyLinguisticsPaths(Map<String, Try<List<Language>>> partyLanguageMap) {
+        return partyLanguageMap.entrySet().stream()
+                .map(stringListEntry -> String.format("%s: %s",
+                        stringListEntry.getKey(),
+                        stringListEntry.getValue()
+                                .fold(
+                                        Throwable::getMessage,
+                                        languages -> languages.stream()
+                                                .map(Language::getName)
+                                                .collect(Collectors.joining(" → "))
+                                )
+                ))
+                .collect(Collectors.joining("\n"));
+    }
+
     private EmbedBuilder handleCalculate(User user, InteractionBase event, SlashCommandInteractionOption option) {
-        Optional<Language> targetLanguageOpt = option.getOptionStringValueByName("target")
+        Optional<Language> targetLanguageOpt = option.getOptionStringValueByName(TARGET)
                 .flatMap(languageLogic::getByName);
 
         if (targetLanguageOpt.isPresent()) {
@@ -225,7 +361,7 @@ public class LanguageCommand implements VelenSlashEvent {
                         .collect(Collectors.toMap(Pair::getKey, Pair::getRight));
 
                 return new EmbedBuilder()
-                        .setTitle("Shortest Path to " + targetLanguageOpt.get())
+                        .setTitle("Shortest Path to " + targetLanguageOpt.get().getName())
                         .setDescription("The shortest path to " + targetLanguageOpt.get().getName() +
                                 " with this party is:\n" + joinPartyLinguisticsPaths(foundPaths)
                         )
@@ -236,23 +372,8 @@ public class LanguageCommand implements VelenSlashEvent {
         else {
             return new EmbedBuilder()
                     .setTitle("Failed to Calculate Difficulty")
-                    .setDescription("No Target Language found for: " + option.getOptionStringValueByName("target").orElse("NONE"));
+                    .setDescription("No Target Language found for: " + option.getOptionStringValueByName(TARGET).orElse("NONE"));
         }
-    }
-
-    private String joinPartyLinguisticsPaths(Map<String, Try<List<Language>>> partyLanguageMap) {
-        return partyLanguageMap.entrySet().stream()
-                .map(stringListEntry -> String.format("%s: %s",
-                        stringListEntry.getKey(),
-                        stringListEntry.getValue()
-                                .fold(
-                                        Throwable::getMessage,
-                                        languages -> languages.stream()
-                                                .map(Language::getName)
-                                                .collect(Collectors.joining(" → "))
-                                )
-                ))
-                .collect(Collectors.joining("\n"));
     }
 
     private String getGroupDifficultyString(Map<String, Try<List<Language>>> partyLanguageMap, int modifier) {
@@ -263,126 +384,9 @@ public class LanguageCommand implements VelenSlashEvent {
                         stringListEntry.getValue()
                                 .fold(
                                         Throwable::getMessage,
-                                        languages -> Tier.getByIndex(languages.size() + modifier)
+                                        languages -> Tier.getTierTextByIndex(languages.size() + modifier)
                                 )
                 ))
                 .collect(Collectors.joining("\n"));
-    }
-
-    public static void setup(Velen velen, LanguageLogic languageLogic) {
-        VelenCommand.ofSlash(
-                "language",
-                "Query, Create, Connect, Remove Facets Languages.",
-                velen,
-                new LanguageCommand(languageLogic),
-                new SlashCommandOptionBuilder()
-                        .setType(SlashCommandOptionType.SUB_COMMAND)
-                        .setName("add")
-                        .setDescription("Add a New Language.")
-                        .setOptions(Lists.newArrayList(
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.STRING,
-                                        "name",
-                                        "Name",
-                                        true
-                                ),
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.STRING,
-                                        "description",
-                                        "Description"
-                                ),
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.BOOLEAN,
-                                        "constellation",
-                                        "Constellation"
-                                ),
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.BOOLEAN,
-                                        "court",
-                                        "Court"
-                                ),
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.BOOLEAN,
-                                        "Family",
-                                        "Family"
-                                ),
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.BOOLEAN,
-                                        "regional",
-                                        "Regional"
-                                ),
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.BOOLEAN,
-                                        "vulgar",
-                                        "Vulgar"
-                                )
-                        )),
-                new SlashCommandOptionBuilder()
-                        .setType(SlashCommandOptionType.SUB_COMMAND)
-                        .setName("remove")
-                        .setDescription("Remove Language.")
-                        .setOptions(Lists.newArrayList(
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.STRING,
-                                        "name",
-                                        "Name",
-                                        true
-                                )
-                        )),
-                new SlashCommandOptionBuilder()
-                        .setType(SlashCommandOptionType.SUB_COMMAND)
-                        .setName("query")
-                        .setDescription("Displays information on a language, and its immediate relatives.")
-                        .setOptions(Lists.newArrayList(
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.STRING,
-                                        "name",
-                                        "Name",
-                                        true
-                                )
-                        )),
-                new SlashCommandOptionBuilder()
-                        .setType(SlashCommandOptionType.SUB_COMMAND)
-                        .setName("connect")
-                        .setDescription("Connect Languages.")
-                        .setOptions(Lists.newArrayList(
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.STRING,
-                                        "language1",
-                                        "First Language",
-                                        true
-                                ),
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.STRING,
-                                        "language2",
-                                        "Second Language",
-                                        true
-                                )
-                        )),
-                new SlashCommandOptionBuilder()
-                        .setType(SlashCommandOptionType.SUB_COMMAND)
-                        .setName("calculate")
-                        .setDescription("Calculates the difficulty of linguistics checks, will use User as default input.")
-                        .setOptions(Lists.newArrayList(
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.STRING,
-                                        "target",
-                                        "The Language to Target",
-                                        true
-                                ),
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.MENTIONABLE,
-                                        "characters",
-                                        "The Character or Party to pull languages from as input",
-                                        false
-                                ),
-                                SlashCommandOption.create(
-                                        SlashCommandOptionType.STRING,
-                                        "languages",
-                                        "A comma separated list of languages to use as manual input",
-                                        false
-                                )
-                        ))
-        ).attach();
     }
 }

@@ -32,7 +32,7 @@ public class AdvancementLogic implements VelenSlashEvent {
                 .setDescription("The current array of specialty skills, e.g. use 4 6 8 if you have a d4 d6 d8")
                 .setRequired(false);
         final SlashCommandOptionBuilder targetFacets = new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.INTEGER)
+                .setType(SlashCommandOptionType.LONG)
                 .setName("target-facets")
                 .setDescription("The amount of facets to target for the general skill")
                 .setRequired(true);
@@ -42,12 +42,12 @@ public class AdvancementLogic implements VelenSlashEvent {
                 .setDescription("Attempts to ensure at least one specialty skill reaches d14, defaults to false")
                 .setRequired(false);
         final SlashCommandOptionBuilder minimumFacets = new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.INTEGER)
+                .setType(SlashCommandOptionType.LONG)
                 .setName("minimum-facets")
                 .setDescription("Ensures as many specialty skills as possible are above the specified facet count, defaults to 12")
                 .setRequired(false);
         final SlashCommandOptionBuilder nervewrightMana = new SlashCommandOptionBuilder()
-                .setType(SlashCommandOptionType.INTEGER)
+                .setType(SlashCommandOptionType.LONG)
                 .setName("nervewright-mana")
                 .setDescription("Specifies the amount of mana that can be invested for Nervewright, defaults to 0")
                 .setRequired(false);
