@@ -77,7 +77,7 @@ public class LanguageCommand implements VelenSlashEvent {
                         .setDescription("Add a new Language.")
                         .setOptions(Lists.newArrayList(
                                 SlashCommandOption.createStringOption(
-                                        LANGUAGE_NAME,
+                                        "name",
                                         "The name of the language to create",
                                         true,
                                         true
@@ -183,7 +183,7 @@ public class LanguageCommand implements VelenSlashEvent {
     }
 
     private EmbedBuilder handleAdd(SlashCommandInteractionOption option) {
-        Optional<String> nameOpt = option.getOptionStringValueByName(LANGUAGE_NAME);
+        Optional<String> nameOpt = option.getOptionStringValueByName("name");
         if (nameOpt.isPresent()) {
             return languageLogic.add(new Language(
                     nameOpt.get(),
@@ -289,7 +289,8 @@ public class LanguageCommand implements VelenSlashEvent {
 
     private String joinPartyLinguisticsPaths(Map<String, Try<List<Language>>> partyLanguageMap) {
         return partyLanguageMap.entrySet().stream()
-                .map(stringListEntry -> String.format("%s: %s",
+                .map(stringListEntry -> String.format(
+                        "%s: %s",
                         stringListEntry.getKey(),
                         stringListEntry.getValue()
                                 .fold(
