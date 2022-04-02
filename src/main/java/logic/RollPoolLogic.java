@@ -21,6 +21,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
+
+    public static final String POOL_NAME = "pool-name";
+
     public static void setupPoolCommand(Velen velen) {
         RollPoolLogic rollPoolLogic = new RollPoolLogic();
         List<SlashCommandOption> commandOptions = new ArrayList<>();
@@ -37,7 +40,7 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
         commandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "save", "Rolls a derived attribute roll with opportunities disabled", saveOptions));
 
         List<SlashCommandOption> poolOptions = new ArrayList<>();
-        poolOptions.add(new SlashCommandOptionBuilder().setName("pool-name").setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("The named pool to roll from the character sheet").build());
+        poolOptions.add(new SlashCommandOptionBuilder().setName(POOL_NAME).setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("The named pool to roll from the character sheet").build());
         poolOptions.addAll(rollOptions);
         poolOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false));
         commandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "saved-pool", "Rolls a saved dice pool in your saved dice pools sheet or combat tracker", poolOptions));
@@ -47,7 +50,6 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
         VelenCommand.ofHybrid("roll-pool", "Rolls a predefined dice pool from your character sheet", velen, rollPoolLogic, rollPoolLogic)
                 .addShortcuts("rollp", "testp")
                 .addOptions(commandOptions.toArray(new SlashCommandOption[0]))
-                .setServerOnly(true, 817619574450028554L)
                 .attach();
     }
 
@@ -104,7 +106,7 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
         else {
             Boolean opportunity = subcommandOption.getOptionBooleanValueByName("opportunity").orElse(true);
             //noinspection OptionalGetWithoutIsPresent
-            SheetsHandler.getSavedPool(subcommandOption.getOptionStringValueByName("pool-name").get(), user)
+            SheetsHandler.getSavedPool(subcommandOption.getOptionStringValueByName(POOL_NAME).get(), user)
                     .map(defaultPool -> MessageFormat.format("{0} {1}", defaultPool, bonuses.orElse("")))
                     .onFailure(throwable -> event.createImmediateResponder().setContent(throwable.getMessage()).setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond())
                     .onSuccess(dicePool -> RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, opportunity));
