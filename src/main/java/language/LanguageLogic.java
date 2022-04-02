@@ -89,9 +89,7 @@ public class LanguageLogic {
     public Stream<Language> findPossibilities(String attempt) {
         return this.languages.entrySet()
                 .stream()
-                .filter(slashCommandOptionChoice -> slashCommandOptionChoice.getKey()
-                        .contains(attempt)
-                )
+                .filter(slashCommandOptionChoice -> slashCommandOptionChoice.getKey().toLowerCase(Locale.ROOT).contains(attempt))
                 .map(Map.Entry::getValue)
                 .limit(25);
     }

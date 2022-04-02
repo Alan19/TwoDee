@@ -340,7 +340,7 @@ public class LanguageCommand implements VelenSlashEvent {
                                                 .flatMap(value -> value.map(Stream::of).orElse(Stream.empty()))
                                                 .collect(Collectors.toSet())
                                         );
-                                return Pair.of(DiscordHelper.getUsernameFromInteraction(event, user), languageNames);
+                                return Pair.of(DiscordHelper.getUsernameFromInteraction(event, userPlayerPair.getKey()), languageNames);
                             })
                     ).ifPresent(stream -> stream.forEach(
                             pair -> userLanguages.put(pair.getLeft(), pair.getRight())
@@ -376,8 +376,8 @@ public class LanguageCommand implements VelenSlashEvent {
 
                 return new EmbedBuilder()
                         .setTitle("Shortest Path to " + targetLanguageOpt.get().getName())
-                        .setDescription("The shortest path to " + targetLanguageOpt.get().getName() +
-                                " with this party is:\n" + joinPartyLinguisticsPaths(foundPaths)
+                        .setDescription("The shortest path(s) to " + targetLanguageOpt.get().getName() +
+                                " with the selected character(s) are:\n" + joinPartyLinguisticsPaths(foundPaths)
                         )
                         .addField("Real Time Translation (Wits) / Grasp Idioms (Vision)", getGroupDifficultyString(foundPaths, 1))
                         .addField("Translate Behind Conversation (Reason)", getGroupDifficultyString(foundPaths, 0));
