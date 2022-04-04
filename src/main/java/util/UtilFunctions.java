@@ -5,6 +5,7 @@ import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.InteractionBase;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -51,5 +52,16 @@ public class UtilFunctions {
 
     public static String getUsernameFromSlashEvent(InteractionBase event, User user) {
         return event.getChannel().map(channel -> getUsernameInChannel(user, channel)).orElse(user.getName());
+    }
+
+    /**
+     * Checks if a string is within another string and ignores case
+     *
+     * @param s         The main string
+     * @param substring The substring to be checked within the main string
+     * @return If the substring is within the main string, ignoring casing
+     */
+    public static boolean containsIgnoreCase(String s, String substring) {
+        return s.toLowerCase(Locale.ROOT).contains(substring);
     }
 }

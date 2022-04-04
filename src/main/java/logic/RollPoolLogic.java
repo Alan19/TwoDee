@@ -40,7 +40,7 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
         commandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "save", "Rolls a derived attribute roll with opportunities disabled", saveOptions));
 
         List<SlashCommandOption> poolOptions = new ArrayList<>();
-        poolOptions.add(new SlashCommandOptionBuilder().setName(POOL_NAME).setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("The named pool to roll from the character sheet").build());
+        poolOptions.add(new SlashCommandOptionBuilder().setName(POOL_NAME).setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("The named pool to roll from the character sheet").setAutocompletable(true).build());
         poolOptions.addAll(rollOptions);
         poolOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false));
         commandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "saved-pool", "Rolls a saved dice pool in your saved dice pools sheet or combat tracker", poolOptions));
@@ -57,7 +57,6 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
         if (args.length > 0) {
-            // TODO Verify pool support when Andy's done
             String poolName = args[0];
             String bonus = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
             if (Stream.of("vitality", "initiative", "willpower").anyMatch(poolName::equalsIgnoreCase)) {

@@ -18,6 +18,7 @@ import io.vavr.API;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.interaction.SlashCommandOptionChoice;
 import roles.Player;
 import roles.PlayerHandler;
 
@@ -257,10 +258,24 @@ public class SheetsHandler {
         return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
     }
 
+    public static Try<List<SlashCommandOptionChoice>> getSavedPoolChoices(User user) {
+        final Optional<String> spreadsheetID = getSpreadsheetForPartyMember(user);
+        if (spreadsheetID.isPresent()) {
+            return Try.of(() -> instance.service.spreadsheets().values()
+                            .get(spreadsheetID.get(), "DicePools")
+                            .execute())
+                    .map(valueRange -> valueRange.getValues().stream()
+                            .filter(objects -> objects.size() == 2)
+                            .map(objects -> SlashCommandOptionChoice.create(((String) (objects.get(0))), ((String) (objects.get(0))).replaceAll("\\s", "")))
+                            .collect(Collectors.toList()));
+        }
+        return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
+    }
+
     /**
      * Returns the list of languages for a user
      *
-     * @param user The user to search
+     * @param player The player to search
      * @return A list of languages as strings
      */
     public static Try<Collection<String>> getLanguages(Player player) {
