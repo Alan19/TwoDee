@@ -50,7 +50,6 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
         VelenCommand.ofHybrid("roll-pool", "Rolls a predefined dice pool from your character sheet", velen, rollPoolLogic, rollPoolLogic)
                 .addShortcuts("rollp", "testp")
                 .addOptions(commandOptions.toArray(new SlashCommandOption[0]))
-                .setServerOnly(true, 817619574450028554L)
                 .attach();
     }
 
