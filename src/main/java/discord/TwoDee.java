@@ -2,6 +2,7 @@ package discord;
 
 import io.vavr.control.Try;
 import language.LanguageLogic;
+import listeners.DoomPoolAutocomplete;
 import listeners.LanguageAutocompleteListener;
 import listeners.PoolAutocompleteListener;
 import org.apache.logging.log4j.LogManager;
