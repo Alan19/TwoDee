@@ -1,24 +1,25 @@
 package logic;
 
 import doom.DoomHandler;
-import org.javacord.api.entity.message.Message;
-import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
-import org.javacord.api.event.interaction.SlashCommandCreateEvent;
-import org.javacord.api.event.message.MessageCreateEvent;
-import org.javacord.api.interaction.*;
-import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
-import pw.mihou.velen.interfaces.*;
-import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
-import util.UtilFunctions;
+import org.javacord.api.interaction.SlashCommandOption;
+import org.javacord.api.interaction.SlashCommandOptionBuilder;
+import org.javacord.api.interaction.SlashCommandOptionType;
+import pw.mihou.velen.interfaces.Velen;
+import pw.mihou.velen.interfaces.VelenCommand;
+import pw.mihou.velen.interfaces.VelenHybridHandler;
+import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
+import pw.mihou.velen.interfaces.hybrid.objects.VelenHybridArguments;
+import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
+import pw.mihou.velen.interfaces.hybrid.objects.subcommands.VelenSubcommand;
+import pw.mihou.velen.interfaces.hybrid.responder.VelenGeneralResponder;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
-public class DoomLogic implements VelenEvent, VelenSlashEvent {
+public class DoomLogic implements VelenHybridHandler {
 
     public static void setupDoomCommand(Velen velen) {
         final List<SlashCommandOption> options = new ArrayList<>();
@@ -29,12 +30,13 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all doom pools", getNameOption().setDescription("the name of the doom pool to query")));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "delete", "Deletes the doom pool from the doom pool tracker", getNameOption().setDescription("the name of the doom pool to delete")));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "create", "Create new doom pool", getNameOption().setRequired(true), getCountOption()));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "list", "List Doom Pools"));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "info", "Doom Pool Info", getNameOption().setRequired(true)));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "list", "List all stored doom pools"));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "info", "Displays information on the specified doom pool", getNameOption().setRequired(true)));
 
         DoomLogic doomLogic = new DoomLogic();
-        VelenCommand.ofHybrid("doom", "Modifies the doom pool!", velen, doomLogic, doomLogic)
+        VelenCommand.ofHybrid("doom", "Modifies the doom pool!", velen, doomLogic)
                 .addOptions(options.toArray(new SlashCommandOption[]{}))
+                .addFormats("doom :[add:of(subcommand)] :[count:of(numeric)] :[name:of(string)]", "doom :[sub:of(subcommand)] :[count:of(numeric)] :[name:of(string)]", "doom :[set:of(subcommand)] :[count:of(numeric):required()] :[name:of(string)]", "doom :[select:of(subcommand)] :[name:of(string):required()]", "doom :[query:of(subcommand)] :[name:of(string):required()]", "doom :[delete:of(subcommand)] :[name:of(string):required()]", "doom :[create:of(subcommand)] :[name:of(string):required()]", "doom :[list:of(subcommand)]", "doom :[info:of(subcommand)]")
                 .addShortcuts("d")
                 .attach();
     }
@@ -53,26 +55,6 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
                 .setDescription("the amount to modify the doom pool by")
                 .setType(SlashCommandOptionType.LONG)
                 .setRequired(false);
-    }
-
-    @Override
-    public void onEvent(MessageCreateEvent event, Message message, User user, String[] params, VelenRoutedOptions options) {
-        if (params.length > 0) {
-            String mode;
-            String poolName = "";
-            int count = 1;
-            mode = params[0];
-            if (params.length > 1) {
-                poolName = params[1];
-            }
-            if (params.length > 2) {
-                count = UtilFunctions.tryParseInt(params[2]).orElse(1);
-            }
-            new MessageBuilder().addEmbed(handleCommand(mode, poolName, count).setFooter(MessageFormat.format("Requested by {0}", UtilFunctions.getUsernameInChannel(user, event.getChannel())), user.getAvatar())).send(event.getChannel());
-        }
-        else {
-            new MessageBuilder().addEmbed(DoomHandler.generateDoomEmbed().setFooter(MessageFormat.format("Requested by {0}", UtilFunctions.getUsernameInChannel(user, event.getChannel())), user.getAvatar())).send(event.getChannel());
-        }
     }
 
     private EmbedBuilder handleCommand(String mode, String poolName, int count) {
@@ -105,6 +87,7 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
                     return DoomHandler.generateDoomEmbed();
                 case "info":
                     return DoomHandler.generateDoomEmbed(actualPoolName);
+                case "query":
                 default:
                     return actualPoolName.equals("") ? DoomHandler.generateDoomEmbed() : DoomHandler.generateDoomEmbed(actualPoolName);
             }
@@ -112,18 +95,15 @@ public class DoomLogic implements VelenEvent, VelenSlashEvent {
     }
 
     @Override
-    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final SlashCommandInteractionOption subcommandOption = event.getOptions().get(0);
-        final String mode = subcommandOption.getName();
-        final Optional<String> poolName = subcommandOption.getOptionStringValueByName("name");
-        final Optional<Integer> count = subcommandOption.getOptionLongValueByName("count").map(Math::toIntExact);
-        if (event.getChannel().isPresent()) {
-            final EmbedBuilder query = handleCommand(mode, poolName.orElseGet(() -> mode.equals("query") ? "" : DoomHandler.getActivePool()), count.orElse(1));
-            firstResponder.addEmbed(query.setFooter("Requested by " + UtilFunctions.getUsernameFromSlashEvent(event, user), user.getAvatar())).respond();
-        }
-        else {
-            firstResponder.setContent("Unable to find a channel!").respond();
-        }
+    public void onEvent(VelenGeneralEvent event, VelenGeneralResponder responder, User user, VelenHybridArguments args) {
+        final String subcommandName = Arrays.stream(args.getOptions())
+                .skip(1)
+                .findFirst()
+                .map(VelenOption::asSubcommand)
+                .map(VelenSubcommand::getName)
+                .orElse("query");
+        final int count = args.withName("count").flatMap(VelenOption::asInteger).orElse(1);
+        final String name = args.withName("name").flatMap(VelenOption::asString).orElse(DoomHandler.getActivePool());
+        responder.addEmbed(handleCommand(subcommandName, name, count)).respond();
     }
-
 }
