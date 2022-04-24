@@ -10,6 +10,7 @@ import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
@@ -19,6 +20,7 @@ import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import pw.mihou.velen.interfaces.*;
+import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
 import rolling.Result;
 import rolling.RollOutput;
 import rolling.RollParameters;
@@ -178,13 +180,13 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     }
 
     @Override
-    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
+    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args, VelenRoutedOptions options) {
         String dicePool = String.join(" ", args);
         handleTextCommandRoll(user, event.getChannel(), dicePool, true);
     }
 
     @Override
-    public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
+    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final Boolean opportunity = event.getOptionBooleanValueByName("opportunity").orElse(true);
         final Long discount = event.getOptionLongValueByName("discount").orElse(0L);
         final String dicePool = event.getOptionStringValueByName("dicepool").orElse("");

@@ -6,6 +6,7 @@ import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.InteractionBase;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -20,6 +21,21 @@ public class DiscordHelper {
      */
     public static String getUsernameInChannel(User user, Channel channel) {
         return channel.asServerTextChannel().map(serverTextChannel -> user.getDisplayName(serverTextChannel.getServer())).orElseGet(user::getName);
+    }
+
+    /**
+     * Gets all users mentioned by a mentionable, a list of users if it's a role and a single user if it's a user ping
+     *
+     * @param mentionable A mentionable that could either be a user or a role
+     * @return A list of users
+     */
+    public static Collection<User> getUsersForMentionable(Mentionable mentionable) {
+        if (mentionable instanceof Role) {
+            return new ArrayList<>(((Role) mentionable).getUsers());
+        }
+        else {
+            return Collections.singleton((User) mentionable);
+        }
     }
 
     public static Collection<String> getUsernamesFor(Mentionable mentionable, Channel channel) {

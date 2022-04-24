@@ -5,11 +5,13 @@ import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.*;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.util.DiscordRegexPattern;
 import pw.mihou.velen.interfaces.*;
+import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
 import sheets.PlotPointUtils;
 import sheets.SheetsHandler;
 import util.RandomColor;
@@ -66,7 +68,7 @@ public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
     }
 
     @Override
-    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
+    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args, VelenRoutedOptions options) {
         if (args.length > 0) {
             String mode = args[0];
             User target = user;
@@ -91,7 +93,7 @@ public class PlotPointLogic implements VelenSlashEvent, VelenEvent {
     }
 
     @Override
-    public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
+    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final SlashCommandInteractionOption subcommandOption = event.getOptions().get(0);
         final String mode = subcommandOption.getName();
         final Optional<User> mentionedUser = subcommandOption.getOptionUserValueByName("name");

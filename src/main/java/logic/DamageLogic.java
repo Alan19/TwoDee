@@ -4,6 +4,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOptionBuilder;
@@ -71,7 +72,7 @@ public class DamageLogic implements VelenSlashEvent {
      * @param immediateResponseBuilder The response builder to respond immediately
      */
     @Override
-    public void onEvent(SlashCommandInteraction interaction, User user, VelenArguments arguments, List<SlashCommandInteractionOption> list, InteractionImmediateResponseBuilder immediateResponseBuilder) {
+    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction interaction, User user, VelenArguments arguments, List<SlashCommandInteractionOption> list, InteractionImmediateResponseBuilder immediateResponseBuilder) {
         final Optional<String> typeOptional = interaction.getOptionStringValueByName("type");
         final Optional<Long> countOptional = interaction.getOptionLongValueByName("count");
         if (typeOptional.isPresent() && countOptional.isPresent()) {

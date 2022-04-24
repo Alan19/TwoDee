@@ -5,10 +5,12 @@ import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.*;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import pw.mihou.velen.interfaces.*;
+import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
 import util.RandomColor;
 
 import java.text.MessageFormat;
@@ -49,7 +51,7 @@ public class SnackLogic implements VelenSlashEvent, VelenEvent {
     }
 
     @Override
-    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
+    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args, VelenRoutedOptions options) {
         new MessageBuilder().addEmbed(getSnackEmbed(user, getRandomSnack(), user)).send(event.getChannel());
     }
 
@@ -59,7 +61,7 @@ public class SnackLogic implements VelenSlashEvent, VelenEvent {
     }
 
     @Override
-    public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
+    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final Pair<String, String> snackType = event.getOptionStringValueByName("snack-type").map(s -> Pair.of(Pair.of(s, snacks.get(s)))).orElse(getRandomSnack());
         final User recipient = event.getOptionUserValueByName("recipient").orElse(user);
         firstResponder.addEmbed(getSnackEmbed(user, snackType, recipient)).respond();

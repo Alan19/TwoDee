@@ -35,7 +35,7 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
     compile 'io.vavr:vavr:0.10.4'
     implementation 'com.google.code.gson:gson:2.9.0'
-    implementation 'pw.mihou:Velen:2.1.1'
+    implementation 'pw.mihou:Velen:3.1.1'
     compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.17.2'
     compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.2'
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.36.0.3'

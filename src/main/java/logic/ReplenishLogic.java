@@ -6,6 +6,7 @@ import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
@@ -14,6 +15,7 @@ import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.util.DiscordRegexPattern;
 import pw.mihou.velen.interfaces.*;
+import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
 import sheets.PlotPointUtils;
 import util.UtilFunctions;
 
@@ -47,7 +49,7 @@ public class ReplenishLogic implements VelenSlashEvent, VelenEvent {
     }
 
     @Override
-    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
+    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args, VelenRoutedOptions options) {
         if (args.length >= 2) {
             final Matcher matcher = DiscordRegexPattern.ROLE_MENTION.matcher(args[0]);
             final Optional<Integer> count = UtilFunctions.tryParseInt(args[1]);
@@ -70,7 +72,7 @@ public class ReplenishLogic implements VelenSlashEvent, VelenEvent {
     }
 
     @Override
-    public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
+    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final Optional<Role> party = event.getOptionRoleValueByName("party");
         final Optional<Integer> count = event.getOptionLongValueByName("count").map(Math::toIntExact);
         if (party.isPresent() && count.isPresent() && event.getChannel().isPresent()) {

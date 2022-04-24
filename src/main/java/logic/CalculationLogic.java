@@ -16,10 +16,12 @@ import org.javacord.api.entity.channel.ChannelType;
 import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.*;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import pw.mihou.velen.interfaces.*;
+import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,7 +38,7 @@ public class CalculationLogic implements VelenEvent, VelenSlashEvent {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
-    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
+    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args, VelenRoutedOptions options) {
         Message startingMessage = message.reply("Staring Calculations").join();
         Try.of(() -> Long.parseLong(args[0]))
                 .flatMap(start -> CalculationLogic.beginCalculations(
@@ -80,7 +82,7 @@ public class CalculationLogic implements VelenEvent, VelenSlashEvent {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
-    public void onEvent(SlashCommandInteraction event, User user, VelenArguments args,
+    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args,
                         List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         firstResponder.setContent("Starting Calculations")
                 .respond()

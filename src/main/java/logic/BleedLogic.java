@@ -1,114 +1,53 @@
 package logic;
 
+import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Triple;
-import org.javacord.api.entity.Mentionable;
 import org.javacord.api.entity.channel.TextChannel;
-import org.javacord.api.entity.message.Message;
-import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
-import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
-import org.javacord.api.event.message.MessageCreateEvent;
-import org.javacord.api.interaction.SlashCommandInteraction;
-import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
-import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
-import org.javacord.api.util.DiscordRegexPattern;
-import pw.mihou.velen.interfaces.*;
+import pw.mihou.velen.interfaces.Velen;
+import pw.mihou.velen.interfaces.VelenCommand;
+import pw.mihou.velen.interfaces.VelenHybridHandler;
+import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
+import pw.mihou.velen.interfaces.hybrid.objects.VelenHybridArguments;
+import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
+import pw.mihou.velen.interfaces.hybrid.responder.VelenGeneralResponder;
 import sheets.PlotPointChangeResult;
 import sheets.PlotPointUtils;
 import sheets.SheetsHandler;
+import util.DiscordHelper;
 import util.UtilFunctions;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
 
-public class BleedLogic implements VelenSlashEvent, VelenEvent {
+public class BleedLogic implements VelenHybridHandler {
+
+    public static final String BLEED_MENTIONABLE = "bleed-mentionable";
+    public static final String BLEED_MODIFIER = "bleed-modifier";
+
     public static void setupBleedCommand(Velen velen) {
         BleedLogic bleedLogic = new BleedLogic();
-        VelenCommand.ofHybrid("bleed", "Applies plot point bleed!", velen, bleedLogic, bleedLogic)
-                .addOptions(SlashCommandOption.create(SlashCommandOptionType.MENTIONABLE, "target", "The party to bleed", true), SlashCommandOption.create(SlashCommandOptionType.LONG, "modifier", "The bonus or penalty on the bleed", false))
+        VelenCommand.ofHybrid("bleed", "Applies plot point bleed!", velen, bleedLogic)
+                .addOptions(SlashCommandOption.create(SlashCommandOptionType.MENTIONABLE, BLEED_MENTIONABLE, "The party to bleed", true), SlashCommandOption.create(SlashCommandOptionType.LONG, BLEED_MODIFIER, "The bonus or penalty on the bleed", false))
+                .addFormats(String.format("bleed :[%s:of(user)]", BLEED_MENTIONABLE), String.format("bleed :[%s:of(role)]", BLEED_MENTIONABLE))
                 .attach();
     }
 
     @Override
-    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
-        if (args.length > 0) {
-            final Matcher userMatcher = DiscordRegexPattern.USER_MENTION.matcher(args[0]);
-            final Matcher roleMatcher = DiscordRegexPattern.ROLE_MENTION.matcher(args[0]);
-            if (userMatcher.find()) {
-                event.getApi().getUserById(userMatcher.group("id")).thenAccept(foundUser -> {
-                    int modifier = args.length > 1 ? UtilFunctions.tryParseInt(args[1]).orElse(0) : 0;
-                    onBleedCommand(user, event.getChannel(), Collections.singletonList(foundUser), modifier).thenAccept(embed -> new MessageBuilder().addEmbed(embed).send(event.getChannel()));
-                });
-            }
-            else if (roleMatcher.find()) {
-                event.getApi().getRoleById(roleMatcher.group("id")).ifPresent(role -> {
-                    int modifier = args.length > 1 ? UtilFunctions.tryParseInt(args[1]).orElse(0) : 0;
-                    onBleedCommand(user, event.getChannel(), new ArrayList<>(role.getUsers()), modifier).thenAccept(embed -> new MessageBuilder().addEmbed(embed).send(event.getChannel()));
-                });
-            }
-        }
-        else {
-            event.getChannel().sendMessage("Invalid role or channel!");
-        }
-    }
-
-    @Override
-    public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final Optional<Mentionable> targets = event.getOptionMentionableValueByName("target");
-        if (targets.isPresent() && event.getChannel().isPresent()) {
-            List<User> users = new ArrayList<>();
-            if (targets.get() instanceof Role) {
-                users.addAll(((Role) targets.get()).getUsers());
-            }
-            else {
-                users.add((User) targets.get());
-            }
-            event.respondLater().thenAcceptBoth(onBleedCommand(event.getUser(), event.getChannel().get(), users, event.getOptionLongValueByName("modifier").map(Math::toIntExact).orElse(0)), (updater, embed) -> updater.addEmbed(embed).update());
-        }
-        else {
-            firstResponder.setContent("Invalid role or channel!").respond();
-        }
-    }
-
-    /**
-     * Applies plot point bleed to all specified users
-     *
-     * @param sender   The sender of the message
-     * @param channel  The channel the message was sent in
-     * @param users    The users to apply bleed to
-     * @param modifier The modifier on the bleed
-     * @return A CompletableFuture that contains an embed that records the changes in plot points
-     */
-    private CompletableFuture<EmbedBuilder> onBleedCommand(User sender, TextChannel channel, List<User> users, Integer modifier) {
-        List<Triple<User, Integer, Integer>> changes = new ArrayList<>();
-        List<User> errors = new ArrayList<>();
-        AtomicInteger bleed = new AtomicInteger();
-        List<CompletableFuture<Void>> list = new ArrayList<>();
-        for (User user : users) {
-            if (SheetsHandler.getPlayerBleed(user).orElse(0) > 0) {
-                CompletableFuture<Void> completableFuture = bleedPlayer(user).thenAccept(change -> {
-                    if (change.isPresent()) {
-                        changes.add(change.get());
-                        bleed.addAndGet((change.get().getMiddle() - change.get().getRight()));
-                    }
-                    else {
-                        errors.add(user);
-                    }
-                });
-                list.add(completableFuture);
-            }
-        }
-        final CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(list.toArray(new CompletableFuture[0]));
-        return voidCompletableFuture.thenApply(unused -> getBleedEmbed(sender, channel, changes, errors, bleed.get(), modifier));
+    public void onEvent(VelenGeneralEvent event, VelenGeneralResponder responder, User user, VelenHybridArguments args) {
+        Try.of(() -> args.withName(BLEED_MENTIONABLE)
+                        .flatMap(VelenOption::asMentionable)
+                        .orElseThrow(IllegalArgumentException::new))
+                .map(DiscordHelper::getUsersForMentionable)
+                .onSuccess(users -> handleBleed(users, args.withName(BLEED_MODIFIER).flatMap(VelenOption::asInteger).orElse(0), user, event.getChannel()).thenAccept(embedBuilder -> responder.addEmbed(embedBuilder).respond()));
     }
 
     /**
@@ -144,4 +83,28 @@ public class BleedLogic implements VelenSlashEvent, VelenEvent {
                 .setDescription(message)
                 .setFooter("Requested by " + UtilFunctions.getUsernameInChannel(sender, channel), sender.getAvatar());
     }
+
+    private CompletableFuture<EmbedBuilder> handleBleed(Collection<User> users, Integer modifier, User sender, TextChannel channel) {
+        List<Triple<User, Integer, Integer>> changes = new ArrayList<>();
+        List<User> errors = new ArrayList<>();
+        AtomicInteger bleed = new AtomicInteger();
+        List<CompletableFuture<Void>> list = new ArrayList<>();
+        for (User user : users) {
+            if (SheetsHandler.getPlayerBleed(user).orElse(0) > 0) {
+                CompletableFuture<Void> completableFuture = bleedPlayer(user).thenAccept(change -> {
+                    if (change.isPresent()) {
+                        changes.add(change.get());
+                        bleed.addAndGet((change.get().getMiddle() - change.get().getRight()));
+                    }
+                    else {
+                        errors.add(user);
+                    }
+                });
+                list.add(completableFuture);
+            }
+        }
+        final CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(list.toArray(new CompletableFuture[0]));
+        return voidCompletableFuture.thenApply(unused -> getBleedEmbed(sender, channel, changes, errors, bleed.get(), modifier));
+    }
+
 }
