@@ -22,7 +22,6 @@ public class SlashCommandRegister {
         CalculationLogic.setup(velen);
         AdvancementLogic.setupAdvancementCommand(velen);
         LanguageCommand.setup(velen, languageLogic);
-        NewRollLogic.setupRollCommand(velen);
 
         return velen;
     }
