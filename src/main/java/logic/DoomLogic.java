@@ -21,14 +21,16 @@ import java.util.List;
 
 public class DoomLogic implements VelenHybridHandler {
 
+    public static final String POOL_NAME = "doom-pool-name";
+
     public static void setupDoomCommand(Velen velen) {
         final List<SlashCommandOption> options = new ArrayList<>();
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "add", "Adds to the doom pool", getNameOption(), getCountOption()));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "sub", "Subtracts from the doom pool", getNameOption(), getCountOption()));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "set", "Sets from the doom pool to the specified amount", getCountOption().setRequired(true), getNameOption()));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "select", "Chooses the specified doom pool as the active doom pool", getNameOption().setRequired(true)));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all doom pools", getNameOption().setDescription("the name of the doom pool to query")));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "delete", "Deletes the doom pool from the doom pool tracker", getNameOption().setDescription("the name of the doom pool to delete")));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "add", "Adds to the doom pool", getNameOption().setAutocompletable(true), getCountOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "sub", "Subtracts from the doom pool", getNameOption().setAutocompletable(true), getCountOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "set", "Sets from the doom pool to the specified amount", getCountOption().setRequired(true), getNameOption().setAutocompletable(true)));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "select", "Chooses the specified doom pool as the active doom pool", getNameOption().setRequired(true).setAutocompletable(true)));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all doom pools", getNameOption().setDescription("the name of the doom pool to query").setAutocompletable(true)));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "delete", "Deletes the doom pool from the doom pool tracker", getNameOption().setDescription("the name of the doom pool to delete").setAutocompletable(true)));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "create", "Create new doom pool", getNameOption().setRequired(true), getCountOption()));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "list", "List all stored doom pools"));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "info", "Displays information on the specified doom pool", getNameOption().setRequired(true)));
@@ -44,7 +46,7 @@ public class DoomLogic implements VelenHybridHandler {
     private static SlashCommandOptionBuilder getNameOption() {
         return new SlashCommandOptionBuilder()
                 .setType(SlashCommandOptionType.STRING)
-                .setName("name")
+                .setName(POOL_NAME)
                 .setDescription("the name of the doom pool to modify")
                 .setRequired(false);
     }
@@ -103,7 +105,7 @@ public class DoomLogic implements VelenHybridHandler {
                 .map(VelenSubcommand::getName)
                 .orElse("query");
         final int count = args.withName("count").flatMap(VelenOption::asInteger).orElse(1);
-        final String name = args.withName("name").flatMap(VelenOption::asString).orElse(DoomHandler.getActivePool());
+        final String name = args.withName(POOL_NAME).flatMap(VelenOption::asString).orElse(DoomHandler.getActivePool());
         responder.addEmbed(handleCommand(subcommandName, name, count)).respond();
     }
 }

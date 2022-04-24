@@ -47,6 +47,7 @@ public class TwoDee {
                                         .send(api.getTextChannelById(s).orElseThrow(() -> new IllegalStateException("Failed to find channel for ID: " + s))));
                         api.addListener(new LanguageAutocompleteListener(languageLogic));
                         api.addListener(new PoolAutocompleteListener());
+                        api.addListener(new DoomPoolAutocomplete());
                     })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
