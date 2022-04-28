@@ -17,7 +17,10 @@ public class TestLogic implements VelenEvent, VelenSlashEvent {
     public static void setTestCommand(Velen velen) {
         TestLogic testLogic = new TestLogic();
         List<SlashCommandOption> options = RollLogic.getRollCommandOptions();
-        VelenCommand.ofHybrid("test", "Rolls some dice with opportunities disabled!", velen, testLogic, testLogic).addOptions(options.toArray(new SlashCommandOption[0])).addShortcuts("t").attach();
+        VelenCommand.ofHybrid("test", "Rolls some dice with opportunities disabled!", velen, testLogic, testLogic)
+                .addOptions(options.toArray(new SlashCommandOption[0]))
+                .addShortcuts("t")
+                .attach();
     }
 
 
