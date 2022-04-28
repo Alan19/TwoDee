@@ -38,7 +38,18 @@ public class DoomLogic implements VelenHybridHandler {
         DoomLogic doomLogic = new DoomLogic();
         VelenCommand.ofHybrid("doom", "Modifies the doom pool!", velen, doomLogic)
                 .addOptions(options.toArray(new SlashCommandOption[]{}))
-                .addFormats("doom :[add:of(subcommand)] :[count:of(numeric)] :[name:of(string)]", "doom :[sub:of(subcommand)] :[count:of(numeric)] :[name:of(string)]", "doom :[set:of(subcommand)] :[count:of(numeric):required()] :[name:of(string)]", "doom :[select:of(subcommand)] :[name:of(string):required()]", "doom :[query:of(subcommand)] :[name:of(string):required()]", "doom :[delete:of(subcommand)] :[name:of(string):required()]", "doom :[create:of(subcommand)] :[name:of(string):required()]", "doom :[list:of(subcommand)]", "doom :[info:of(subcommand)]")
+                .addFormats(
+                        "doom add :[count:of(numeric)] :[doom-pool-name:of(string)]",
+                        "doom add :[count:of(numeric)]",
+                        "doom sub :[count:of(numeric)] :[doom-pool-name:of(string)]",
+                        "doom sub :[count:of(numeric)]",
+                        "doom set :[count:of(numeric)] :[doom-pool-name:of(string)]",
+                        "doom set :[count:of(numeric)]",
+                        "doom select :[doom-pool-name:of(string)]",
+                        "doom delete :[doom-pool-name:of(string)]",
+                        "doom create :[doom-pool-name:of(string)] :[count:of(numeric)]",
+                        "doom create :[doom-pool-name:of(string)]",
+                        "doom query :[doom-pool-name:of(string)]")
                 .addShortcuts("d")
                 .attach();
     }

@@ -11,10 +11,6 @@ version = '7.2.0'
 
 description = "A bot for the Facets tabletop RPG"
 
-
-sourceCompatibility = 17
-targetCompatibility = 1.8
-
 repositories {
     mavenLocal()
     maven { url "https://jitpack.io" }
