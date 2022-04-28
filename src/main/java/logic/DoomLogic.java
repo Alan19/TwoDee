@@ -25,14 +25,14 @@ public class DoomLogic implements VelenHybridHandler {
 
     public static void setupDoomCommand(Velen velen) {
         final List<SlashCommandOption> options = new ArrayList<>();
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "add", "Adds to the doom pool", getNameOption().setAutocompletable(true), getCountOption()));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "sub", "Subtracts from the doom pool", getNameOption().setAutocompletable(true), getCountOption()));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "set", "Sets from the doom pool to the specified amount", getCountOption().setRequired(true), getNameOption().setAutocompletable(true)));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "select", "Chooses the specified doom pool as the active doom pool", getNameOption().setRequired(true).setAutocompletable(true)));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of a doom pool. Defaults to the active pool.", getNameOption().setDescription("the name of the doom pool to query").setAutocompletable(true)));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "delete", "Deletes the doom pool from the doom pool tracker", getNameOption().setDescription("the name of the doom pool to delete").setAutocompletable(true)));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "create", "Create new doom pool", getNameOption().setRequired(true), getCountOption()));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "list", "List all stored doom pools"));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "add", "Adds to the doom pool, defaults to the active pool.", getNameOption().setAutocompletable(true), getCountOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "sub", "Subtracts from the doom pool, defaults to the active pool.", getNameOption().setAutocompletable(true), getCountOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "set", "Sets from the doom pool to the specified amount.", getCountOption().setRequired(true), getNameOption().setAutocompletable(true)));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "select", "Selects the specified doom pool as the active doom pool.", getNameOption().setRequired(true).setAutocompletable(true)));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of a doom pool. Defaults to the active pool.", getNameOption().setDescription("The name of the doom pool to query").setAutocompletable(true)));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "delete", "Deletes the doom pool from the doom pool tracker.", getNameOption().setDescription("The name of the doom pool to delete").setAutocompletable(true)));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "create", "Creates a new doom pool. The new pool has 0 doom by default.", getNameOption().setRequired(true), getCountOption()));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "list", "Lists all doom pools and their values."));
 
         DoomLogic doomLogic = new DoomLogic();
         VelenCommand.ofHybrid("doom", "Modifies the doom pool!", velen, doomLogic)
@@ -58,14 +58,14 @@ public class DoomLogic implements VelenHybridHandler {
         return new SlashCommandOptionBuilder()
                 .setType(SlashCommandOptionType.STRING)
                 .setName(POOL_NAME)
-                .setDescription("the name of the doom pool to modify")
+                .setDescription("The name of the doom pool to modify")
                 .setRequired(false);
     }
 
     private static SlashCommandOptionBuilder getCountOption() {
         return new SlashCommandOptionBuilder()
                 .setName("count")
-                .setDescription("the amount to modify the doom pool by")
+                .setDescription("The amount to modify the doom pool by")
                 .setType(SlashCommandOptionType.LONG)
                 .setRequired(false);
     }

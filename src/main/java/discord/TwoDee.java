@@ -39,8 +39,6 @@ public class TwoDee {
             final Velen velen = SlashCommandRegister.setupVelen(languageLogic);
             new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
                         System.out.println("You can invite the bot by using the following url: " + api.createBotInvite() + "&scope=bot%20applications.commands");
-                        // Uncomment this line when a command is altered
-                        // TODO do this a smarter way
                         velen.registerAllSlashCommands(api);
                         //Send startup messsage
                         Try.of(() -> prop.getProperty("main_channel_id"))
@@ -51,7 +49,7 @@ public class TwoDee {
                         api.addListener(new LanguageAutocompleteListener(languageLogic));
                         api.addListener(new PoolAutocompleteListener());
                         api.addListener(new DoomPoolAutocomplete());
-                        new VelenObserver(api, ObserverMode.MASTER).observeAllServers(velen, api).thenAccept(unused -> System.out.println("Updated everything!"));
+                        new VelenObserver(api, ObserverMode.MASTER).observeAllServers(velen, api);
                         velen.index(true, api).join();
                     })
                     // Log any exceptions that happened
