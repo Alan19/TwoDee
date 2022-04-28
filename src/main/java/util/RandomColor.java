@@ -5,8 +5,10 @@ import java.util.Random;
 
 public class RandomColor {
 
-    private RandomColor() {
+    private final Random random;
 
+    private RandomColor() {
+        random = new Random();
     }
 
     public static Color getRandomColor() {
@@ -14,7 +16,6 @@ public class RandomColor {
     }
 
     private Color generateRandomColor() {
-        Random random = new Random();
         return new Color(random.nextFloat(), random.nextFloat(), random.nextFloat());
     }
 

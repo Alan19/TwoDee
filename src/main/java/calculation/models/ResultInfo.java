@@ -154,7 +154,7 @@ public class ResultInfo {
                                 if (regularChaos.hasNext()) {
                                     diceInfo.add(new DiceInfo(
                                             dice.getType(),
-                                            dice.getValue(),
+                                            dice.value(),
                                             regularChaos.next()
                                     ));
                                 }
@@ -167,7 +167,7 @@ public class ResultInfo {
                                 if (plotEnhanced.hasNext()) {
                                     diceInfo.add(new DiceInfo(
                                             dice.getType(),
-                                            dice.getValue(),
+                                            dice.value(),
                                             plotEnhanced.next()
                                     ));
                                 }
@@ -179,7 +179,7 @@ public class ResultInfo {
                                 if (kept.hasNext()) {
                                     diceInfo.add(new DiceInfo(
                                             dice.getType(),
-                                            dice.getValue(),
+                                            dice.value(),
                                             kept.next()
                                     ));
                                 }

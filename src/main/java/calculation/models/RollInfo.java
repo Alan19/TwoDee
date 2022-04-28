@@ -64,8 +64,8 @@ public class RollInfo extends Info {
                     .ifPresent(exTier -> jsonObject.addProperty("enhancedExTier", exTier));
         }
         if (doomInfo != null) {
-            jsonObject.addProperty("doomAmount", this.doomInfo.getAmount());
-            jsonObject.addProperty("doomPool", this.doomInfo.getPoolName());
+            jsonObject.addProperty("doomAmount", this.doomInfo.amount());
+            jsonObject.addProperty("doomPool", this.doomInfo.poolName());
         }
         JsonArray diceArray = new JsonArray();
         for (DiceInfo diceInfo : this.resultInfo.getDice()) {

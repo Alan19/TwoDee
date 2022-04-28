@@ -87,8 +87,8 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
                         .setFlags(InteractionCallbackDataFlag.EPHEMERAL)
                         .setContent(throwable.getMessage())
                         .update())))
-                .onSuccess(rollOutput -> updaterFuture.thenCompose(updater -> updater.addEmbeds(rollOutput.getEmbeds())
-                        .addComponents(ComponentUtils.createRollComponentRows(true, Optional.ofNullable(enhanceable).orElse(rollOutput.isPlotDiceUsed()), rollOutput.getRollTotal()))
+                .onSuccess(rollOutput -> updaterFuture.thenCompose(updater -> updater.addEmbeds(rollOutput.embeds())
+                        .addComponents(ComponentUtils.createRollComponentRows(true, Optional.ofNullable(enhanceable).orElse(rollOutput.plotDiceUsed()), rollOutput.rollTotal()))
                         .update()
                         .thenAccept(message -> Roller.attachEmotesAndListeners(user, rollParameters, originalPointPair.orElse(Pair.of(0, 0)), rollOutput, message)))
                 );
@@ -173,8 +173,8 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         rollDice(pool, 0, 2, opportunity, user, UtilFunctions.getUsernameInChannel(user, channel))
                 .onFailure(throwable -> channel.sendMessage(throwable.getMessage()))
                 .onSuccess(rollOutput -> new MessageBuilder()
-                        .addEmbeds(rollOutput.getEmbeds())
-                        .addComponents(ComponentUtils.createRollComponentRows(true, rollOutput.isPlotDiceUsed(), rollOutput.getRollTotal()))
+                        .addEmbeds(rollOutput.embeds())
+                        .addComponents(ComponentUtils.createRollComponentRows(true, rollOutput.plotDiceUsed(), rollOutput.rollTotal()))
                         .send(channel)
                         .thenAccept(message -> Roller.attachEmotesAndListeners(user, rollParameters, originalPointPair.orElse(Pair.of(0, 0)), rollOutput, message)));
     }
