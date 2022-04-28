@@ -29,11 +29,10 @@ public class DoomLogic implements VelenHybridHandler {
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "sub", "Subtracts from the doom pool", getNameOption().setAutocompletable(true), getCountOption()));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "set", "Sets from the doom pool to the specified amount", getCountOption().setRequired(true), getNameOption().setAutocompletable(true)));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "select", "Chooses the specified doom pool as the active doom pool", getNameOption().setRequired(true).setAutocompletable(true)));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of all doom pools", getNameOption().setDescription("the name of the doom pool to query").setAutocompletable(true)));
+        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "query", "Queries the value of a doom pool. Defaults to the active pool.", getNameOption().setDescription("the name of the doom pool to query").setAutocompletable(true)));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "delete", "Deletes the doom pool from the doom pool tracker", getNameOption().setDescription("the name of the doom pool to delete").setAutocompletable(true)));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "create", "Create new doom pool", getNameOption().setRequired(true), getCountOption()));
         options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "list", "List all stored doom pools"));
-        options.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "info", "Displays information on the specified doom pool", getNameOption().setRequired(true)));
 
         DoomLogic doomLogic = new DoomLogic();
         VelenCommand.ofHybrid("doom", "Modifies the doom pool!", velen, doomLogic)
@@ -49,7 +48,8 @@ public class DoomLogic implements VelenHybridHandler {
                         "doom delete :[doom-pool-name:of(string)]",
                         "doom create :[doom-pool-name:of(string)] :[count:of(numeric)]",
                         "doom create :[doom-pool-name:of(string)]",
-                        "doom query :[doom-pool-name:of(string)]")
+                        "doom query :[doom-pool-name:of(string)]",
+                        "doom list")
                 .addShortcuts("d")
                 .attach();
     }
@@ -98,8 +98,6 @@ public class DoomLogic implements VelenHybridHandler {
                     return DoomHandler.createPool(actualPoolName, count);
                 case "list":
                     return DoomHandler.generateDoomEmbed();
-                case "info":
-                    return DoomHandler.generateDoomEmbed(actualPoolName);
                 case "query":
                 default:
                     return actualPoolName.equals("") ? DoomHandler.generateDoomEmbed() : DoomHandler.generateDoomEmbed(actualPoolName);

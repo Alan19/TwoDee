@@ -12,6 +12,8 @@ import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.util.logging.ExceptionLogger;
 import pw.mihou.velen.interfaces.Velen;
+import pw.mihou.velen.internals.observer.VelenObserver;
+import pw.mihou.velen.internals.observer.modes.ObserverMode;
 import slashcommands.SlashCommandRegister;
 
 import java.io.*;
@@ -49,6 +51,8 @@ public class TwoDee {
                         api.addListener(new LanguageAutocompleteListener(languageLogic));
                         api.addListener(new PoolAutocompleteListener());
                         api.addListener(new DoomPoolAutocomplete());
+                        new VelenObserver(api, ObserverMode.MASTER).observeAllServers(velen, api).thenAccept(unused -> System.out.println("Updated everything!"));
+                        velen.index(true, api).join();
                     })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());
