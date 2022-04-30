@@ -3,6 +3,7 @@ package util;
 import org.javacord.api.entity.Icon;
 import org.javacord.api.entity.Mentionable;
 import org.javacord.api.entity.channel.Channel;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.InteractionBase;
@@ -11,7 +12,6 @@ import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
 import pw.mihou.velen.interfaces.hybrid.objects.subcommands.VelenSubcommand;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class DiscordHelper {
     /**
@@ -40,21 +40,6 @@ public class DiscordHelper {
         }
     }
 
-    public static Collection<String> getUsernamesFor(Mentionable mentionable, Channel channel) {
-        if (mentionable instanceof Role) {
-            return ((Role) mentionable).getUsers()
-                    .stream()
-                    .map(user -> getUsernameInChannel(user, channel))
-                    .collect(Collectors.toSet());
-        }
-        else if (mentionable instanceof User) {
-            return Collections.singleton(getUsernameInChannel((User) mentionable, channel));
-        }
-        else {
-            return Collections.emptyList();
-        }
-    }
-
     public static String getUsernameFromInteraction(InteractionBase event, User user) {
         return event.getChannel().map(channel -> getUsernameInChannel(user, channel)).orElse(user.getName());
     }
@@ -76,4 +61,9 @@ public class DiscordHelper {
     public static Icon getLocalAvatar(VelenGeneralEvent event, User user) {
         return event.getServer().map(user::getEffectiveAvatar).orElseGet(user::getAvatar);
     }
+
+    public static EmbedBuilder addUserToFooter(VelenGeneralEvent event, User user, EmbedBuilder output) {
+        return output.setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, event.getChannel()), getLocalAvatar(event, user));
+    }
+
 }

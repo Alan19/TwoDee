@@ -30,7 +30,7 @@ dependencies {
     implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
     implementation 'io.vavr:vavr:0.10.4'
     implementation 'com.google.code.gson:gson:2.9.0'
-    implementation 'pw.mihou:Velen:3.1.1'
+    implementation 'com.github.ShindouMihou:Velen:adc26d3cca'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.17.2'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.2'
     implementation group: 'org.xerial', name: 'sqlite-jdbc', version: '3.36.0.3'

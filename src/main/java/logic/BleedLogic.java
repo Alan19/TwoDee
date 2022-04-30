@@ -36,15 +36,15 @@ public class BleedLogic implements VelenHybridHandler {
     public static void setupBleedCommand(Velen velen) {
         BleedLogic bleedLogic = new BleedLogic();
         VelenCommand.ofHybrid("bleed", "Applies plot point bleed!", velen, bleedLogic)
-                .addOptions(SlashCommandOption.create(SlashCommandOptionType.MENTIONABLE, BLEED_MENTIONABLE, "The party to bleed", true), SlashCommandOption.create(SlashCommandOptionType.LONG, BLEED_MODIFIER, "The bonus or penalty on the bleed", false))
-                .addFormats(String.format("bleed :[%s:of(user)]", BLEED_MENTIONABLE), String.format("bleed :[%s:of(role)]", BLEED_MENTIONABLE))
+                .addOptions(SlashCommandOption.create(SlashCommandOptionType.ROLE, BLEED_MENTIONABLE, "The party to bleed", true), SlashCommandOption.create(SlashCommandOptionType.LONG, BLEED_MODIFIER, "The bonus or penalty on the bleed", false))
+                .addFormats(String.format("bleed :[%s:of(role)]", BLEED_MENTIONABLE))
                 .attach();
     }
 
     @Override
     public void onEvent(VelenGeneralEvent event, VelenGeneralResponder responder, User user, VelenHybridArguments args) {
         Try.of(() -> args.withName(BLEED_MENTIONABLE)
-                        .flatMap(VelenOption::asMentionable)
+                        .flatMap(VelenOption::asRole)
                         .orElseThrow(IllegalArgumentException::new))
                 .map(DiscordHelper::getUsersForMentionable)
                 .onSuccess(users -> handleBleed(users, args.withName(BLEED_MODIFIER).flatMap(VelenOption::asInteger).orElse(0), user, event.getChannel()).thenAccept(embedBuilder -> responder.addEmbed(embedBuilder).respond()));

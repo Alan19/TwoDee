@@ -31,7 +31,7 @@ public record PlotPointChangeResult(List<Triple<User, Integer, Integer>> plotPoi
     public EmbedBuilder getReplenishEmbed(TextChannel channel) {
         final EmbedBuilder embed = generateEmbed(channel).setTitle("Session Replenishment!");
         if (!unmodifiableUsers().isEmpty()) {
-            embed.setDescription("I was unable to edit the plot points of:\n - " + unmodifiableUsers().stream().map(user -> UtilFunctions.getUsernameInChannel(user, channel)).collect(Collectors.joining("\n - ")));
+            embed.setDescription("I was unable to edit the plot points of:\n - " + unmodifiableUsers().stream().map(User::getDiscriminatedName).collect(Collectors.joining("\n - ")));
         }
 
         return embed;
