@@ -7,31 +7,11 @@ import org.javacord.api.entity.user.User;
 import util.RandomColor;
 import util.UtilFunctions;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PlotPointChangeResult {
-    private final List<Triple<User, Integer, Integer>> plotPointChanges;
-    private final List<User> unmodifiableUsers;
-
-    public PlotPointChangeResult() {
-        this.plotPointChanges = new ArrayList<>();
-        this.unmodifiableUsers = new ArrayList<>();
-    }
-
-    public PlotPointChangeResult(List<Triple<User, Integer, Integer>> plotPointChanges, List<User> unmodifiableUsers) {
-        this.plotPointChanges = plotPointChanges;
-        this.unmodifiableUsers = unmodifiableUsers;
-    }
-
-    public List<Triple<User, Integer, Integer>> getPlotPointChanges() {
-        return plotPointChanges;
-    }
-
-    public List<User> getUnmodifiableUsers() {
-        return unmodifiableUsers;
-    }
+public record PlotPointChangeResult(List<Triple<User, Integer, Integer>> plotPointChanges,
+                                    List<User> unmodifiableUsers) {
 
     public EmbedBuilder generateEmbed(TextChannel channel) {
         EmbedBuilder builder = new EmbedBuilder().setTitle("Plot Points!").setColor(RandomColor.getRandomColor());
@@ -50,8 +30,8 @@ public class PlotPointChangeResult {
      */
     public EmbedBuilder getReplenishEmbed(TextChannel channel) {
         final EmbedBuilder embed = generateEmbed(channel).setTitle("Session Replenishment!");
-        if (!getUnmodifiableUsers().isEmpty()) {
-            embed.setDescription("I was unable to edit the plot points of:\n - " + getUnmodifiableUsers().stream().map(user -> UtilFunctions.getUsernameInChannel(user, channel)).collect(Collectors.joining("\n - ")));
+        if (!unmodifiableUsers().isEmpty()) {
+            embed.setDescription("I was unable to edit the plot points of:\n - " + unmodifiableUsers().stream().map(user -> UtilFunctions.getUsernameInChannel(user, channel)).collect(Collectors.joining("\n - ")));
         }
 
         return embed;
