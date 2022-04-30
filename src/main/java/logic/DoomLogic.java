@@ -117,7 +117,9 @@ public class DoomLogic implements VelenHybridHandler {
             final int count = subcommand.flatMap(velenSubcommand -> velenSubcommand.withName("count"))
                     .flatMap(VelenOption::asInteger)
                     .orElse(1);
-            final String name = args.withName(POOL_NAME).flatMap(VelenOption::asString).orElse(DoomHandler.getActivePool());
+            final String name = subcommand.flatMap(velenSubcommand -> velenSubcommand.withName(POOL_NAME))
+                    .flatMap(VelenOption::asString)
+                    .orElse(DoomHandler.getActivePool());
             responder.addEmbed(handleCommand(subcommandName, name, count)).respond();
         }
     }

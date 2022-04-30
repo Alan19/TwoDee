@@ -129,10 +129,13 @@ public class PlotPointLogic implements VelenHybridHandler {
         String subcommandName = subcommand.map(VelenSubcommand::getName).orElse("query");
         // Hacky workaround to still restrict input while allowing subcommands with no parameters
         if (Arrays.asList("add", "sub", "set", "query").contains(subcommandName)) {
-            final int count = subcommand.flatMap(velenSubcommand -> velenSubcommand.withName("count")).flatMap(VelenOption::asInteger).orElse(1);
-            final User target = args.withName("name").flatMap(VelenOption::asUser).orElse(user);
-            executeCommand(user, subcommandName, target, count, event.getChannel()).thenAccept(output -> responder.addEmbed(output).respond());
+            final int count = subcommand.flatMap(velenSubcommand -> velenSubcommand.withName("count"))
+                    .flatMap(VelenOption::asInteger)
+                    .orElse(1);
+            final User target = subcommand.flatMap(velenSubcommand -> velenSubcommand.withName("name"))
+                    .flatMap(VelenOption::asUser)
+                    .orElse(user);
+            executeCommand(user, subcommandName, target, count, event.getChannel()).thenAccept(output -> responder.addEmbed(output.setThumbnail(DiscordHelper.getLocalAvatar(event, target))).respond());
         }
     }
-
 }

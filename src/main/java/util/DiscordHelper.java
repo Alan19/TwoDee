@@ -1,10 +1,12 @@
 package util;
 
+import org.javacord.api.entity.Icon;
 import org.javacord.api.entity.Mentionable;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.InteractionBase;
+import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
 import pw.mihou.velen.interfaces.hybrid.objects.subcommands.VelenSubcommand;
 
@@ -62,5 +64,16 @@ public class DiscordHelper {
                 .skip(isMessage ? 1 : 0)
                 .findFirst()
                 .map(VelenOption::asSubcommand);
+    }
+
+    /**
+     * Retrieves the avatar for a user in the current channel
+     *
+     * @param event The event containing the server option
+     * @param user  The user
+     * @return The server / channel specific avatar for the provided user, defaults to the normal avatar if event is not in a server
+     */
+    public static Icon getLocalAvatar(VelenGeneralEvent event, User user) {
+        return event.getServer().map(user::getEffectiveAvatar).orElseGet(user::getAvatar);
     }
 }
