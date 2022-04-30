@@ -5,10 +5,10 @@ import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.InteractionBase;
+import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
+import pw.mihou.velen.interfaces.hybrid.objects.subcommands.VelenSubcommand;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DiscordHelper {
@@ -55,5 +55,12 @@ public class DiscordHelper {
 
     public static String getUsernameFromInteraction(InteractionBase event, User user) {
         return event.getChannel().map(channel -> getUsernameInChannel(user, channel)).orElse(user.getName());
+    }
+
+    public static Optional<VelenSubcommand> getSubcommandInHybridCommand(boolean isMessage, VelenOption[] args) {
+        return Arrays.stream(args)
+                .skip(isMessage ? 1 : 0)
+                .findFirst()
+                .map(VelenOption::asSubcommand);
     }
 }

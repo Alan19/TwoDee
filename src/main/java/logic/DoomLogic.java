@@ -14,10 +14,12 @@ import pw.mihou.velen.interfaces.hybrid.objects.VelenHybridArguments;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
 import pw.mihou.velen.interfaces.hybrid.objects.subcommands.VelenSubcommand;
 import pw.mihou.velen.interfaces.hybrid.responder.VelenGeneralResponder;
+import util.DiscordHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class DoomLogic implements VelenHybridHandler {
 
@@ -49,6 +51,7 @@ public class DoomLogic implements VelenHybridHandler {
                         "doom create :[doom-pool-name:of(string)] :[count:of(numeric)]",
                         "doom create :[doom-pool-name:of(string)]",
                         "doom query :[doom-pool-name:of(string)]",
+                        "doom :[mode:of(subcommand)]",
                         "doom list")
                 .addShortcuts("d")
                 .attach();
@@ -107,14 +110,15 @@ public class DoomLogic implements VelenHybridHandler {
 
     @Override
     public void onEvent(VelenGeneralEvent event, VelenGeneralResponder responder, User user, VelenHybridArguments args) {
-        final String subcommandName = Arrays.stream(args.getOptions())
-                .skip(1)
-                .findFirst()
-                .map(VelenOption::asSubcommand)
-                .map(VelenSubcommand::getName)
-                .orElse("query");
-        final int count = args.withName("count").flatMap(VelenOption::asInteger).orElse(1);
-        final String name = args.withName(POOL_NAME).flatMap(VelenOption::asString).orElse(DoomHandler.getActivePool());
-        responder.addEmbed(handleCommand(subcommandName, name, count)).respond();
+        final Optional<VelenSubcommand> subcommand = DiscordHelper.getSubcommandInHybridCommand(event.isMessageEvent(), args.getOptions());
+        final String subcommandName = subcommand.map(VelenSubcommand::getName).orElse("query");
+        // Hacky workaround to still restrict input while allowing subcommands with no parameters
+        if (Arrays.asList("add", "sub", "select", "set", "delete", "create", "list", "query").contains(subcommandName)) {
+            final int count = subcommand.flatMap(velenSubcommand -> velenSubcommand.withName("count"))
+                    .flatMap(VelenOption::asInteger)
+                    .orElse(1);
+            final String name = args.withName(POOL_NAME).flatMap(VelenOption::asString).orElse(DoomHandler.getActivePool());
+            responder.addEmbed(handleCommand(subcommandName, name, count)).respond();
+        }
     }
 }
