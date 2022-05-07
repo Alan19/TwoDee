@@ -1,14 +1,17 @@
 package util;
 
+import org.javacord.api.entity.Icon;
 import org.javacord.api.entity.Mentionable;
 import org.javacord.api.entity.channel.Channel;
+import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.InteractionBase;
+import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
+import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
+import pw.mihou.velen.interfaces.hybrid.objects.subcommands.VelenSubcommand;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class DiscordHelper {
     /**
@@ -22,22 +25,45 @@ public class DiscordHelper {
         return channel.asServerTextChannel().map(serverTextChannel -> user.getDisplayName(serverTextChannel.getServer())).orElseGet(user::getName);
     }
 
-    public static Collection<String> getUsernamesFor(Mentionable mentionable, Channel channel) {
+    /**
+     * Gets all users mentioned by a mentionable, a list of users if it's a role and a single user if it's a user ping
+     *
+     * @param mentionable A mentionable that could either be a user or a role
+     * @return A list of users
+     */
+    public static Collection<User> getUsersForMentionable(Mentionable mentionable) {
         if (mentionable instanceof Role) {
-            return ((Role) mentionable).getUsers()
-                    .stream()
-                    .map(user -> getUsernameInChannel(user, channel))
-                    .collect(Collectors.toSet());
-        }
-        else if (mentionable instanceof User) {
-            return Collections.singleton(getUsernameInChannel((User) mentionable, channel));
+            return new ArrayList<>(((Role) mentionable).getUsers());
         }
         else {
-            return Collections.emptyList();
+            return Collections.singleton((User) mentionable);
         }
     }
 
     public static String getUsernameFromInteraction(InteractionBase event, User user) {
         return event.getChannel().map(channel -> getUsernameInChannel(user, channel)).orElse(user.getName());
     }
+
+    public static Optional<VelenSubcommand> getSubcommandInHybridCommand(boolean isMessage, VelenOption[] args) {
+        return Arrays.stream(args)
+                .skip(isMessage ? 1 : 0)
+                .findFirst()
+                .map(VelenOption::asSubcommand);
+    }
+
+    /**
+     * Retrieves the avatar for a user in the current channel
+     *
+     * @param event The event containing the server option
+     * @param user  The user
+     * @return The server / channel specific avatar for the provided user, defaults to the normal avatar if event is not in a server
+     */
+    public static Icon getLocalAvatar(VelenGeneralEvent event, User user) {
+        return event.getServer().map(user::getEffectiveAvatar).orElseGet(user::getAvatar);
+    }
+
+    public static EmbedBuilder addUserToFooter(VelenGeneralEvent event, User user, EmbedBuilder output) {
+        return output.setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, event.getChannel()), getLocalAvatar(event, user));
+    }
+
 }

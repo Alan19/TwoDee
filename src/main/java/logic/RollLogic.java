@@ -10,6 +10,7 @@ import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
@@ -19,6 +20,7 @@ import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import pw.mihou.velen.interfaces.*;
+import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
 import rolling.Result;
 import rolling.RollOutput;
 import rolling.RollParameters;
@@ -85,8 +87,8 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
                         .setFlags(InteractionCallbackDataFlag.EPHEMERAL)
                         .setContent(throwable.getMessage())
                         .update())))
-                .onSuccess(rollOutput -> updaterFuture.thenCompose(updater -> updater.addEmbeds(rollOutput.getEmbeds())
-                        .addComponents(ComponentUtils.createRollComponentRows(true, Optional.ofNullable(enhanceable).orElse(rollOutput.isPlotDiceUsed()), rollOutput.getRollTotal()))
+                .onSuccess(rollOutput -> updaterFuture.thenCompose(updater -> updater.addEmbeds(rollOutput.embeds())
+                        .addComponents(ComponentUtils.createRollComponentRows(true, Optional.ofNullable(enhanceable).orElse(rollOutput.plotDiceUsed()), rollOutput.rollTotal()))
                         .update()
                         .thenAccept(message -> Roller.attachEmotesAndListeners(user, rollParameters, originalPointPair.orElse(Pair.of(0, 0)), rollOutput, message)))
                 );
@@ -171,20 +173,20 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         rollDice(pool, 0, 2, opportunity, user, UtilFunctions.getUsernameInChannel(user, channel))
                 .onFailure(throwable -> channel.sendMessage(throwable.getMessage()))
                 .onSuccess(rollOutput -> new MessageBuilder()
-                        .addEmbeds(rollOutput.getEmbeds())
-                        .addComponents(ComponentUtils.createRollComponentRows(true, rollOutput.isPlotDiceUsed(), rollOutput.getRollTotal()))
+                        .addEmbeds(rollOutput.embeds())
+                        .addComponents(ComponentUtils.createRollComponentRows(true, rollOutput.plotDiceUsed(), rollOutput.rollTotal()))
                         .send(channel)
                         .thenAccept(message -> Roller.attachEmotesAndListeners(user, rollParameters, originalPointPair.orElse(Pair.of(0, 0)), rollOutput, message)));
     }
 
     @Override
-    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
+    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args, VelenRoutedOptions options) {
         String dicePool = String.join(" ", args);
         handleTextCommandRoll(user, event.getChannel(), dicePool, true);
     }
 
     @Override
-    public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
+    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final Boolean opportunity = event.getOptionBooleanValueByName("opportunity").orElse(true);
         final Long discount = event.getOptionLongValueByName("discount").orElse(0L);
         final String dicePool = event.getOptionStringValueByName("dicepool").orElse("");

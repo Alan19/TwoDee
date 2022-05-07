@@ -4,11 +4,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.*;
 import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import pw.mihou.velen.interfaces.*;
+import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
 import sheets.SheetsHandler;
 import util.RandomColor;
 
@@ -55,7 +57,7 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
 
 
     @Override
-    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
+    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args, VelenRoutedOptions options) {
         if (args.length > 0) {
             String poolName = args[0];
             String bonus = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
@@ -78,10 +80,10 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
     }
 
     @Override
-    public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
+    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final SlashCommandInteractionOption subcommandOption = event.getOptions().get(0);
         String mode = subcommandOption.getName();
-        final Optional<String> bonuses = event.getOptionStringValueByName("bonuses");
+        final Optional<String> bonuses = subcommandOption.getOptionStringValueByName("bonuses");
         final Integer discount = subcommandOption.getOptionLongValueByName("discount").map(Math::toIntExact).orElse(0);
         final Integer diceKept = subcommandOption.getOptionLongValueByName("dice-kept").map(Math::toIntExact).orElse(2);
         final Boolean enhanceable = subcommandOption.getOptionBooleanValueByName("enhanceable").orElse(null);

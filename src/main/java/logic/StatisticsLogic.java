@@ -6,6 +6,7 @@ import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.MessageDecoration;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
@@ -15,6 +16,7 @@ import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import pw.mihou.velen.interfaces.*;
+import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
 import rolling.DicePoolBuilder;
 import statistics.GenerateStatistics;
 
@@ -39,7 +41,7 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
     }
 
     @Override
-    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args) {
+    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args, VelenRoutedOptions options) {
         // Add delete component
         String dicePool = String.join(" ", args);
         final DicePoolBuilder builder = new DicePoolBuilder(dicePool, s -> s);
@@ -53,7 +55,7 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
     }
 
     @Override
-    public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
+    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         final Optional<String> dicepool = event.getOptionStringValueByName("dicepool");
         if (dicepool.isPresent()) {
             final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new GenerateStatistics(new DicePoolBuilder(dicepool.get(), s -> s).withDiceKept(event.getOptionLongValueByName("dicekept").map(Math::toIntExact).orElse(2))).getResult());

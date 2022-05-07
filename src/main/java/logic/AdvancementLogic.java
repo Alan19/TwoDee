@@ -8,6 +8,7 @@ import io.vavr.control.Try;
 import io.vavr.control.Validation;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.*;
 import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
@@ -69,7 +70,7 @@ public class AdvancementLogic implements VelenSlashEvent {
     }
 
     @Override
-    public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
+    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         // Generate Validation objects on objects that need validation
         final SlashCommandInteractionOption subcommandOption = event.getOptions().get(0);
         final Optional<Long> targetFacets = subcommandOption.getOptionLongValueByName("target-facets");
@@ -78,7 +79,7 @@ public class AdvancementLogic implements VelenSlashEvent {
                 .flatMap(aLong -> isValidFacetCount(aLong, "target-facets"))
                 .toValidation();
         final Validation<Throwable, Seq<Long>> startingArrayValidation = Try.of(() -> getStartingArray(subcommandOption))
-                // TODO Try to map the exception to prepend the parameter
+                // TODO Try to map the exception to prefix the parameter
                 .flatMap(integers -> Try.sequence(integers.stream().map(aLong -> isValidFacetCount(aLong, "target-facets")).collect(Collectors.toList())))
                 .toValidation();
         final boolean tall = subcommandOption.getName().equals("tall");

@@ -7,22 +7,7 @@ import util.RegexExtractor;
 /**
  * A Holding class for the Results from a Doom Embed. Split out for parsing simplicity
  */
-public class DoomInfo {
-    private final String poolName;
-    private final int amount;
-
-    public DoomInfo(String poolName, int amount) {
-        this.poolName = poolName;
-        this.amount = amount;
-    }
-
-    public int getAmount() {
-        return amount;
-    }
-
-    public String getPoolName() {
-        return poolName;
-    }
+public record DoomInfo(String poolName, int amount) {
 
     @Override
     public String toString() {

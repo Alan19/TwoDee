@@ -29,19 +29,10 @@ public class Result {
 
     private void acceptDice(Roll roll) {
         switch (roll.getType()) {
-            case "pd":
-            case "ed":
-                plotDice.add(roll);
-                break;
-            case "cd":
-                chaosDice.add(roll.getValue());
-                break;
-            case "kd":
-                keptDice.add(roll.getValue());
-                break;
-            default:
-                regularDice.add(roll.getValue());
-                break;
+            case "pd", "ed" -> plotDice.add(roll);
+            case "cd" -> chaosDice.add(roll.getValue());
+            case "kd" -> keptDice.add(roll.getValue());
+            default -> regularDice.add(roll.getValue());
         }
     }
 

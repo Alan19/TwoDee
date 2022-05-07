@@ -104,10 +104,10 @@ public class Roller {
     }
 
     private static Roll createRoll(Dice dice) {
-        if (dice.getName().equals("pd") || dice.getName().equals("ed")) {
-            return new Roll(dice.getName(), random.nextInt(dice.getValue()) + 1, dice.getValue() / 2);
+        if (dice.name().equals("pd") || dice.name().equals("ed")) {
+            return new Roll(dice.name(), random.nextInt(dice.value()) + 1, dice.value() / 2);
         }
-        return new Roll(dice.getName(), random.nextInt(dice.getValue()) + 1);
+        return new Roll(dice.name(), random.nextInt(dice.value()) + 1);
     }
 
     /**
@@ -143,31 +143,31 @@ public class Roller {
     public static RollOutput output(PointChange changes, UnaryOperator<EmbedBuilder> postProcessResultFunction, String doomPool, int discount, boolean opportunities) {
         List<EmbedBuilder> outputs = new ArrayList<>();
         final EmbedBuilder rollEmbed = new EmbedBuilder()
-                .addField("Regular and chaos dice", formatRegularDiceResults(changes.getResult().getRegularAndChaosDice(), true), true)
-                .addField("Plot dice", formatRegularDiceResults(changes.getResult().getPlotDice(), true), true)
-                .addField("Kept dice", formatRegularDiceResults(changes.getResult().getKeptDice(), true), true)
-                .addField("Picked", formatRegularDiceResults(changes.getResult().getPickedDice(), false), true)
-                .addField("Flat bonuses", formatRegularDiceResults(changes.getResult().getFlatBonuses(), false), true)
-                .addField("Dropped", formatRegularDiceResults(changes.getResult().getDroppedDice(), false), true)
-                .addField("Total", String.valueOf(changes.getResult().getTotal()), true)
-                .addField("Tier Hit", getTierHitString(changes.getResult().getTotal()), true)
+                .addField("Regular and chaos dice", formatRegularDiceResults(changes.result().getRegularAndChaosDice(), true), true)
+                .addField("Plot dice", formatRegularDiceResults(changes.result().getPlotDice(), true), true)
+                .addField("Kept dice", formatRegularDiceResults(changes.result().getKeptDice(), true), true)
+                .addField("Picked", formatRegularDiceResults(changes.result().getPickedDice(), false), true)
+                .addField("Flat bonuses", formatRegularDiceResults(changes.result().getFlatBonuses(), false), true)
+                .addField("Dropped", formatRegularDiceResults(changes.result().getDroppedDice(), false), true)
+                .addField("Total", String.valueOf(changes.result().getTotal()), true)
+                .addField("Tier Hit", getTierHitString(changes.result().getTotal()), true)
                 .setFooter("Click on one of the components within the next 60 seconds to enhance or re-roll the roll");
         outputs.add(postProcessResultFunction.apply(rollEmbed));
-        boolean opportunityTriggered = opportunities && changes.getResult().getOpportunities() > 0;
-        final int plotPointsSpent = changes.getResult().getPlotDiceCost() - discount;
+        boolean opportunityTriggered = opportunities && changes.result().getOpportunities() > 0;
+        final int plotPointsSpent = changes.result().getPlotDiceCost() - discount;
         if (plotPointsSpent != 0) {
             outputs.add(new EmbedBuilder()
                     .setTitle("Using " + plotPointsSpent + " plot point(s)!")
-                    .addField("Plot points", getPlotPointSpendingText(plotPointsSpent, changes.getNewPlotPoints(), opportunityTriggered)));
+                    .addField("Plot points", getPlotPointSpendingText(plotPointsSpent, changes.newPlotPoints(), opportunityTriggered)));
         }
-        if (opportunities && changes.getResult().getOpportunities() > 0) {
+        if (opportunities && changes.result().getOpportunities() > 0) {
             outputs.add(new EmbedBuilder()
                     .setTitle("An opportunity!")
-                    .addField("Plot points", changes.getNewPlotPoints() - 1 + " → " + changes.getNewPlotPoints())
-                    .addField(doomPool, changes.getNewDoom() - changes.getResult().getOpportunities() + " → " + changes.getNewDoom())
+                    .addField("Plot points", changes.newPlotPoints() - 1 + " → " + changes.newPlotPoints())
+                    .addField(doomPool, changes.newDoom() - changes.result().getOpportunities() + " → " + changes.newDoom())
             );
         }
-        return new RollOutput(outputs, changes.getResult().getPlotDiceCost() == 0, changes.getResult().getTotal(), opportunityTriggered);
+        return new RollOutput(outputs, changes.result().getPlotDiceCost() == 0, changes.result().getTotal(), opportunityTriggered);
     }
 
     public static String getPlotPointSpendingText(int plotPointsSpent, Integer newPlotPoints, boolean opportunityTriggered) {
@@ -237,7 +237,7 @@ public class Roller {
     }
 
     public static void attachEmotesAndListeners(User user, RollParameters rollParameters, Pair<Integer, Integer> originalPointPair, RollOutput rollOutput, Message message) {
-        if (rollOutput.isOpportunity()) {
+        if (rollOutput.opportunity()) {
             message.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
         }
         attachListener(user, rollParameters, message, originalPointPair);

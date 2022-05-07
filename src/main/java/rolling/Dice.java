@@ -2,38 +2,17 @@ package rolling;
 
 import java.util.Objects;
 
-public class Dice {
-    private final String name;
-    private final int value;
-
-    public Dice(String name, int value) {
-        this.name = name;
-        this.value = value;
-    }
-
-    public String getName() {
-        return name;
-    }
+public record Dice(String name, int value) {
 
     public DiceType getType() {
-        switch (this.getName()) {
-            case "cd":
-                return DiceType.CHAOS_DIE;
-            case "d":
-                return DiceType.REGULAR;
-            case "ed":
-                return DiceType.ENHANCED_DIE;
-            case "kd":
-                return DiceType.KEPT_DIE;
-            case "pd":
-                return DiceType.PLOT_DIE;
-            default:
-                throw new IllegalArgumentException("Invalid Dice Type");
-        }
-    }
-
-    public int getValue() {
-        return value;
+        return switch (this.name()) {
+            case "cd" -> DiceType.CHAOS_DIE;
+            case "d" -> DiceType.REGULAR;
+            case "ed" -> DiceType.ENHANCED_DIE;
+            case "kd" -> DiceType.KEPT_DIE;
+            case "pd" -> DiceType.PLOT_DIE;
+            default -> throw new IllegalArgumentException("Invalid Dice Type");
+        };
     }
 
     @Override
@@ -44,11 +23,6 @@ public class Dice {
             return false;
         Dice dice = (Dice) o;
         return value == dice.value && Objects.equals(name, dice.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, value);
     }
 
     @Override

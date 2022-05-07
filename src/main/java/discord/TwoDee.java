@@ -2,6 +2,7 @@ package discord;
 
 import io.vavr.control.Try;
 import language.LanguageLogic;
+import listeners.DoomPoolAutocomplete;
 import listeners.LanguageAutocompleteListener;
 import listeners.PoolAutocompleteListener;
 import org.apache.logging.log4j.LogManager;
@@ -11,6 +12,8 @@ import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.util.logging.ExceptionLogger;
 import pw.mihou.velen.interfaces.Velen;
+import pw.mihou.velen.internals.observer.VelenObserver;
+import pw.mihou.velen.internals.observer.modes.ObserverMode;
 import slashcommands.SlashCommandRegister;
 
 import java.io.*;
@@ -36,8 +39,6 @@ public class TwoDee {
             final Velen velen = SlashCommandRegister.setupVelen(languageLogic);
             new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
                         System.out.println("You can invite the bot by using the following url: " + api.createBotInvite() + "&scope=bot%20applications.commands");
-                        // Uncomment this line when a command is altered
-                        // TODO do this a smarter way
                         velen.registerAllSlashCommands(api);
                         //Send startup messsage
                         Try.of(() -> prop.getProperty("main_channel_id"))
@@ -47,6 +48,9 @@ public class TwoDee {
                                         .send(api.getTextChannelById(s).orElseThrow(() -> new IllegalStateException("Failed to find channel for ID: " + s))));
                         api.addListener(new LanguageAutocompleteListener(languageLogic));
                         api.addListener(new PoolAutocompleteListener());
+                        api.addListener(new DoomPoolAutocomplete());
+                        new VelenObserver(api, ObserverMode.MASTER).observeAllServers(velen, api);
+                        velen.index(true, api).join();
                     })
                     // Log any exceptions that happened
                     .exceptionally(ExceptionLogger.get());

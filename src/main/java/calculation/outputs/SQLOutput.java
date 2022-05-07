@@ -84,8 +84,8 @@ public class SQLOutput implements IOutput, AutoCloseable {
                 }
 
                 if (rollInfo.getDoomInfo() != null) {
-                    rollPreparedStatement.setInt(12, rollInfo.getDoomInfo().getAmount());
-                    rollPreparedStatement.setString(13, rollInfo.getDoomInfo().getPoolName());
+                    rollPreparedStatement.setInt(12, rollInfo.getDoomInfo().amount());
+                    rollPreparedStatement.setString(13, rollInfo.getDoomInfo().poolName());
                 }
                 else {
                     rollPreparedStatement.setNull(12, Types.INTEGER);

@@ -8,6 +8,7 @@ import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.*;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import pw.mihou.velen.interfaces.Velen;
@@ -38,7 +39,7 @@ public class LanguageCommand implements VelenSlashEvent {
     }
 
     @Override
-    public void onEvent(SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
+    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         event.respondLater()
                 .thenAccept(updater -> {
                     Consumer<EmbedBuilder> consumer = ((Consumer<EmbedBuilder>) embedBuilder -> {
@@ -86,9 +87,8 @@ public class LanguageCommand implements VelenSlashEvent {
                         .setDescription("Add a new Language.")
                         .setOptions(Lists.newArrayList(
                                 SlashCommandOption.createStringOption(
-                                        "name",
+                                        LANGUAGE_NAME,
                                         "The name of the language to create",
-                                        true,
                                         true
                                 ),
                                 SlashCommandOption.create(
@@ -196,7 +196,7 @@ public class LanguageCommand implements VelenSlashEvent {
     }
 
     private EmbedBuilder handleAdd(SlashCommandInteractionOption option) {
-        Optional<String> nameOpt = option.getOptionStringValueByName("name");
+        Optional<String> nameOpt = option.getOptionStringValueByName(LANGUAGE_NAME);
         if (nameOpt.isPresent()) {
             return languageLogic.add(new Language(
                     nameOpt.get(),
