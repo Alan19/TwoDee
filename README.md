@@ -31,7 +31,7 @@ To get a local copy up and running follow these steps.
 ### Prerequisites
 
 * Gradle
-* Java
+* Java 17
 
 ### Installation
 
@@ -40,37 +40,44 @@ To get a local copy up and running follow these steps.
    ```sh
     https://github.com/Alan19/TwoDee.git
     ```
-3. Set up the `resources` folder
-    1. Create a file named `announcement_channels.txt` and add the channel IDs of each channel that you want the bot to
+3. Set up the `settings.json` file
+    1. Fill in the `announcementChannels` field by adding the channel IDs of each channel that you want the bot to
        send a startup message to
-       #### Example `announcement_channels.txt` file
-        ```
-       9084021907123
-       2198487129038
-       ```
-    2. In the `bot.properties` file, paste the token you have obtained from Discord after the equals sign in the token
-       field
-    3. Create a file named `storytellers.json` and create a JSON array containing the role IDs for storytellers (
+       #### Example
+        ```json
+       "announcementChannels": [
+            123342347956,
+            235423465234
+       ]
+       ```````
+    2. In the `token` field, paste the token you have obtained from Discord in quotes
+    3. In the `storytellerRoles` field, fill in the array with the role ID(s) for storytellers (
        Storytellers are the Facets equivalent of GMs or DMs)
-       #### Example `storytellers.json` file
+       #### Example
        ```json
-       [
-         123498903812,
-         129321390521
+       "storytellerRoles": [
+           1233124784567,
+           1235768345234
        ]
        ```
 
 ### Adding Google Sheets integration
 
-1. Download Google Drive API token
-2. Fill out `players.json`. The file should contain a JSON array containing objects that contain the Discord ID and the
-   Sheet ID of the players.
-   #### Example `players.json` file
+The first time you use any command that accesses your character sheet (roll, plot), a window will appear to prompt you
+to authenticate to Google. This will download the `credentials.json` file to your `resources` folder.
+
+Before doing so, fill out the `players` array in `settings.json`. The array should contain objects that contain the
+Discord ID, spreadsheet ID, and the active doom pool for the player.
+Sheet ID of the players.
+
+#### Example
+
    ```json
    [
       {
         "discord_id": 707906577071579042,
-        "sheet_id": "26dPTBrNsoScoAmsqCz026dPTBrNsoScoAmsqCz0"
+        "sheet_id": "26dPTBrNsoScoAmsqCz026dPTBrNsoScoAmsqCz0",
+        "doom_pool": "Doom!"
       }
    ]
    ```
@@ -115,10 +122,8 @@ See the [open issues](https://github.com/Alan19/TwoDee/issues) for a list of pro
 
 **Some cool features coming in the near future include**:
 
-* Settings consolidation
-* Removal of hardcoded IDs
-* Damage calculation command
-* Dice roll difficulty helper
+* Dynamic quote and playert registration
+* Bolding dice that roll maximum
 
 ## Author
 
@@ -156,8 +161,10 @@ Give a ⭐️ if this project helped you!
 
 ## 📝 License
 
-Copyright © 2021 [Alan19](https://github.com/Alan19). <br/>
+Copyright © 2022 [Alan19](https://github.com/Alan19). <br/>
 This project is [MIT](https://github.com/Alan19/TwoDee/blob/master/LICENSE) licensed.
+
+Facets Rule System © 2022 Jerry Grim All Rights Reserved
 
 ## Acknowledgements
 

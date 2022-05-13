@@ -1,30 +1,23 @@
 package roles;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import configs.Settings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.Mentionable;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class PlayerHandler {
     private static final PlayerHandler instance = new PlayerHandler();
-    private List<Player> players;
+    private final List<Player> players;
 
     private PlayerHandler() {
-        try {
-            players = new Gson().fromJson(new BufferedReader(new FileReader("resources/players.json")), TypeToken.getParameterized(ArrayList.class, Player.class).getType());
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            players = new ArrayList<>();
-        }
+        players = Settings.getPlayerSettings();
     }
 
     public static PlayerHandler getInstance() {
@@ -45,7 +38,7 @@ public class PlayerHandler {
                     .map(user -> getPlayerFromUser(user)
                             .map(player -> Pair.of(user, player))
                     )
-                    .flatMap(opt -> opt.map(Stream::of).orElseGet(Stream::empty))
+                    .flatMap(Optional::stream)
                     .collect(Collectors.toSet());
         }
         else if (mentionable instanceof User) {

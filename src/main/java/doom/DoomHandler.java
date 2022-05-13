@@ -1,8 +1,8 @@
 package doom;
 
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import configs.DoomSettings;
+import configs.Settings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -14,28 +14,21 @@ import util.DamerauLevenshtein;
 
 import javax.annotation.Nullable;
 import java.awt.*;
-import java.io.*;
 import java.text.MessageFormat;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class DoomHandler {
+public final class DoomHandler {
 
-    private static Logger LOGGER = LogManager.getLogger(DoomHandler.class);
+    private static final Logger LOGGER = LogManager.getLogger(DoomHandler.class);
 
     public static final String DOOM = "Doom!";
     private static final DoomHandler instance = new DoomHandler();
-    private DoomConfigs doomConfigs;
+    private final DoomSettings doomSettings;
 
     private DoomHandler() {
-        try {
-            doomConfigs = new Gson().fromJson(new BufferedReader(new FileReader("resources/doom.json")), new TypeToken<DoomConfigs>() {
-            }.getType());
-        } catch (FileNotFoundException e) {
-            doomConfigs = new DoomConfigs();
-        }
+        doomSettings = Settings.getDoom();
     }
 
     /**
@@ -54,7 +47,7 @@ public class DoomHandler {
                     .setDescription("No Doom Pool with Name ''**" + pool + "**'' exists.");
         }
         final int newDoom = getDoomPools().compute(pool, (s, integer) -> integer != null ? integer + doomVal : doomVal);
-        serializePools();
+        Settings.serializePersonalSettings();
         return generateDoomEmbed(pool, oldDoom, newDoom);
     }
 
@@ -120,7 +113,7 @@ public class DoomHandler {
                     .setDescription("No Doom Pool with Name ''**" + pool + "**'' exists.");
         }
         getDoomPools().put(pool, newDoom);
-        serializePools();
+        Settings.serializePersonalSettings();
         return generateDoomEmbed(pool, oldDoom, newDoom);
     }
 
@@ -155,19 +148,6 @@ public class DoomHandler {
     }
 
     /**
-     * Serializes the values of the various doom pools and writes it to doom.json
-     */
-    private static void serializePools() {
-        try {
-            final BufferedWriter writer = new BufferedWriter(new FileWriter("resources/doom.json"));
-            new Gson().toJson(instance.doomConfigs, writer);
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * Deletes a doom pool and serialize the change.
      *
      * @param pool The name of the doom pool to delete
@@ -176,7 +156,7 @@ public class DoomHandler {
     public static EmbedBuilder deletePool(String pool) {
         final Integer removedDoom = getDoomPools().remove(pool);
         final String description = Optional.ofNullable(removedDoom).map(doom -> MessageFormat.format("I''ve removed the ''**{0}**'' doom pool, which contained {1} doom points.", pool, doom)).orElseGet(() -> MessageFormat.format("I was unable to find the ''**{0}**'' doom pool", pool));
-        serializePools();
+        Settings.serializePersonalSettings();
         return new EmbedBuilder()
                 .setTitle(DOOM)
                 .setDescription(description);
@@ -195,7 +175,7 @@ public class DoomHandler {
     }
 
     public static Map<String, Integer> getDoomPools() {
-        return instance.doomConfigs.getDoomPools();
+        return instance.doomSettings.getDoomPools();
     }
 
     /**
@@ -204,7 +184,7 @@ public class DoomHandler {
      * @return The name of the active pool
      */
     public static String getActivePool() {
-        return instance.doomConfigs.getActivePool();
+        return instance.doomSettings.getActivePool();
     }
 
     /**
@@ -214,8 +194,8 @@ public class DoomHandler {
      * @return An embed with that includes the name and value of the new active doom pool
      */
     public static EmbedBuilder setActivePool(String pool) {
-        instance.doomConfigs.setActivePool(pool);
-        serializePools();
+        instance.doomSettings.setActivePool(pool);
+        Settings.serializePersonalSettings();
         return new EmbedBuilder().setTitle(DOOM).setDescription(MessageFormat.format("I''ve set the active doom pool to ''**{0}**'', which contains {1} doom points.", pool, getDoom(pool)));
     }
 
@@ -229,7 +209,7 @@ public class DoomHandler {
 
     public static EmbedBuilder createPool(String poolName, int count) {
         getDoomPools().put(poolName, count);
-        serializePools();
+        Settings.serializePersonalSettings();
         return new EmbedBuilder()
                 .setTitle(DOOM)
                 .setDescription(MessageFormat.format("I''ve created the doom pool ''**{0}**'', which contains {1} doom points.", poolName, count));
@@ -273,28 +253,4 @@ public class DoomHandler {
         }
     }
 
-    /**
-     * Inner class that stores the representation of doom.json
-     */
-    private static class DoomConfigs {
-        private final Map<String, Integer> doomPools;
-        private String activePool;
-
-        public DoomConfigs() {
-            doomPools = new HashMap<>();
-            activePool = "Doom!";
-        }
-
-        public Map<String, Integer> getDoomPools() {
-            return doomPools;
-        }
-
-        public String getActivePool() {
-            return activePool;
-        }
-
-        public void setActivePool(String activePool) {
-            this.activePool = activePool;
-        }
-    }
 }
