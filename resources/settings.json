@@ -1,0 +1,14 @@
+{
+  "doom": {
+    "doomPools": {
+      "Doom!": 0
+    },
+    "activePool": "Doom!"
+  },
+  "discordSettings": {
+    "announcementChannels": [],
+    "token": "",
+    "storytellerRoles": []
+  },
+  "players": []
+}
