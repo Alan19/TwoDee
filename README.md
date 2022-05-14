@@ -122,7 +122,7 @@ See the [open issues](https://github.com/Alan19/TwoDee/issues) for a list of pro
 
 **Some cool features coming in the near future include**:
 
-* Dynamic quote and playert registration
+* Dynamic quote and player registration
 * Bolding dice that roll maximum
 
 ## Author
