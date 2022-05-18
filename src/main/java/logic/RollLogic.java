@@ -1,6 +1,6 @@
 package logic;
 
-import discord.TwoDee;
+import configs.Settings;
 import doom.DoomHandler;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
@@ -127,7 +127,7 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
         final Try<String> processedDicePool = Roller.preprocessPool(dicePool, s -> convertSkillsToDice(user, s));
         return builder.setAuthor(username, null, user.getAvatar())
                 .setColor(RandomColor.getRandomColor())
-                .setTitle(TwoDee.getRollTitleMessage())
+                .setTitle(Settings.getQuotes().getRandomRollQuote())
                 .setDescription(MessageFormat.format("Here are the results for **{0}**", processedDicePool.getOrElse(dicePool)));
     }
 
