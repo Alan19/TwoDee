@@ -1,28 +1,28 @@
 package logic;
 
 import org.apache.commons.lang3.StringUtils;
-import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
-import org.javacord.api.event.interaction.SlashCommandCreateEvent;
-import org.javacord.api.event.message.MessageCreateEvent;
-import org.javacord.api.interaction.*;
-import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
-import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
-import pw.mihou.velen.interfaces.*;
-import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
+import org.javacord.api.interaction.SlashCommandOption;
+import org.javacord.api.interaction.SlashCommandOptionBuilder;
+import org.javacord.api.interaction.SlashCommandOptionType;
+import pw.mihou.velen.interfaces.Velen;
+import pw.mihou.velen.interfaces.VelenCommand;
+import pw.mihou.velen.interfaces.VelenHybridHandler;
+import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
+import pw.mihou.velen.interfaces.hybrid.objects.VelenHybridArguments;
+import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
+import pw.mihou.velen.interfaces.hybrid.objects.interfaces.VelenCommonsArguments;
+import pw.mihou.velen.interfaces.hybrid.responder.VelenGeneralResponder;
 import sheets.SheetsHandler;
 import util.RandomColor;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
+public class RollPoolLogic implements VelenHybridHandler {
 
     public static final String POOL_NAME = "pool-name";
 
@@ -49,67 +49,45 @@ public class RollPoolLogic implements VelenEvent, VelenSlashEvent {
 
         commandOptions.add(SlashCommandOption.create(SlashCommandOptionType.SUB_COMMAND, "query", "Query your saved pools"));
 
-        VelenCommand.ofHybrid("roll-pool", "Rolls a predefined dice pool from your character sheet", velen, rollPoolLogic, rollPoolLogic)
-                .addShortcuts("rollp", "testp")
+        VelenCommand.ofHybrid("roll-pool", "Rolls a predefined dice pool from your character sheet", velen, rollPoolLogic)
+                .addShortcuts("rollp")
+                .addFormats("roll-pool :[pool:of(string)] :[bonuses:of(string):hasMany()]",
+                        "roll-pool :[pool:of(string)]",
+                        "roll-pool query")
                 .addOptions(commandOptions.toArray(new SlashCommandOption[0]))
                 .attach();
     }
 
-
     @Override
-    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args, VelenRoutedOptions options) {
-        if (args.length > 0) {
-            String poolName = args[0];
-            String bonus = Arrays.stream(args).skip(1).collect(Collectors.joining(" "));
-            if (Stream.of("vitality", "initiative", "willpower").anyMatch(poolName::equalsIgnoreCase)) {
-                SheetsHandler.getSavePool(StringUtils.capitalize(poolName.toLowerCase()), user)
-                        .map(defaultPool -> MessageFormat.format("{0} {1}", defaultPool, bonus))
-                        .onFailure(throwable -> event.getChannel().sendMessage(throwable.getMessage()))
-                        .onSuccess(dicePool -> RollLogic.handleTextCommandRoll(user, event.getChannel(), dicePool, false));
-            }
-            else {
-                SheetsHandler.getSavedPool(poolName.toLowerCase(), user)
-                        .map(defaultPool -> MessageFormat.format("{0} {1}", defaultPool, bonus))
-                        .onFailure(throwable -> event.getChannel().sendMessage(throwable.getMessage()))
-                        .onSuccess(dicePool -> RollLogic.handleTextCommandRoll(user, event.getChannel(), dicePool, false));
-            }
-        }
-        else {
-            event.getChannel().sendMessage("save type not found!");
-        }
-    }
-
-    @Override
-    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final SlashCommandInteractionOption subcommandOption = event.getOptions().get(0);
-        String mode = subcommandOption.getName();
-        final Optional<String> bonuses = subcommandOption.getOptionStringValueByName("bonuses");
-        final Integer discount = subcommandOption.getOptionLongValueByName("discount").map(Math::toIntExact).orElse(0);
-        final Integer diceKept = subcommandOption.getOptionLongValueByName("dice-kept").map(Math::toIntExact).orElse(2);
-        final Boolean enhanceable = subcommandOption.getOptionBooleanValueByName("enhanceable").orElse(null);
-        if (mode.equals("save")) {
-            //noinspection OptionalGetWithoutIsPresent
-            SheetsHandler.getSavePool(subcommandOption.getOptionStringValueByName("save-type").get(), user)
-                    .map(defaultPool -> MessageFormat.format("{0} {1}", defaultPool, bonuses.orElse("")))
-                    .onFailure(throwable -> event.createImmediateResponder().setContent(throwable.getMessage()).setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond())
-                    .onSuccess(dicePool -> RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false));
-        }
-        else if (mode.equals("query")) {
-            event.respondLater(true).thenAccept(updater -> SheetsHandler.getSavedPools(user).onSuccess(strings -> {
+    public void onEvent(VelenGeneralEvent event, VelenGeneralResponder responder, User user, VelenHybridArguments args) {
+        VelenCommonsArguments arguments = event.isMessageEvent() ? args : args.get(0).asSubcommand();
+        boolean isQuery = event.isMessageEvent() ? args.get(1).asString().orElseThrow(IllegalStateException::new).equals("query") : args.get(0).asSubcommand().getName().equals("query");
+        String pool = event.isMessageEvent() ? arguments.getManyWithName("pool").orElseThrow(IllegalStateException::new) : arguments.get(0).asString().orElseThrow(IllegalStateException::new);
+        String bonuses = arguments.getManyWithName("bonuses").orElse("");
+        final Integer discount = arguments.withName("discount").flatMap(VelenOption::asInteger).orElse(0);
+        final Integer diceKept = arguments.withName("dice-kept").flatMap(VelenOption::asInteger).orElse(2);
+        final Boolean enhanceable = arguments.withName("enhanceable").flatMap(VelenOption::asBoolean).orElse(null);
+        if (isQuery) {
+            SheetsHandler.getSavedPools(user).onSuccess(strings -> {
                 EmbedBuilder builder = new EmbedBuilder()
                         .setTitle("Your list of saved pools")
                         .setColor(RandomColor.getRandomColor())
                         .setAuthor(user);
                 strings.forEach(pair -> builder.addField(pair.getLeft(), pair.getRight()));
-                updater.addEmbed(builder).update();
-            }).onFailure(throwable -> updater.setContent(throwable.getMessage()).update()));
+                responder.addEmbed(builder).respond();
+            }).onFailure(throwable -> responder.setContent(throwable.getMessage()).respond());
+        }
+        else if (Stream.of("vitality", "initiative", "willpower").anyMatch(pool::equalsIgnoreCase)) {
+            SheetsHandler.getSavePool(StringUtils.capitalize(pool.toLowerCase()), user)
+                    .map(defaultPool -> MessageFormat.format("{0} {1}", defaultPool, bonuses))
+                    .onFailure(throwable -> event.getChannel().sendMessage(throwable.getMessage()))
+                    .onSuccess(dicePool -> RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false));
         }
         else {
-            Boolean opportunity = subcommandOption.getOptionBooleanValueByName("opportunity").orElse(true);
-            //noinspection OptionalGetWithoutIsPresent
-            SheetsHandler.getSavedPool(subcommandOption.getOptionStringValueByName(POOL_NAME).get(), user)
-                    .map(defaultPool -> MessageFormat.format("{0} {1}", defaultPool, bonuses.orElse("")))
-                    .onFailure(throwable -> event.createImmediateResponder().setContent(throwable.getMessage()).setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond())
+            Boolean opportunity = arguments.withName("opportunity").flatMap(VelenOption::asBoolean).orElse(true);
+            SheetsHandler.getSavedPool(pool.toLowerCase(), user)
+                    .map(defaultPool -> MessageFormat.format("{0} {1}", defaultPool, bonuses))
+                    .onFailure(throwable -> event.getChannel().sendMessage(throwable.getMessage()))
                     .onSuccess(dicePool -> RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, opportunity));
         }
     }

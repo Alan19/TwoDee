@@ -1,6 +1,5 @@
 package logic;
 
-import com.vdurmont.emoji.EmojiParser;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.MessageDecoration;
@@ -27,9 +26,6 @@ import java.util.concurrent.CompletableFuture;
 
 
 public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
-    public static CompletableFuture<Void> addCancelReactToMessage(Message sentMessage) {
-        return sentMessage.addReaction(EmojiParser.parseToUnicode(":x:"));
-    }
 
     public static void setupStatisticsCommand(Velen velen) {
         final StatisticsLogic statisticsLogic = new StatisticsLogic();
@@ -37,7 +33,11 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
         options.add(SlashCommandOption.create(SlashCommandOptionType.STRING, "dicepool", "The dice pool to roll with.", true));
         options.add(SlashCommandOption.create(SlashCommandOptionType.LONG, "dicekept", "The number of dice kept. Keeps two dice by default.", false));
         options.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "nonephemeral", "Makes the statistics for the roll visible. Defaults to false.", false));
-        VelenCommand.ofHybrid("statistics", "Generates the statistics for a dice pool!", velen, statisticsLogic, statisticsLogic).addOptions(options.toArray(new SlashCommandOption[0])).addShortcuts("s", "stat", "stats").attach();
+        VelenCommand.ofHybrid("statistics", "Generates the statistics for a dice pool!", velen, statisticsLogic, statisticsLogic)
+                .addOptions(options.toArray(new SlashCommandOption[0]))
+                .addShortcuts("s", "stat", "stats")
+                .addFormats("statistics :[dicepool:hasMany()]")
+                .attach();
     }
 
     @Override

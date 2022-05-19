@@ -10,17 +10,16 @@ import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
-import org.javacord.api.event.interaction.SlashCommandCreateEvent;
-import org.javacord.api.event.message.MessageCreateEvent;
-import org.javacord.api.interaction.SlashCommandInteraction;
-import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
-import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
-import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
-import pw.mihou.velen.interfaces.*;
-import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
+import pw.mihou.velen.interfaces.Velen;
+import pw.mihou.velen.interfaces.VelenCommand;
+import pw.mihou.velen.interfaces.VelenHybridHandler;
+import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
+import pw.mihou.velen.interfaces.hybrid.objects.VelenHybridArguments;
+import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
+import pw.mihou.velen.interfaces.hybrid.responder.VelenGeneralResponder;
 import rolling.Result;
 import rolling.RollOutput;
 import rolling.RollParameters;
@@ -37,20 +36,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
  * Rolls a pool of dice based on the input. After rolling, adds doom points to doom pool and makes appropriate changes the player's plot point count based on input options. If the DM is rolling, plot points they spend come from the doom point pool.
  */
-public class RollLogic implements VelenSlashEvent, VelenEvent {
+public class RollLogic implements VelenHybridHandler {
 
     public static void setupRollCommand(Velen velen) {
         RollLogic rollLogic = new RollLogic();
         final List<SlashCommandOption> rollCommandOptions = getRollCommandOptions();
         rollCommandOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false));
-        VelenCommand.ofHybrid("roll", "Rolls some dice!", velen, rollLogic, rollLogic)
+        VelenCommand.ofHybrid("roll", "Rolls some dice!", velen, rollLogic)
                 .addOptions(rollCommandOptions.toArray(new SlashCommandOption[0]))
+                .addFormats("roll :[dicepool:of(string):hasMany()]")
                 .addShortcuts("r")
                 .attach();
     }
@@ -74,24 +73,22 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
      * @param enhanceable If there is an enhancement override on the roll
      * @param opportunity If opportunities are enabled
      */
-    public static void handleSlashCommandRoll(SlashCommandInteraction event, String dicePool, Integer discount, Integer diceKept, @Nullable Boolean enhanceable, Boolean opportunity) {
+    public static void handleSlashCommandRoll(VelenGeneralEvent event, String dicePool, Integer discount, Integer diceKept, @Nullable Boolean enhanceable, Boolean opportunity) {
         final User user = event.getUser();
         final RollParameters rollParameters = new RollParameters(dicePool, discount, enhanceable, opportunity, diceKept);
-        final CompletableFuture<InteractionOriginalResponseUpdater> updaterFuture = event.respondLater();
+        final VelenGeneralResponder updaterFuture = event.createResponder();
         Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user)
                 .flatMap(integer -> DoomHandler.getUserDoomPool(user)
                         .map(s -> Pair.of(integer, DoomHandler.getDoom(s)))
                 );
-        rollDice(dicePool, discount, diceKept, opportunity, user, UtilFunctions.getUsernameFromSlashEvent(event, user))
-                .onFailure(throwable -> event.getChannel().ifPresent(channel -> updaterFuture.thenAccept(updater -> updater
+        rollDice(dicePool, discount, diceKept, opportunity, user, UtilFunctions.getUsernameInChannel(user, event.getChannel()))
+                .onFailure(throwable -> updaterFuture
                         .setFlags(InteractionCallbackDataFlag.EPHEMERAL)
-                        .setContent(throwable.getMessage())
-                        .update())))
-                .onSuccess(rollOutput -> updaterFuture.thenCompose(updater -> updater.addEmbeds(rollOutput.embeds())
+                        .setContent(throwable.getMessage()).respond())
+                .onSuccess(rollOutput -> updaterFuture.addEmbeds(rollOutput.embeds().toArray(value -> new EmbedBuilder[]{}))
                         .addComponents(ComponentUtils.createRollComponentRows(true, Optional.ofNullable(enhanceable).orElse(rollOutput.plotDiceUsed()), rollOutput.rollTotal()))
-                        .update()
-                        .thenAccept(message -> Roller.attachEmotesAndListeners(user, rollParameters, originalPointPair.orElse(Pair.of(0, 0)), rollOutput, message)))
-                );
+                        .respond()
+                        .thenAccept(message -> Roller.attachEmotesAndListeners(user, rollParameters, originalPointPair.orElse(Pair.of(0, 0)), rollOutput, message)));
     }
 
     /**
@@ -180,20 +177,14 @@ public class RollLogic implements VelenSlashEvent, VelenEvent {
     }
 
     @Override
-    public void onEvent(MessageCreateEvent event, Message message, User user, String[] args, VelenRoutedOptions options) {
-        String dicePool = String.join(" ", args);
-        handleTextCommandRoll(user, event.getChannel(), dicePool, true);
-    }
-
-    @Override
-    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final Boolean opportunity = event.getOptionBooleanValueByName("opportunity").orElse(true);
-        final Long discount = event.getOptionLongValueByName("discount").orElse(0L);
-        final String dicePool = event.getOptionStringValueByName("dicepool").orElse("");
-        final Long diceKept = event.getOptionLongValueByName("dicekept").orElse(2L);
-        final Boolean enhanceable = event.getOptionBooleanValueByName("enhanceable").orElse(null);
+    public void onEvent(VelenGeneralEvent event, VelenGeneralResponder responder, User user, VelenHybridArguments args) {
+        final String dicePool = args.getManyWithName("dicepool").orElse("");
+        final Long diceKept = args.withName("dicekept").flatMap(VelenOption::asLong).orElse(2L);
+        final Boolean opportunity = args.withName("opportunity").flatMap(VelenOption::asBoolean).orElse(true);
+        final Boolean enhanceable = args.withName("enhanceable").flatMap(VelenOption::asBoolean).orElse(null);
+        final Long discount = args.withName("discount").flatMap(VelenOption::asLong).orElse(0L);
 
         handleSlashCommandRoll(event, dicePool, Math.toIntExact(discount), Math.toIntExact(diceKept), enhanceable, opportunity);
-    }
 
+    }
 }
