@@ -4,9 +4,7 @@ import configs.Settings;
 import doom.DoomHandler;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
-import org.javacord.api.entity.channel.TextChannel;
 import org.javacord.api.entity.message.Message;
-import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
@@ -153,27 +151,6 @@ public class RollLogic implements VelenHybridHandler {
             afterEnhanceEmbed[0] = afterEnhanceEmbed[0].setFooter("");
         }
         return afterEnhanceEmbed;
-    }
-
-    /**
-     * Handles a text roll by rolling the dice pool, generating the embed, attaching the listener.
-     * The text command only allows for keeping 2 dice, can't specify discount, no enhancement override
-     *
-     * @param user        The user who made the roll
-     * @param channel     The channel the message was sent from
-     * @param pool        The pool to be rolled
-     * @param opportunity If opportunities are enabled
-     */
-    public static void handleTextCommandRoll(User user, TextChannel channel, String pool, boolean opportunity) {
-        Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user).flatMap(integer -> DoomHandler.getUserDoomPool(user).map(s -> Pair.of(integer, DoomHandler.getDoom(s))));
-        final RollParameters rollParameters = new RollParameters(pool, 0, null, true, 2);
-        rollDice(pool, 0, 2, opportunity, user, UtilFunctions.getUsernameInChannel(user, channel))
-                .onFailure(throwable -> channel.sendMessage(throwable.getMessage()))
-                .onSuccess(rollOutput -> new MessageBuilder()
-                        .addEmbeds(rollOutput.embeds())
-                        .addComponents(ComponentUtils.createRollComponentRows(true, rollOutput.plotDiceUsed(), rollOutput.rollTotal()))
-                        .send(channel)
-                        .thenAccept(message -> Roller.attachEmotesAndListeners(user, rollParameters, originalPointPair.orElse(Pair.of(0, 0)), rollOutput, message)));
     }
 
     @Override

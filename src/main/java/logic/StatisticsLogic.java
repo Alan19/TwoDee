@@ -36,7 +36,7 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
         VelenCommand.ofHybrid("statistics", "Generates the statistics for a dice pool!", velen, statisticsLogic, statisticsLogic)
                 .addOptions(options.toArray(new SlashCommandOption[0]))
                 .addShortcuts("s", "stat", "stats")
-                .addFormats("statistics :[dicepool:hasMany()]")
+                .addFormats("statistics :[dicepool:of(string):hasMany()]")
                 .attach();
     }
 
