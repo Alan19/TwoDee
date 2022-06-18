@@ -5,6 +5,7 @@ import language.LanguageLogic;
 import listeners.DoomPoolAutocomplete;
 import listeners.LanguageAutocompleteListener;
 import listeners.PoolAutocompleteListener;
+import logic.AwardContextMenu;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.DiscordApiBuilder;
@@ -43,9 +44,11 @@ public class TwoDee {
                             LOGGER.error("Failed to find channel for ID: %d".formatted(id));
                         }
                     });
+                    AwardContextMenu.setupContextMenu(api);
                     api.addListener(new LanguageAutocompleteListener(languageLogic));
                     api.addListener(new PoolAutocompleteListener());
                     api.addListener(new DoomPoolAutocomplete());
+                    api.addUserContextMenuCommandListener(new AwardContextMenu());
                     new VelenObserver(api, ObserverMode.MASTER).observeAllServers(velen, api);
                     velen.index(true, api).join();
                 })

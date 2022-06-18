@@ -84,14 +84,20 @@ public class PlotPointLogic implements VelenHybridHandler {
                 .setFooter("Requested by " + UtilFunctions.getUsernameInChannel(sender, channel), sender.getAvatar()));
     }
 
-    private CompletableFuture<EmbedBuilder> getPlotPointEmbed(User target, TextChannel channel) {
-        return CompletableFuture.supplyAsync(() -> SheetsHandler.getPlotPoints(target)
-                .map(integer -> new EmbedBuilder().addField(UtilFunctions.getUsernameInChannel(target, channel), String.valueOf(integer)))
-                .orElseGet(this::getUnableToRetrieveEmbed));
+    private static EmbedBuilder getUnableToRetrieveEmbed() {
+        return new EmbedBuilder().setDescription("Unable to retrieve plot points!");
     }
 
-    private EmbedBuilder getUnableToRetrieveEmbed() {
-        return new EmbedBuilder().setDescription("Unable to retrieve plot points!");
+    public static CompletableFuture<EmbedBuilder> addPointsAndGetEmbed(User target, Integer count, TextChannel channel) {
+        final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(target);
+        if (plotPoints.isPresent()) {
+            return PlotPointUtils.addPlotPointsToUser(target, count).thenApply(integer -> integer
+                    .map(newPoints -> new EmbedBuilder().addField(UtilFunctions.getUsernameInChannel(target, channel), plotPoints.get() + " → " + integer.get()))
+                    .orElseGet(() -> new EmbedBuilder().setDescription("Unable to set plot points for " + UtilFunctions.getUsernameInChannel(target, channel) + "!")));
+        }
+        else {
+            return CompletableFuture.completedFuture(PlotPointLogic.getUnableToRetrieveEmbed());
+        }
     }
 
     private CompletableFuture<EmbedBuilder> setPointsAndGetEmbed(User target, Integer count, TextChannel channel) {
@@ -111,16 +117,10 @@ public class PlotPointLogic implements VelenHybridHandler {
         }
     }
 
-    private CompletableFuture<EmbedBuilder> addPointsAndGetEmbed(User target, Integer count, TextChannel channel) {
-        final Optional<Integer> plotPoints = SheetsHandler.getPlotPoints(target);
-        if (plotPoints.isPresent()) {
-            return PlotPointUtils.addPlotPointsToUser(target, count).thenApply(integer -> integer
-                    .map(newPoints -> new EmbedBuilder().addField(UtilFunctions.getUsernameInChannel(target, channel), plotPoints.get() + " → " + integer.get()))
-                    .orElseGet(() -> new EmbedBuilder().setDescription("Unable to set plot points for " + UtilFunctions.getUsernameInChannel(target, channel) + "!")));
-        }
-        else {
-            return CompletableFuture.completedFuture(getUnableToRetrieveEmbed());
-        }
+    private CompletableFuture<EmbedBuilder> getPlotPointEmbed(User target, TextChannel channel) {
+        return CompletableFuture.supplyAsync(() -> SheetsHandler.getPlotPoints(target)
+                .map(integer -> new EmbedBuilder().addField(UtilFunctions.getUsernameInChannel(target, channel), String.valueOf(integer)))
+                .orElseGet(PlotPointLogic::getUnableToRetrieveEmbed));
     }
 
     @Override
