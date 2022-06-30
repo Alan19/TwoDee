@@ -19,7 +19,7 @@ public class TestLogic implements VelenHybridHandler {
         VelenCommand.ofHybrid("test", "Rolls some dice with opportunities disabled!", velen, testLogic)
                 .addOptions(options.toArray(new SlashCommandOption[0]))
                 .addFormats("test :[dicepool:of(string):hasMany()]",
-                        "test :[dicekept:of(integer)] :[dicepool:of(string):hasMany()]")
+                        "test -- :[dicekept:of(integer)] :[dicepool:of(string):hasMany()]")
                 .addShortcuts("t")
                 .attach();
     }

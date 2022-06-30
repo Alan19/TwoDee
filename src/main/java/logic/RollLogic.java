@@ -48,7 +48,7 @@ public class RollLogic implements VelenHybridHandler {
         VelenCommand.ofHybrid("roll", "Rolls some dice!", velen, rollLogic)
                 .addOptions(rollCommandOptions.toArray(new SlashCommandOption[0]))
                 .addFormats("roll :[dicepool:of(string):hasMany()]",
-                        "roll :[dicekept:of(integer)] :[dicepool:of(string):hasMany()]")
+                        "roll -- :[dicekept:of(integer)] :[dicepool:of(string):hasMany()]")
                 .addShortcuts("r")
                 .attach();
     }
