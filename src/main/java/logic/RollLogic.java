@@ -18,10 +18,7 @@ import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenHybridArguments;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
 import pw.mihou.velen.interfaces.hybrid.responder.VelenGeneralResponder;
-import rolling.Result;
-import rolling.RollOutput;
-import rolling.RollParameters;
-import rolling.Roller;
+import rolling.*;
 import sheets.PlotPointUtils;
 import sheets.SheetsHandler;
 import util.ComponentUtils;
@@ -71,7 +68,7 @@ public class RollLogic implements VelenHybridHandler {
      * @param enhanceable If there is an enhancement override on the roll
      * @param opportunity If opportunities are enabled
      */
-    public static void handleSlashCommandRoll(VelenGeneralEvent event, String dicePool, Integer discount, Integer diceKept, @Nullable Boolean enhanceable, Boolean opportunity) {
+    public static void handleRoll(VelenGeneralEvent event, String dicePool, Integer discount, Integer diceKept, @Nullable Boolean enhanceable, Boolean opportunity) {
         final User user = event.getUser();
         final RollParameters rollParameters = new RollParameters(dicePool, discount, enhanceable, opportunity, diceKept);
         final VelenGeneralResponder updaterFuture = event.createResponder();
@@ -155,13 +152,12 @@ public class RollLogic implements VelenHybridHandler {
 
     @Override
     public void onEvent(VelenGeneralEvent event, VelenGeneralResponder responder, User user, VelenHybridArguments args) {
-        final String dicePool = args.getManyWithName("dicepool").orElse("");
-        final Long diceKept = args.withName("dicekept").flatMap(VelenOption::asLong).orElse(2L);
+        final CoreRollParameters coreRollParameters = CoreRollParameters.getCoreRollParametersFromHybridEvent(event, args);
         final Boolean opportunity = args.withName("opportunity").flatMap(VelenOption::asBoolean).orElse(true);
         final Boolean enhanceable = args.withName("enhanceable").flatMap(VelenOption::asBoolean).orElse(null);
         final Long discount = args.withName("discount").flatMap(VelenOption::asLong).orElse(0L);
 
-        handleSlashCommandRoll(event, dicePool, Math.toIntExact(discount), Math.toIntExact(diceKept), enhanceable, opportunity);
+        handleRoll(event, coreRollParameters.pool(), Math.toIntExact(discount), coreRollParameters.diceKept(), enhanceable, opportunity);
 
     }
 }

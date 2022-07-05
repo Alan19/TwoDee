@@ -9,6 +9,7 @@ import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenHybridArguments;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
 import pw.mihou.velen.interfaces.hybrid.responder.VelenGeneralResponder;
+import rolling.CoreRollParameters;
 
 import java.util.List;
 
@@ -25,12 +26,10 @@ public class TestLogic implements VelenHybridHandler {
 
     @Override
     public void onEvent(VelenGeneralEvent event, VelenGeneralResponder responder, User user, VelenHybridArguments args) {
-        final String dicePool = args.getManyWithName("dicepool").orElse("");
+        final CoreRollParameters coreRollParameters = CoreRollParameters.getCoreRollParametersFromHybridEvent(event, args);
         final Integer discount = args.withName("discount").flatMap(VelenOption::asInteger).orElse(0);
-        final Integer diceKept = args.withName("dicekept").flatMap(VelenOption::asInteger).orElse(2);
         final Boolean enhanceable = args.withName("enhanceable").flatMap(VelenOption::asBoolean).orElse(null);
 
-        RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false);
-
+        RollLogic.handleRoll(event, coreRollParameters.pool(), discount, coreRollParameters.diceKept(), enhanceable, false);
     }
 }
