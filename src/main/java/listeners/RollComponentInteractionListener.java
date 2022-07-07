@@ -79,7 +79,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
         final Optional<Integer> enhanceCount = UtilFunctions.tryParseInt(customId);
         final Message interactionMessage = componentInteraction.getMessage();
         if (interactionMessage.getUserAuthor().map(user1 -> event.getInteraction().getUser() == user1).orElse(false)) {
-            componentInteraction.createFollowupMessageBuilder().setContent("You shouldn't be enhancing someone else's roll!").setFlags(InteractionCallbackDataFlag.EPHEMERAL).send();
+            componentInteraction.createImmediateResponder().setContent("You shouldn't be enhancing someone else's roll!").setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
         }
         else if (!removeListenerTask.isDone() && removeListenerTask.getDelay(TimeUnit.MILLISECONDS) > 0) {
             removeListenerTask.cancel(true);
