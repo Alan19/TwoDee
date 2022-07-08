@@ -51,12 +51,8 @@ public class RollLogic implements VelenHybridHandler {
         this.diceKept = diceKept;
     }
 
-    public RollLogic() {
-        this.diceKept = 2;
-    }
-
     public static void setupRollCommand(Velen velen) {
-        RollLogic rollLogic = new RollLogic();
+        RollLogic rollLogic = new RollLogic(2);
         VelenCommand.ofHybrid("roll", "Roll some dice!", velen, rollLogic)
                 .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, DICE_KEPT, OPPORTUNITY)
                 .addFormats("roll :[dicepool:of(string):hasMany()]")
