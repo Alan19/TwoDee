@@ -4,10 +4,6 @@ import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenHybridArguments;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
 
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 public record CoreRollParameters(String pool, int diceKept) {
     /**
      * Extracts the number of kept dice and the dice pool from the parameters of a hybrid event
@@ -20,18 +16,11 @@ public record CoreRollParameters(String pool, int diceKept) {
         int diceKept = 2;
         String dicePool;
         if (event.isMessageEvent()) {
-            final Optional<String> diceKeptOptional = args.asMessageOptions()
-                    .flatMap(strings -> Arrays.stream(strings).skip(1).findFirst())
-                    .filter(s -> s.matches("[1-9]\\d*"));
-            if (diceKeptOptional.isPresent()) {
-                diceKept = Integer.parseInt(diceKeptOptional.get());
-                dicePool = Arrays.stream(args.asMessageOptions().orElseThrow(IllegalStateException::new))
-                        .skip(2)
-                        .collect(Collectors.joining(" "));
+            final String commandName = args.get(0).asString().orElseThrow(IllegalStateException::new);
+            if (commandName.charAt(commandName.length() - 1) == '3') {
+                diceKept = 3;
             }
-            else {
-                dicePool = args.getManyWithName("dicepool").orElse("");
-            }
+            dicePool = args.getManyWithName("dicepool").orElse("");
         }
         else {
             dicePool = args.getManyWithName("dicepool").orElse("");
