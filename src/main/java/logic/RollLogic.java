@@ -60,7 +60,7 @@ public class RollLogic implements VelenHybridHandler {
         VelenCommand.ofHybrid("roll", "Roll some dice!", velen, rollLogic)
                 .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, DICE_KEPT, OPPORTUNITY)
                 .addFormats("roll :[dicepool:of(string):hasMany()]")
-                .addShortcuts("r")
+                .addShortcuts("r", "r2")
                 .attach();
         List.of(1, 3, 4, 5).forEach(integer -> VelenCommand.ofHybrid("roll%d".formatted(integer), "Roll some dice and keeps %s dice!".formatted(integer), velen, new RollLogic(integer))
                 .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, OPPORTUNITY)

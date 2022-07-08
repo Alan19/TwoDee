@@ -25,7 +25,7 @@ public class TestLogic implements VelenHybridHandler {
         VelenCommand.ofHybrid("test", "Rolls some dice with opportunities disabled!", velen, testLogic)
                 .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, DICE_KEPT)
                 .addFormats("test :[dicepool:of(string):hasMany()]")
-                .addShortcuts("t")
+                .addShortcuts("t", "t2")
                 .attach();
         List.of(1, 3, 4, 5).forEach(integer -> VelenCommand.ofHybrid("test%d".formatted(integer), "Roll some dice with opportuities disabled and keeps %s dice!".formatted(integer), velen, new TestLogic(integer))
                 .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE)
