@@ -18,7 +18,10 @@ import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenHybridArguments;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
 import pw.mihou.velen.interfaces.hybrid.responder.VelenGeneralResponder;
-import rolling.*;
+import rolling.Result;
+import rolling.RollOutput;
+import rolling.RollParameters;
+import rolling.Roller;
 import sheets.PlotPointUtils;
 import sheets.SheetsHandler;
 import util.ComponentUtils;
@@ -27,7 +30,6 @@ import util.UtilFunctions;
 
 import javax.annotation.Nullable;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -38,24 +40,33 @@ import java.util.stream.Collectors;
  */
 public class RollLogic implements VelenHybridHandler {
 
-    public static void setupRollCommand(Velen velen) {
-        RollLogic rollLogic = new RollLogic();
-        final List<SlashCommandOption> rollCommandOptions = getRollCommandOptions();
-        rollCommandOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false));
-        VelenCommand.ofHybrid("roll", "Rolls some dice!", velen, rollLogic)
-                .addOptions(rollCommandOptions.toArray(new SlashCommandOption[0]))
-                .addFormats("roll :[dicepool:of(string):hasMany()]")
-                .addShortcuts("r", "roll3", "r3")
-                .attach();
+    public static final SlashCommandOption DICE_POOL = SlashCommandOption.create(SlashCommandOptionType.STRING, "dicepool", "The dice pool to roll with.", true);
+    public static final SlashCommandOption DISCOUNT = SlashCommandOption.create(SlashCommandOptionType.LONG, "discount", "The number of plot points to discount (negative results in a plot point cost increase).", false);
+    public static final SlashCommandOption DICE_KEPT = SlashCommandOption.create(SlashCommandOptionType.LONG, "dicekept", "The number of dice kept. Keeps two dice by default.", false);
+    public static final SlashCommandOption ENHANCEABLE = SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "enhanceable", "Allows the roll to be enhanced after the roll.", false);
+    public static final SlashCommandOption OPPORTUNITY = SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false);
+    private final int diceKept;
+
+    public RollLogic(int diceKept) {
+        this.diceKept = diceKept;
     }
 
-    static List<SlashCommandOption> getRollCommandOptions() {
-        List<SlashCommandOption> options = new ArrayList<>();
-        options.add(SlashCommandOption.create(SlashCommandOptionType.STRING, "dicepool", "The dice pool to roll with.", true));
-        options.add(SlashCommandOption.create(SlashCommandOptionType.LONG, "discount", "The number of plot points to discount (negative results in a plot point cost increase).", false));
-        options.add(SlashCommandOption.create(SlashCommandOptionType.LONG, "dicekept", "The number of dice kept. Keeps two dice by default.", false));
-        options.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "enhanceable", "Allows the roll to be enhanced after the roll.", false));
-        return options;
+    public RollLogic() {
+        this.diceKept = 2;
+    }
+
+    public static void setupRollCommand(Velen velen) {
+        RollLogic rollLogic = new RollLogic();
+        VelenCommand.ofHybrid("roll", "Roll some dice!", velen, rollLogic)
+                .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, DICE_KEPT, OPPORTUNITY)
+                .addFormats("roll :[dicepool:of(string):hasMany()]")
+                .addShortcuts("r")
+                .attach();
+        List.of(1, 3, 4, 5).forEach(integer -> VelenCommand.ofHybrid("roll%d".formatted(integer), "Roll some dice and keeps %s dice!".formatted(integer), velen, new RollLogic(integer))
+                .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, OPPORTUNITY)
+                .addFormats("roll%d :[dicepool:of(string):hasMany()]".formatted(integer))
+                .addShortcuts("r%d".formatted(integer))
+                .attach());
     }
 
     /**
@@ -152,12 +163,13 @@ public class RollLogic implements VelenHybridHandler {
 
     @Override
     public void onEvent(VelenGeneralEvent event, VelenGeneralResponder responder, User user, VelenHybridArguments args) {
-        final CoreRollParameters coreRollParameters = CoreRollParameters.getCoreRollParametersFromHybridEvent(event, args);
+        final String dicePool = args.getManyWithName("dicepool").orElse("");
+        final Integer kept = args.withName("dicekept").flatMap(VelenOption::asInteger).orElse(this.diceKept);
         final Boolean opportunity = args.withName("opportunity").flatMap(VelenOption::asBoolean).orElse(true);
         final Boolean enhanceable = args.withName("enhanceable").flatMap(VelenOption::asBoolean).orElse(null);
         final Long discount = args.withName("discount").flatMap(VelenOption::asLong).orElse(0L);
 
-        handleRoll(event, coreRollParameters.pool(), Math.toIntExact(discount), coreRollParameters.diceKept(), enhanceable, opportunity);
+        handleRoll(event, dicePool, Math.toIntExact(discount), kept, enhanceable, opportunity);
 
     }
 }
