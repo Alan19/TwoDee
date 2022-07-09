@@ -81,14 +81,14 @@ public class RollPoolLogic implements VelenHybridHandler {
             SheetsHandler.getSavePool(StringUtils.capitalize(pool.toLowerCase()), user)
                     .map(defaultPool -> MessageFormat.format("{0} {1}", defaultPool, bonuses))
                     .onFailure(throwable -> event.getChannel().sendMessage(throwable.getMessage()))
-                    .onSuccess(dicePool -> RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, false));
+                    .onSuccess(dicePool -> RollLogic.handleRoll(event, dicePool, discount, diceKept, enhanceable, false));
         }
         else {
             Boolean opportunity = arguments.withName("opportunity").flatMap(VelenOption::asBoolean).orElse(true);
             SheetsHandler.getSavedPool(pool.toLowerCase(), user)
                     .map(defaultPool -> MessageFormat.format("{0} {1}", defaultPool, bonuses))
                     .onFailure(throwable -> event.getChannel().sendMessage(throwable.getMessage()))
-                    .onSuccess(dicePool -> RollLogic.handleSlashCommandRoll(event, dicePool, discount, diceKept, enhanceable, opportunity));
+                    .onSuccess(dicePool -> RollLogic.handleRoll(event, dicePool, discount, diceKept, enhanceable, opportunity));
         }
     }
 }
