@@ -4,24 +4,23 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
-import org.javacord.api.event.interaction.SlashCommandCreateEvent;
-import org.javacord.api.interaction.SlashCommandInteraction;
-import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOptionBuilder;
 import org.javacord.api.interaction.SlashCommandOptionType;
 import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
-import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import pw.mihou.velen.interfaces.Velen;
-import pw.mihou.velen.interfaces.VelenArguments;
 import pw.mihou.velen.interfaces.VelenCommand;
-import pw.mihou.velen.interfaces.VelenSlashEvent;
+import pw.mihou.velen.interfaces.VelenHybridHandler;
+import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
+import pw.mihou.velen.interfaces.hybrid.objects.VelenHybridArguments;
+import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
+import pw.mihou.velen.interfaces.hybrid.responder.VelenGeneralResponder;
 import util.RandomColor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class DamageLogic implements VelenSlashEvent {
+public class DamageLogic implements VelenHybridHandler {
 
     public static void setupDamageCommand(Velen velen) {
         final List<SlashCommandOptionBuilder> options = new ArrayList<>();
@@ -57,41 +56,10 @@ public class DamageLogic implements VelenSlashEvent {
 
         DamageLogic logic = new DamageLogic();
 
-        VelenCommand.ofSlash("damage", "calculates the damage of each type received from an attack", velen, logic)
+        VelenCommand.ofHybrid("damage", "calculates the damage of each type received from an attack", velen, logic)
                 .addOptions(options.toArray(new SlashCommandOptionBuilder[0]))
+                .addFormats("~damage :[count:of(integer)] :[type:of(string)] :[stun-armor:of(integer)] :[basic-armor:of(integer)] :[wound-armor:of(integer)] :[resilience:of(integer)]")
                 .attach();
-    }
-
-    /**
-     * Sends an ephemeral embed to the user that contains the amount of points to mark off after taking damage
-     *
-     * @param interaction              The interaction that contains the command
-     * @param user                     The user that used the command
-     * @param arguments                The arguments in the command
-     * @param list                     The list of interaction options in the command
-     * @param immediateResponseBuilder The response builder to respond immediately
-     */
-    @Override
-    public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction interaction, User user, VelenArguments arguments, List<SlashCommandInteractionOption> list, InteractionImmediateResponseBuilder immediateResponseBuilder) {
-        final Optional<String> typeOptional = interaction.getOptionStringValueByName("type");
-        final Optional<Long> countOptional = interaction.getOptionLongValueByName("count");
-        if (typeOptional.isPresent() && countOptional.isPresent()) {
-            // Get params
-            final DamageType type = DamageType.getType(typeOptional.get());
-            long damageCount = countOptional.get();
-            long stunArmor = interaction.getOptionLongValueByName("stun-armor").orElse(0L);
-            long basicArmor = interaction.getOptionLongValueByName("basic-armor").orElse(0L);
-            long woundArmor = interaction.getOptionLongValueByName("wound-armor").orElse(0L);
-            long resilience = interaction.getOptionLongValueByName("resilience").orElse(0L);
-            final long effectiveStunArmor = Math.max(stunArmor, (long) Math.ceil((double) basicArmor / 2));
-            final long effectiveWoundArmor = Math.max(woundArmor, basicArmor / 2);
-            final Triple<Long, Long, Long> damageTriple = calculateDamage(type, damageCount, resilience, effectiveStunArmor, effectiveWoundArmor);
-            final EmbedBuilder embed = createDamageEmbed(damageTriple.getLeft(), damageTriple.getMiddle(), damageTriple.getRight());
-            immediateResponseBuilder.addEmbed(embed).setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
-        }
-        else {
-            immediateResponseBuilder.setContent("invalid damage type and / or count!").setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
-        }
     }
 
     /**
@@ -158,20 +126,43 @@ public class DamageLogic implements VelenSlashEvent {
         }
     }
 
+    /**
+     * Sends an ephemeral embed to the user that contains the amount of points to mark off after taking damage
+     */
+    @Override
+    public void onEvent(VelenGeneralEvent event, VelenGeneralResponder responder, User user, VelenHybridArguments args) {
+        final Optional<String> typeOptional = args.withName("type").flatMap(VelenOption::asString);
+        final Optional<Long> countOptional = args.withName("count").flatMap(VelenOption::asLong);
+        if (typeOptional.isPresent() && countOptional.isPresent()) {
+            // Get params
+            final DamageType type = DamageType.getType(typeOptional.get());
+            long damageCount = countOptional.get();
+            long stunArmor = args.withName("stun-armor").flatMap(VelenOption::asLong).orElse(0L);
+            long basicArmor = args.withName("basic-armor").flatMap(VelenOption::asLong).orElse(0L);
+            long woundArmor = args.withName("wound-armor").flatMap(VelenOption::asLong).orElse(0L);
+            long resilience = args.withName("resilience").flatMap(VelenOption::asLong).orElse(0L);
+            final long effectiveStunArmor = Math.max(stunArmor, (long) Math.ceil((double) basicArmor / 2));
+            final long effectiveWoundArmor = Math.max(woundArmor, basicArmor / 2);
+            final Triple<Long, Long, Long> damageTriple = calculateDamage(type, damageCount, resilience, effectiveStunArmor, effectiveWoundArmor);
+            final EmbedBuilder embed = createDamageEmbed(damageTriple.getLeft(), damageTriple.getMiddle(), damageTriple.getRight());
+            responder.addEmbed(embed).setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
+        }
+        else {
+            responder.setContent("invalid damage type and / or count!").setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
+        }
+
+    }
+
     public enum DamageType {
         STUN, BASIC, WOUND;
 
         static DamageType getType(String string) {
-            switch (string) {
-                case "stun":
-                    return STUN;
-                case "basic":
-                    return BASIC;
-                case "wound":
-                    return WOUND;
-                default:
-                    throw new IllegalStateException("Unexpected value: " + string);
-            }
+            return switch (string) {
+                case "stun" -> STUN;
+                case "basic" -> BASIC;
+                case "wound" -> WOUND;
+                default -> throw new IllegalStateException("Unexpected value: " + string);
+            };
         }
     }
 }
