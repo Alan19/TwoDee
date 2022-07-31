@@ -5,6 +5,11 @@ import java.util.Random;
 public class Quotes {
     private static final Random random = new Random();
     private String[] startupQuotes;
+
+    public String[] getRollQuotes() {
+        return rollQuotes;
+    }
+
     private String[] rollQuotes;
 
     public Quotes() {
@@ -27,4 +32,5 @@ public class Quotes {
     public void setRollQuotes(String[] rollQuotes) {
         this.rollQuotes = rollQuotes;
     }
+
 }

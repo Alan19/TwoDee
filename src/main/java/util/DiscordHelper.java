@@ -7,6 +7,7 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.permission.Role;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.ApplicationCommandEvent;
+import org.javacord.api.interaction.Interaction;
 import org.javacord.api.interaction.InteractionBase;
 import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
@@ -67,8 +68,11 @@ public class DiscordHelper {
         return event.getInteraction().getServer().map(user::getEffectiveAvatar).orElseGet(user::getAvatar);
     }
 
+    public static Icon getLocalAvatar(Interaction interaction, User user) {
+        return interaction.getServer().map(user::getEffectiveAvatar).orElseGet(user::getAvatar);
+    }
+
     public static EmbedBuilder addUserToFooter(VelenGeneralEvent event, User user, EmbedBuilder output) {
         return output.setFooter("Requested by " + UtilFunctions.getUsernameInChannel(user, event.getChannel()), getLocalAvatar(event, user));
     }
-
 }

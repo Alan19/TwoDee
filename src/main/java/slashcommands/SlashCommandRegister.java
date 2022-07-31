@@ -24,6 +24,7 @@ public class SlashCommandRegister {
         CalculationLogic.setup(velen);
         AdvancementLogic.setupAdvancementCommand(velen);
         LanguageCommand.setup(velen, languageLogic);
+        QuoteLogic.setupQuoteLogic(velen);
 
         return velen;
     }
