@@ -5,12 +5,12 @@ import doom.DoomHandler;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.message.Message;
+import org.javacord.api.entity.message.MessageFlag;
 import org.javacord.api.entity.message.embed.Embed;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
-import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import pw.mihou.velen.interfaces.Velen;
 import pw.mihou.velen.interfaces.VelenCommand;
 import pw.mihou.velen.interfaces.VelenHybridHandler;
@@ -85,7 +85,7 @@ public class RollLogic implements VelenHybridHandler {
                 );
         rollDice(dicePool, discount, diceKept, opportunity, user, UtilFunctions.getUsernameInChannel(user, event.getChannel()))
                 .onFailure(throwable -> updaterFuture
-                        .setFlags(InteractionCallbackDataFlag.EPHEMERAL)
+                        .setFlags(MessageFlag.EPHEMERAL)
                         .setContent(throwable.getMessage()).respond())
                 .onSuccess(rollOutput -> updaterFuture.addEmbeds(rollOutput.embeds().toArray(value -> new EmbedBuilder[]{}))
                         .addComponents(ComponentUtils.createRollComponentRows(true, Optional.ofNullable(enhanceable).orElse(rollOutput.plotDiceUsed()), rollOutput.rollTotal()))
