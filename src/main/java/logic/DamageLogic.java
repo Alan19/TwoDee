@@ -2,11 +2,11 @@ package logic;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.javacord.api.entity.message.MessageFlag;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.SlashCommandOptionBuilder;
 import org.javacord.api.interaction.SlashCommandOptionType;
-import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import pw.mihou.velen.interfaces.Velen;
 import pw.mihou.velen.interfaces.VelenCommand;
 import pw.mihou.velen.interfaces.VelenHybridHandler;
@@ -145,10 +145,10 @@ public class DamageLogic implements VelenHybridHandler {
             final long effectiveWoundArmor = Math.max(woundArmor, basicArmor / 2);
             final Triple<Long, Long, Long> damageTriple = calculateDamage(type, damageCount, resilience, effectiveStunArmor, effectiveWoundArmor);
             final EmbedBuilder embed = createDamageEmbed(damageTriple.getLeft(), damageTriple.getMiddle(), damageTriple.getRight());
-            responder.addEmbed(embed).setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
+            responder.addEmbed(embed).setFlags(MessageFlag.EPHEMERAL).respond();
         }
         else {
-            responder.setContent("invalid damage type and / or count!").setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
+            responder.setContent("invalid damage type and / or count!").setFlags(MessageFlag.EPHEMERAL).respond();
         }
 
     }

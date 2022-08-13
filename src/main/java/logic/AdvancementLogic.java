@@ -6,11 +6,11 @@ import io.vavr.Tuple4;
 import io.vavr.collection.Seq;
 import io.vavr.control.Try;
 import io.vavr.control.Validation;
+import org.javacord.api.entity.message.MessageFlag;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.*;
-import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import pw.mihou.velen.interfaces.Velen;
 import pw.mihou.velen.interfaces.VelenArguments;
@@ -93,7 +93,7 @@ public class AdvancementLogic implements VelenSlashEvent {
         // Gather params that don't need validation and then generate and send output on success, or send error message on failure
         Validation.combine(targetFacetsTry, startingArrayValidation, validateMinimum, manaValidation)
                 .ap((target, longs, minimum, mana) -> new Tuple4<>(target, longs.map(Math::toIntExact).asJava(), minimum, mana))
-                .fold(throwables -> firstResponder.setFlags(InteractionCallbackDataFlag.EPHEMERAL).setContent(throwables.map(Throwable::getMessage).collect(Collectors.joining("\n"))).respond(),
+                .fold(throwables -> firstResponder.setFlags(MessageFlag.EPHEMERAL).setContent(throwables.map(Throwable::getMessage).collect(Collectors.joining("\n"))).respond(),
                         tuple -> {
                             final boolean nonEphemeral = subcommandOption.getOptionBooleanValueByName("non-ephemeral").orElse(false);
                             final Boolean expert = subcommandOption.getOptionBooleanValueByName("target-expert").orElse(false);
@@ -104,7 +104,7 @@ public class AdvancementLogic implements VelenSlashEvent {
 
                             firstResponder.addEmbed(resultsEmbed);
                             if (!nonEphemeral) {
-                                firstResponder.setFlags(InteractionCallbackDataFlag.EPHEMERAL);
+                                firstResponder.setFlags(MessageFlag.EPHEMERAL);
                             }
                             return firstResponder.respond();
                         });

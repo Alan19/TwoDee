@@ -3,6 +3,7 @@ package logic;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.MessageDecoration;
+import org.javacord.api.entity.message.MessageFlag;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
@@ -11,7 +12,6 @@ import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
-import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import pw.mihou.velen.interfaces.*;
@@ -67,7 +67,7 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
             });
         }
         else {
-            firstResponder.setContent("Dice pool not found!").setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
+            firstResponder.setContent("Dice pool not found!").setFlags(MessageFlag.EPHEMERAL).respond();
         }
     }
 }

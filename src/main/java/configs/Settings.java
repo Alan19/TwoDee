@@ -9,7 +9,9 @@ import roles.Player;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Settings {
     public static final Settings instance = new Settings();
@@ -61,6 +63,31 @@ public class Settings {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    protected static void serializeQuotes() {
+        try {
+            final BufferedWriter writer = new BufferedWriter(new FileWriter("resources/quotes.json"));
+            new GsonBuilder().setPrettyPrinting().create().toJson(Settings.getQuotes(), writer);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void addQuote(String quote) {
+        final List<String> newQuotes = Arrays.stream(getQuotes().getRollQuotes()).collect(Collectors.toList());
+        newQuotes.add(quote);
+        getQuotes().setRollQuotes(newQuotes.toArray(new String[0]));
+        Settings.serializeQuotes();
+    }
+
+    public static void removeQuote(String quote) {
+        final List<String> newQuotes = Arrays.stream(getQuotes().getRollQuotes()).collect(Collectors.toList());
+        newQuotes.removeIf(s -> s.equals(quote));
+        getQuotes().setRollQuotes(newQuotes.toArray(new String[0]));
+        Settings.serializeQuotes();
+
     }
 
     private static class SettingsInstance {
