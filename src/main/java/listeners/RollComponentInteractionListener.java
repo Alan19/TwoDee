@@ -6,12 +6,12 @@ import logic.RollLogic;
 import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
+import org.javacord.api.entity.message.MessageFlag;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.message.embed.EmbedField;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.ButtonClickEvent;
 import org.javacord.api.interaction.ButtonInteraction;
-import org.javacord.api.interaction.callback.InteractionCallbackDataFlag;
 import org.javacord.api.listener.interaction.ButtonClickListener;
 import org.javacord.api.util.event.ListenerManager;
 import roles.Player;
@@ -79,7 +79,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
         final Optional<Integer> enhanceCount = UtilFunctions.tryParseInt(customId);
         final Message interactionMessage = componentInteraction.getMessage();
         if (interactionMessage.getUserAuthor().map(user1 -> event.getInteraction().getUser() == user1).orElse(false)) {
-            componentInteraction.createImmediateResponder().setContent("You shouldn't be enhancing someone else's roll!").setFlags(InteractionCallbackDataFlag.EPHEMERAL).respond();
+            componentInteraction.createImmediateResponder().setContent("You shouldn't be enhancing someone else's roll!").setFlags(MessageFlag.EPHEMERAL).respond();
         }
         else if (!removeListenerTask.isDone() && removeListenerTask.getDelay(TimeUnit.MILLISECONDS) > 0) {
             removeListenerTask.cancel(true);
