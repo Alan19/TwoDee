@@ -19,7 +19,7 @@ public class SumVisitor implements ResultVisitor {
      */
     @Override
     public void visit(Map<Integer, Long> hashMap) {
-        hashMap.forEach(diceOutcomes::put);
+        diceOutcomes.putAll(hashMap);
     }
 
     @Override

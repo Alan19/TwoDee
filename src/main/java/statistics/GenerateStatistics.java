@@ -11,6 +11,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -19,55 +23,53 @@ import java.util.stream.Stream;
  * Generates statistics for a dice pool by calculating the sample set of all possible outcomes. Does this by using a Map of RollResults to number of occurrences. For every die in the pool, and for every facet of that die, map each RollResult in the map to a copy of that object with that die result added.
  */
 public class GenerateStatistics {
+    public static final EmbedBuilder OVERLOAD_EMBED = new EmbedBuilder().setDescription("That's way too many dice for me to handle. Try using less dice.");
     private final DicePoolBuilder dicePool;
-    private final EmbedBuilder resultEmbed;
+    private EmbedBuilder resultEmbed;
 
     public GenerateStatistics(DicePoolBuilder dicePool) {
-        final long totalCombos = Stream.of(dicePool.getRegularDice(), dicePool.getRegularDice(), dicePool.getEnhancedDice(), dicePool.getChaosDice())
-                .flatMapToLong(integers -> integers.stream().mapToLong(value -> value))
-                .reduce(1, (left, right) -> left * right);
-        final EmbedBuilder overloadEmbed = new EmbedBuilder().setDescription("That's way too many dice for me to handle. Try using less dice.");
         this.dicePool = dicePool;
-        if (totalCombos < 0) {
-            this.resultEmbed = overloadEmbed;
-            return;
-        }
         //Generate the getResults result to occurrence HashMap
-        HashMap<BuildablePoolResult, Long> results = generateResultsMap();
-        final int[] resultStream = results.keySet().stream().mapToInt(BuildablePoolResult::getTotal).toArray();
-        final int minRoll = Arrays.stream(resultStream).min().orElse(0);
-        final int maxRoll = Arrays.stream(resultStream).max().orElse(0);
+        CompletableFuture<HashMap<BuildablePoolResult, Long>> resultsFuture = CompletableFuture.supplyAsync(this::generateResultsMap);
+        try {
+            HashMap<BuildablePoolResult, Long> results = resultsFuture.get(30, TimeUnit.SECONDS);
+            final int[] resultStream = results.keySet().stream().mapToInt(BuildablePoolResult::getTotal).toArray();
+            final int minRoll = Arrays.stream(resultStream).min().orElse(0);
+            final int maxRoll = Arrays.stream(resultStream).max().orElse(0);
 
-        //Generate the getResults to occurrence HashMap
-        final Map<Integer, Long> rollToOccurrences = IntStream.rangeClosed(minRoll, maxRoll)
-                .boxed()
-                .collect(Collectors.toMap(integer -> integer, integer -> results
-                        .entrySet()
-                        .stream()
-                        .filter(rollResultBuilderLongEntry -> rollResultBuilderLongEntry.getKey().getTotal() == integer)
-                        .mapToLong(Map.Entry::getValue)
-                        .sum()));
+            //Generate the getResults to occurrence HashMap
+            final Map<Integer, Long> rollToOccurrences = IntStream.rangeClosed(minRoll, maxRoll)
+                    .boxed()
+                    .collect(Collectors.toMap(integer -> integer, integer -> results
+                            .entrySet()
+                            .stream()
+                            .filter(rollResultBuilderLongEntry -> rollResultBuilderLongEntry.getKey().getTotal() == integer)
+                            .mapToLong(Map.Entry::getValue)
+                            .sum()));
 
 
-        //Generate the opportunity to occurrence HashMap
-        final int[] opportunityArr = results.keySet().stream().mapToInt(BuildablePoolResult::getDoomGenerated).toArray();
-        final int minOpportunities = Arrays.stream(opportunityArr).min().orElse(0);
-        final int maxOpportunities = Arrays.stream(opportunityArr).max().orElse(0);
-        final Map<Integer, Long> rollToOpportunities = IntStream.rangeClosed(minOpportunities, maxOpportunities)
-                .boxed()
-                .collect(Collectors.toMap(integer -> integer, integer -> results
-                        .entrySet()
-                        .stream()
-                        .filter(rollResultBuilderLongEntry -> rollResultBuilderLongEntry.getKey().getDoomGenerated() == integer)
-                        .mapToLong(Map.Entry::getValue)
-                        .sum()));
-
-        if (rollToOccurrences.values().stream().anyMatch(aLong -> aLong < 0) || rollToOpportunities.values().stream().anyMatch(aLong -> aLong < 0)) {
-            this.resultEmbed = overloadEmbed;
+            //Generate the opportunity to occurrence HashMap
+            final int[] opportunityArr = results.keySet().stream().mapToInt(BuildablePoolResult::getDoomGenerated).toArray();
+            final int minOpportunities = Arrays.stream(opportunityArr).min().orElse(0);
+            final int maxOpportunities = Arrays.stream(opportunityArr).max().orElse(0);
+            final Map<Integer, Long> rollToOpportunities = IntStream.rangeClosed(minOpportunities, maxOpportunities)
+                    .boxed()
+                    .collect(Collectors.toMap(integer -> integer, integer -> results
+                            .entrySet()
+                            .stream()
+                            .filter(rollResultBuilderLongEntry -> rollResultBuilderLongEntry.getKey().getDoomGenerated() == integer)
+                            .mapToLong(Map.Entry::getValue)
+                            .sum()));
+            if (rollToOccurrences.values().stream().mapToLong(result -> result).sum() < 0) {
+                this.resultEmbed = OVERLOAD_EMBED;
+            }
+            else {
+                this.resultEmbed = generateEmbed(rollToOccurrences, rollToOpportunities, results);
+            }
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            this.resultEmbed = OVERLOAD_EMBED;
         }
-        else {
-            this.resultEmbed = generateEmbed(rollToOccurrences, rollToOpportunities, results);
-        }
+
     }
 
     public EmbedBuilder getResult() {
@@ -186,8 +188,8 @@ public class GenerateStatistics {
 
     private HashMap<BuildablePoolResult, Long> processPlotDice(HashMap<BuildablePoolResult, Long> rollResultOccurrences) {
         HashMap<BuildablePoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
-        // Loop through all of the kept dice
-        for (Integer plotDice : Stream.concat(dicePool.getPlotDice().stream(), dicePool.getEnhancedDice().stream()).collect(Collectors.toList())) {
+        // Loop through all the kept dice
+        for (Integer plotDice : Stream.concat(dicePool.getPlotDice().stream(), dicePool.getEnhancedDice().stream()).toList()) {
             HashMap<BuildablePoolResult, Long> tempMap = new HashMap<>();
             // Create n BuildablePoolResult Objects with each possible outcomes of the dice
             // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
