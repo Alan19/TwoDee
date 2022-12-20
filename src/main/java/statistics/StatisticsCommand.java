@@ -1,4 +1,4 @@
-package logic;
+package statistics;
 
 import org.javacord.api.entity.message.Message;
 import org.javacord.api.entity.message.MessageBuilder;
@@ -17,7 +17,6 @@ import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import pw.mihou.velen.interfaces.*;
 import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
 import rolling.DicePoolBuilder;
-import statistics.GenerateStatistics;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,15 +24,15 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 
-public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
+public class StatisticsCommand implements VelenSlashEvent, VelenEvent {
 
     public static void setupStatisticsCommand(Velen velen) {
-        final StatisticsLogic statisticsLogic = new StatisticsLogic();
+        final StatisticsCommand statisticsCommand = new StatisticsCommand();
         List<SlashCommandOption> options = new ArrayList<>();
         options.add(SlashCommandOption.create(SlashCommandOptionType.STRING, "dicepool", "The dice pool to roll with.", true));
         options.add(SlashCommandOption.create(SlashCommandOptionType.LONG, "dicekept", "The number of dice kept. Keeps two dice by default.", false));
         options.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "nonephemeral", "Makes the statistics for the roll visible. Defaults to false.", false));
-        VelenCommand.ofHybrid("statistics", "Generates the statistics for a dice pool!", velen, statisticsLogic, statisticsLogic)
+        VelenCommand.ofHybrid("statistics", "Generates the statistics for a dice pool!", velen, statisticsCommand, statisticsCommand)
                 .addOptions(options.toArray(new SlashCommandOption[0]))
                 .addShortcuts("s", "stat", "stats")
                 .addFormats("statistics :[dicepool:of(string):hasMany()]")
@@ -45,7 +44,7 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
         // Add delete component
         String dicePool = String.join(" ", args);
         final DicePoolBuilder builder = new DicePoolBuilder(dicePool, s -> s);
-        final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new GenerateStatistics(builder).getResult());
+        final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new StatisticsLogic(builder).generateEmbed());
         CompletableFuture<Message> statisticsPM = new MessageBuilder()
                 .setContent("Sent you a PM with your statistics for ")
                 .append(message.getContent(), MessageDecoration.BOLD)
@@ -56,17 +55,16 @@ public class StatisticsLogic implements VelenSlashEvent, VelenEvent {
 
     @Override
     public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final Optional<String> dicepool = event.getOptionStringValueByName("dicepool");
-        if (dicepool.isPresent()) {
-            final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new GenerateStatistics(new DicePoolBuilder(dicepool.get(), s -> s).withDiceKept(event.getOptionLongValueByName("dicekept").map(Math::toIntExact).orElse(2))).getResult());
+        final Optional<String> dicePool = event.getOptionStringValueByName("dicepool");
+        if (dicePool.isPresent()) {
+            final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new StatisticsLogic(new DicePoolBuilder(dicePool.get(), s -> s).withDiceKept(event.getOptionLongValueByName("dicekept").map(Math::toIntExact).orElse(2))).generateEmbed());
 
             final boolean ephemeral = !event.getOptionBooleanValueByName("nonephemeral").orElse(false);
             event.respondLater(ephemeral).thenAcceptBoth(result, (updater, embedBuilder) -> {
-                InteractionOriginalResponseUpdater responseUpdater = updater.addEmbed(embedBuilder).setContent("Here are the statistics for **" + dicepool.get() + "**");
+                InteractionOriginalResponseUpdater responseUpdater = updater.addEmbed(embedBuilder).setContent("Here are the statistics for **" + dicePool.get() + "**");
                 responseUpdater.update();
             });
-        }
-        else {
+        } else {
             firstResponder.setContent("Dice pool not found!").setFlags(MessageFlag.EPHEMERAL).respond();
         }
     }

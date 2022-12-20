@@ -68,21 +68,11 @@ public class DicePoolBuilder {
         final String type = diceMatcher.group("type");
         final int facets = Integer.parseInt(diceMatcher.group("facets"));
         switch (type) {
-            case "pd":
-                IntStream.range(0, count).forEach(i -> plotDice.add(facets));
-                break;
-            case "cd":
-                IntStream.range(0, count).forEach(i -> chaosDice.add(facets));
-                break;
-            case "kd":
-                IntStream.range(0, count).forEach(i -> keptDice.add(facets));
-                break;
-            case "ed":
-                IntStream.range(0, count).forEach(i -> enhancedDie.add(facets));
-                break;
-            default:
-                IntStream.range(0, count).forEach(i -> regularDice.add(facets));
-                break;
+            case "pd" -> IntStream.range(0, count).forEach(i -> plotDice.add(facets));
+            case "cd" -> IntStream.range(0, count).forEach(i -> chaosDice.add(facets));
+            case "kd" -> IntStream.range(0, count).forEach(i -> keptDice.add(facets));
+            case "ed" -> IntStream.range(0, count).forEach(i -> enhancedDie.add(facets));
+            default -> IntStream.range(0, count).forEach(i -> regularDice.add(facets));
         }
     }
 

@@ -1,25 +1,19 @@
-package statistics.resultvisitors;
+package statistics.strategies;
 
+import rolling.BuildablePoolResult;
 import util.EmbedField;
 
 import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Each visitor can return an object that stores a Embed field title and description after all objects have been visited
  */
-public interface ResultVisitor {
+public interface ResultStrategy {
+    List<EmbedField> executeStrategy(HashMap<BuildablePoolResult, Long> resultMap, long totalCombinations);
 
-    void visit(Map<Integer, Long> hashMap);
-
-    List<EmbedField> getEmbedField();
-
-    default long getNumberOfResults(Map<Integer, Long> resultMap) {
-        return resultMap.values().stream().mapToLong(result -> result).sum();
-    }
-
-    default String generatePercentage(Long numberOfOccurrences, long numberOfResults) {
+    default String generatePercentage(long numberOfOccurrences, long numberOfResults) {
         final double resultProbability = (double) numberOfOccurrences / numberOfResults;
         final double resultPercentage = resultProbability * 100;
         String formatString = "0.#####" + (resultPercentage < 0.00001 && resultPercentage > 0 ? "E00" : "") + "%";
