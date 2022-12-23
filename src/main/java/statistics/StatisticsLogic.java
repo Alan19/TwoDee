@@ -150,19 +150,19 @@ public class StatisticsLogic {
     private HashMap<BuildablePoolResult, Long> processChaosDice(HashMap<BuildablePoolResult, Long> rollResultOccurrences, DicePoolBuilder dicePool) {
         HashMap<BuildablePoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
         // Loop through all chaos dice
-        for (Integer keptDice : dicePool.getChaosDice()) {
+        for (Integer chaosDice : dicePool.getChaosDice()) {
             HashMap<BuildablePoolResult, Long> tempMap = new HashMap<>();
             // Create n BuildablePoolResult Objects with each possible outcomes of the dice
             // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
             if (newMap.isEmpty()) {
-                IntStream.rangeClosed(1, keptDice)
+                IntStream.rangeClosed(1, chaosDice)
                         .map(operand -> operand * -1)
-                        .mapToObj(i -> new FastRollResult(dicePool.getDiceKept()).addKeptDice(i))
+                        .mapToObj(i -> new FastRollResult(dicePool.getDiceKept()).addChaosDice(i))
                         .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
             } else {
-                newMap.forEach((key, value) -> IntStream.rangeClosed(1, keptDice)
+                newMap.forEach((key, value) -> IntStream.rangeClosed(1, chaosDice)
                         .map(operand -> operand * -1)
-                        .mapToObj(key::addKeptDice)
+                        .mapToObj(key::addChaosDice)
                         .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + value : value)));
             }
             newMap = tempMap;
