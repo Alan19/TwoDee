@@ -25,7 +25,6 @@ import util.Tier;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class LanguageCommand implements VelenSlashEvent {
     public static final String LANGUAGE_NAME = "language-name";
@@ -196,16 +195,16 @@ public class LanguageCommand implements VelenSlashEvent {
     }
 
     private EmbedBuilder handleAdd(SlashCommandInteractionOption option) {
-        Optional<String> nameOpt = option.getOptionStringValueByName(LANGUAGE_NAME);
+        Optional<String> nameOpt = option.getArgumentStringValueByName(LANGUAGE_NAME);
         if (nameOpt.isPresent()) {
             return languageLogic.add(new Language(
                     nameOpt.get(),
-                    option.getOptionStringValueByName("description").orElse(null),
-                    option.getOptionBooleanValueByName("constellation").orElse(false),
-                    option.getOptionBooleanValueByName("court").orElse(false),
-                    option.getOptionBooleanValueByName("family").orElse(false),
-                    option.getOptionBooleanValueByName("regional").orElse(false),
-                    option.getOptionBooleanValueByName("vulgar").orElse(false)
+                    option.getArgumentStringValueByName("description").orElse(null),
+                    option.getArgumentBooleanValueByName("constellation").orElse(false),
+                    option.getArgumentBooleanValueByName("court").orElse(false),
+                    option.getArgumentBooleanValueByName("family").orElse(false),
+                    option.getArgumentBooleanValueByName("regional").orElse(false),
+                    option.getArgumentBooleanValueByName("vulgar").orElse(false)
             )).fold(
                     error -> new EmbedBuilder()
                             .setTitle("Failed to Add New Language")
@@ -223,7 +222,7 @@ public class LanguageCommand implements VelenSlashEvent {
     }
 
     private EmbedBuilder handleRemove(SlashCommandInteractionOption option) {
-        Optional<String> nameOpt = option.getOptionStringValueByName(LANGUAGE_NAME);
+        Optional<String> nameOpt = option.getArgumentStringValueByName(LANGUAGE_NAME);
         if (nameOpt.isPresent()) {
             return nameOpt.flatMap(languageLogic::getByName)
                     .map(languageLogic::remove)
@@ -248,23 +247,21 @@ public class LanguageCommand implements VelenSlashEvent {
     }
 
     private EmbedBuilder handleConnect(SlashCommandInteractionOption option) {
-        Optional<Language> languageU = option.getOptionStringValueByName(LANGUAGE_1)
+        Optional<Language> languageU = option.getArgumentStringValueByName(LANGUAGE_1)
                 .flatMap(languageLogic::getByName);
 
-        Optional<Language> languageV = option.getOptionStringValueByName(LANGUAGE_2)
+        Optional<Language> languageV = option.getArgumentStringValueByName(LANGUAGE_2)
                 .flatMap(languageLogic::getByName);
 
-        if (!languageU.isPresent()) {
+        if (languageU.isEmpty()) {
             return new EmbedBuilder()
                     .setTitle("Failed to Connect Languages")
-                    .setDescription(option.getOptionStringValueByName(LANGUAGE_1).orElse("NONE") + " was not found");
-        }
-        else if (!languageV.isPresent()) {
+                    .setDescription(option.getArgumentStringValueByName(LANGUAGE_1).orElse("NONE") + " was not found");
+        } else if (languageV.isEmpty()) {
             return new EmbedBuilder()
                     .setTitle("Failed to Connect Languages")
-                    .setDescription(option.getOptionStringValueByName(LANGUAGE_2).orElse("NONE") + " was not found");
-        }
-        else {
+                    .setDescription(option.getArgumentStringValueByName(LANGUAGE_2).orElse("NONE") + " was not found");
+        } else {
             return languageLogic.connect(languageU.get(), languageV.get())
                     .fold(
                             error -> new EmbedBuilder()
@@ -281,7 +278,7 @@ public class LanguageCommand implements VelenSlashEvent {
     }
 
     private EmbedBuilder handleQuery(SlashCommandInteractionOption option) {
-        return option.getOptionStringValueByName(LANGUAGE_NAME)
+        return option.getArgumentStringValueByName(LANGUAGE_NAME)
                 .flatMap(languageLogic::getByName)
                 .map(language -> {
                     Collection<Language> connections = languageLogic.getConnections(language);
@@ -296,7 +293,7 @@ public class LanguageCommand implements VelenSlashEvent {
                 })
                 .orElseGet(() -> new EmbedBuilder()
                         .setTitle("Failed to Query Language")
-                        .setDescription("No Language '" + option.getOptionStringValueByName(LANGUAGE_NAME).orElse("NONE") + "' exists")
+                        .setDescription("No Language '" + option.getArgumentStringValueByName(LANGUAGE_NAME).orElse("NONE") + "' exists")
                 );
     }
 
@@ -317,27 +314,27 @@ public class LanguageCommand implements VelenSlashEvent {
     }
 
     private EmbedBuilder handleCalculate(User user, InteractionBase event, SlashCommandInteractionOption option) {
-        Optional<Language> targetLanguageOpt = option.getOptionStringValueByName(TARGET)
+        Optional<Language> targetLanguageOpt = option.getArgumentStringValueByName(TARGET)
                 .flatMap(languageLogic::getByName);
 
         if (targetLanguageOpt.isPresent()) {
             Map<String, Try<Collection<Language>>> userLanguages = Maps.newHashMap();
 
-            option.getOptionStringValueByName("languages")
+            option.getArgumentStringValueByName("languages")
                     .map(languages -> Arrays.stream(languages.split(","))
                             .map(languageLogic::getByName)
-                            .flatMap(value -> value.map(Stream::of).orElse(Stream.empty()))
+                            .flatMap(Optional::stream)
                             .collect(Collectors.toSet())
                     ).ifPresent(languages -> userLanguages.put("Entered", Try.success(languages)));
 
-            option.getOptionMentionableValueByName("characters")
+            option.getArgumentMentionableValueByName("characters")
                     .map(PlayerHandler::getPlayersFromMentionable)
                     .map(players -> players.stream()
                             .map(userPlayerPair -> {
                                 Try<Collection<Language>> languageNames = SheetsHandler.getLanguages(userPlayerPair.getRight())
                                         .map(languages -> languages.stream()
                                                 .map(languageLogic::getByName)
-                                                .flatMap(value -> value.map(Stream::of).orElse(Stream.empty()))
+                                                .flatMap(Optional::stream)
                                                 .collect(Collectors.toSet())
                                         );
                                 return Pair.of(DiscordHelper.getUsernameFromInteraction(event, userPlayerPair.getKey()), languageNames);
@@ -353,7 +350,7 @@ public class LanguageCommand implements VelenSlashEvent {
                                 SheetsHandler.getLanguages(userPlayerPair.getRight())
                                         .map(languages -> languages.stream()
                                                 .map(languageLogic::getByName)
-                                                .flatMap(value -> value.map(Stream::of).orElse(Stream.empty()))
+                                                .flatMap(Optional::stream)
                                                 .collect(Collectors.toCollection(HashSet::new))
                                         )
                         ));
@@ -386,7 +383,7 @@ public class LanguageCommand implements VelenSlashEvent {
         else {
             return new EmbedBuilder()
                     .setTitle("Failed to Calculate Difficulty")
-                    .setDescription("No Target Language found for: " + option.getOptionStringValueByName(TARGET).orElse("NONE"));
+                    .setDescription("No Target Language found for: " + option.getArgumentStringValueByName(TARGET).orElse("NONE"));
         }
     }
 

@@ -73,7 +73,7 @@ public class AdvancementLogic implements VelenSlashEvent {
     public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
         // Generate Validation objects on objects that need validation
         final SlashCommandInteractionOption subcommandOption = event.getOptions().get(0);
-        final Optional<Long> targetFacets = subcommandOption.getOptionLongValueByName("target-facets");
+        final Optional<Long> targetFacets = subcommandOption.getArgumentLongValueByName("target-facets");
         final Validation<Throwable, Long> targetFacetsTry = targetFacets.map(Try::success)
                 .orElseGet(() -> Try.failure(new IllegalStateException("target-facets: Unable to find target facets")))
                 .flatMap(aLong -> isValidFacetCount(aLong, "target-facets"))
@@ -83,10 +83,10 @@ public class AdvancementLogic implements VelenSlashEvent {
                 .flatMap(integers -> Try.sequence(integers.stream().map(aLong -> isValidFacetCount(aLong, "target-facets")).collect(Collectors.toList())))
                 .toValidation();
         final boolean tall = subcommandOption.getName().equals("tall");
-        final Validation<Throwable, Long> validateMinimum = Try.success(subcommandOption.getOptionLongValueByName("minimum-facets").orElse(tall ? 12L : 4L))
+        final Validation<Throwable, Long> validateMinimum = Try.success(subcommandOption.getArgumentLongValueByName("minimum-facets").orElse(tall ? 12L : 4L))
                 .flatMap(aLong -> isValidFacetCount(aLong, "minimum-facets"))
                 .toValidation();
-        final Validation<Throwable, Long> manaValidation = Try.success(subcommandOption.getOptionLongValueByName("nervewright-mana").orElse(0L))
+        final Validation<Throwable, Long> manaValidation = Try.success(subcommandOption.getArgumentLongValueByName("nervewright-mana").orElse(0L))
                 .flatMap(aLong -> flatMapPositiveLong(aLong, "nervewright-mana"))
                 .toValidation();
 
@@ -95,9 +95,9 @@ public class AdvancementLogic implements VelenSlashEvent {
                 .ap((target, longs, minimum, mana) -> new Tuple4<>(target, longs.map(Math::toIntExact).asJava(), minimum, mana))
                 .fold(throwables -> firstResponder.setFlags(MessageFlag.EPHEMERAL).setContent(throwables.map(Throwable::getMessage).collect(Collectors.joining("\n"))).respond(),
                         tuple -> {
-                            final boolean nonEphemeral = subcommandOption.getOptionBooleanValueByName("non-ephemeral").orElse(false);
-                            final Boolean expert = subcommandOption.getOptionBooleanValueByName("target-expert").orElse(false);
-                            final Boolean adolescentInterests = subcommandOption.getOptionBooleanValueByName("adolescent-interests").orElse(false);
+                            final boolean nonEphemeral = subcommandOption.getArgumentBooleanValueByName("non-ephemeral").orElse(false);
+                            final Boolean expert = subcommandOption.getArgumentBooleanValueByName("target-expert").orElse(false);
+                            final Boolean adolescentInterests = subcommandOption.getArgumentBooleanValueByName("adolescent-interests").orElse(false);
 
                             List<SpecialtySkill> skills = new GeneralSkillCalculator(tuple._2, expert, tuple._3, adolescentInterests, tuple._4).generate(tuple._1);
                             EmbedBuilder resultsEmbed = getResultEmbed(subcommandOption, tuple._1, skills);
@@ -138,7 +138,7 @@ public class AdvancementLogic implements VelenSlashEvent {
     }
 
     private List<Long> getStartingArray(SlashCommandInteractionOption subcommandOption) {
-        return subcommandOption.getOptionStringValueByName("starting-array")
+        return subcommandOption.getArgumentStringValueByName("starting-array")
                 .map(s -> Arrays.stream(s.split(" ")).map(Long::parseLong).collect(Collectors.toList()))
                 .orElseGet(ArrayList::new);
     }

@@ -55,11 +55,11 @@ public class StatisticsCommand implements VelenSlashEvent, VelenEvent {
 
     @Override
     public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final Optional<String> dicePool = event.getOptionStringValueByName("dicepool");
+        final Optional<String> dicePool = event.getArgumentStringValueByName("dicepool");
         if (dicePool.isPresent()) {
-            final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new StatisticsLogic(new DicePoolBuilder(dicePool.get(), s -> s).withDiceKept(event.getOptionLongValueByName("dicekept").map(Math::toIntExact).orElse(2))).generateEmbed());
+            final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new StatisticsLogic(new DicePoolBuilder(dicePool.get(), s -> s).withDiceKept(event.getArgumentLongValueByName("dicekept").map(Math::toIntExact).orElse(2))).generateEmbed());
 
-            final boolean ephemeral = !event.getOptionBooleanValueByName("nonephemeral").orElse(false);
+            final boolean ephemeral = !event.getArgumentBooleanValueByName("nonephemeral").orElse(false);
             event.respondLater(ephemeral).thenAcceptBoth(result, (updater, embedBuilder) -> {
                 InteractionOriginalResponseUpdater responseUpdater = updater.addEmbed(embedBuilder).setContent("Here are the statistics for **" + dicePool.get() + "**");
                 responseUpdater.update();

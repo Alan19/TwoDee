@@ -62,8 +62,8 @@ public class SnackLogic implements VelenSlashEvent, VelenEvent {
 
     @Override
     public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final Pair<String, String> snackType = event.getOptionStringValueByName("snack-type").map(s -> Pair.of(Pair.of(s, snacks.get(s)))).orElse(getRandomSnack());
-        final User recipient = event.getOptionUserValueByName("recipient").orElse(user);
+        final Pair<String, String> snackType = event.getArgumentStringValueByName("snack-type").map(s -> Pair.of(Pair.of(s, snacks.get(s)))).orElse(getRandomSnack());
+        final User recipient = event.getArgumentUserValueByName("recipient").orElse(user);
         firstResponder.addEmbed(getSnackEmbed(user, snackType, recipient)).respond();
     }
 

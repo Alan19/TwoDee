@@ -88,18 +88,18 @@ public class CalculationLogic implements VelenEvent, VelenSlashEvent {
                 .respond()
                 .thenCompose(updater ->
                         Try.of(() -> Tuple.of(
-                                        event.getOptionStringValueByName("output")
+                                        event.getArgumentStringValueByName("output")
                                                 .flatMap(OutputType::getByName)
                                                 .orElse(OutputType.SQLITE),
-                                        event.getOptionChannelValueByName("channel")
+                                        event.getArgumentChannelValueByName("channel")
                                                 .flatMap(Channel::asTextChannel)
                                                 .orElseGet(() -> event.getChannel()
                                                         .orElseThrow(() -> new InvalidUserInputException("No Valid Channel Found"))
                                                 ),
-                                        event.getOptionStringValueByName("start")
+                                        event.getArgumentStringValueByName("start")
                                                 .map(Long::parseLong)
                                                 .orElseThrow(() -> new InvalidUserInputException("No Start Message Provided")),
-                                        event.getOptionStringValueByName("end")
+                                        event.getArgumentStringValueByName("end")
                                                 .map(Long::parseLong)
                                                 .orElseThrow(() -> new InvalidUserInputException("No End Message Provider"))
                                 ))
