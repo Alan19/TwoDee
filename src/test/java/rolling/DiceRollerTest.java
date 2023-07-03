@@ -18,19 +18,19 @@ class DiceRollerTest {
 
 
     private Try<Pair<List<Dice>, List<Integer>>> pool;
-    private Pair<List<Roll>, List<Integer>> roll;
+    private Pair<List<RolledDie>, List<Integer>> roll;
     private Result result;
 
     @BeforeEach
     void setUp() {
         pool = Roller.parse("2d8 d6 pd4 cd8 +1 stealth", s -> Try.success(s.replace("stealth", "d8")));
-        roll = Roller.roll(Pair.of(Arrays.asList(new Dice("d", 12), new Dice("pd", 12), new Dice("cd", 12)), Arrays.asList(3, -2)));
-        result = new Result(Arrays.asList(new Roll("d", 4),
-                new Roll("d", 1),
-                new Roll("pd", 12, 6),
-                new Roll("ed", 12, 6),
-                new Roll("cd", 3),
-                new Roll("kd", 1)), Arrays.asList(6, -3), 2);
+        roll = Roller.roll(Pair.of(Arrays.asList(new Dice("d", 12), new Dice("pd", 12), new Dice("cd", 12)), Arrays.asList(3, -2)), false);
+        result = new Result(Arrays.asList(new RolledDie("d", 4),
+                new RolledDie("d", 1),
+                new RolledDie("pd", 12, 6),
+                new RolledDie("ed", 12, 6),
+                new RolledDie("cd", 3),
+                new RolledDie("kd", 1)), Arrays.asList(6, -3), 2);
     }
 
     @Test
@@ -46,7 +46,7 @@ class DiceRollerTest {
     @Test
     void testRoll() {
         assertEquals(3, roll.getLeft().size());
-        assertTrue(roll.getLeft().stream().mapToInt(Roll::getValue).allMatch(value -> Range.between(1, 12).contains(value)));
+        assertTrue(roll.getLeft().stream().mapToInt(RolledDie::getValue).allMatch(value -> Range.between(1, 12).contains(value)));
         assertEquals(Arrays.asList(3, -2), roll.getRight());
     }
 

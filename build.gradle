@@ -7,7 +7,7 @@ apply plugin: 'java'
 apply plugin: 'maven-publish'
 
 group = 'main'
-version = '8.0.14'
+version = '8.0.15'
 
 description = "A bot for the Facets tabletop RPG"
 
@@ -45,6 +45,10 @@ distZip {
         include 'tokens/*'
         include 'resources/*'
     }
+}
+
+test {
+    useJUnitPlatform()
 }
 
 

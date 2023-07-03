@@ -23,12 +23,12 @@ public class TestLogic implements VelenHybridHandler {
     public static void setTestCommand(Velen velen) {
         TestLogic testLogic = new TestLogic(2);
         VelenCommand.ofHybrid("test", "Rolls some dice with opportunities disabled!", velen, testLogic)
-                .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, DICE_KEPT)
+                .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, DICE_KEPT, DEVASTATING)
                 .addFormats("test :[dicepool:of(string):hasMany()]")
                 .addShortcuts("t", "t2")
                 .attach();
         List.of(1, 3, 4, 5).forEach(integer -> VelenCommand.ofHybrid("test%d".formatted(integer), "Roll some dice with opportuities disabled and keeps %s dice!".formatted(integer), velen, new TestLogic(integer))
-                .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE)
+                .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, DEVASTATING)
                 .addFormats("test%d :[dicepool:of(string):hasMany()]".formatted(integer))
                 .addShortcuts("t%d".formatted(integer))
                 .attach());
@@ -41,7 +41,7 @@ public class TestLogic implements VelenHybridHandler {
         final Integer kept = args.withName("dicekept").flatMap(VelenOption::asInteger).orElse(this.diceKept);
         final Integer discount = args.withName("discount").flatMap(VelenOption::asInteger).orElse(0);
         final Boolean enhanceable = args.withName("enhanceable").flatMap(VelenOption::asBoolean).orElse(null);
-
-        RollLogic.handleRoll(event, dicePool, discount, kept, enhanceable, false);
+        final Boolean devastating = args.withName("devastating").flatMap(VelenOption::asBoolean).orElse(false);
+        RollLogic.handleRoll(event, dicePool, discount, kept, enhanceable, false, devastating);
     }
 }

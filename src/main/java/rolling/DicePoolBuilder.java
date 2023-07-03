@@ -2,7 +2,6 @@ package rolling;
 
 import util.UtilFunctions;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -23,13 +22,10 @@ public class DicePoolBuilder {
     private final List<Integer> keptDice;
     private final List<Integer> enhancedDie;
     private final List<Integer> flatBonus;
+    private final boolean devastating;
     private int diceKept = 2;
-    private boolean opportunitiesEnabled = true;
-    private int discount;
-    private Boolean enhanceable;
 
-
-    public DicePoolBuilder(String pool, UnaryOperator<String> parseFunction) {
+    public DicePoolBuilder(String pool, UnaryOperator<String> parseFunction, boolean devastating) {
         pool = parseFunction.apply(pool);
         regularDice = new ArrayList<>();
         plotDice = new ArrayList<>();
@@ -37,8 +33,8 @@ public class DicePoolBuilder {
         keptDice = new ArrayList<>();
         enhancedDie = new ArrayList<>();
         flatBonus = new ArrayList<>();
+        this.devastating = devastating;
 
-        enhanceable = null;
         if (pool.isEmpty()) {
             return;
         }
@@ -63,6 +59,10 @@ public class DicePoolBuilder {
         }
     }
 
+    public boolean isDevastating() {
+        return devastating;
+    }
+
     private void processDice(Matcher diceMatcher) {
         final int count = UtilFunctions.tryParseInt(diceMatcher.group("count")).orElse(1);
         final String type = diceMatcher.group("type");
@@ -76,36 +76,8 @@ public class DicePoolBuilder {
         }
     }
 
-    private List<Integer> splitSkillFacets(int skillFacets) {
-        List<Integer> dice = new ArrayList<>();
-        final int d12Dice = skillFacets / 12;
-        final int remainder = skillFacets % 12;
-        for (int i = 0; i < d12Dice; i++) {
-            dice.add(12);
-        }
-        if (remainder >= 4) {
-            dice.add(remainder);
-        }
-        return dice;
-    }
-
     public DicePoolBuilder withDiceKept(Integer diceKept) {
         this.diceKept = diceKept;
-        return this;
-    }
-
-    public DicePoolBuilder withDiscount(Integer discount) {
-        this.discount = discount;
-        return this;
-    }
-
-    public DicePoolBuilder withEnhanceable(@Nullable Boolean enhanceable) {
-        this.enhanceable = enhanceable;
-        return this;
-    }
-
-    public DicePoolBuilder withOpportunity(Boolean opportunity) {
-        this.opportunitiesEnabled = opportunity;
         return this;
     }
 
@@ -137,15 +109,4 @@ public class DicePoolBuilder {
         return diceKept;
     }
 
-    public boolean isOpportunitiesEnabled() {
-        return opportunitiesEnabled;
-    }
-
-    public int getDiscount() {
-        return discount;
-    }
-
-    public boolean isEnhanceable() {
-        return enhanceable != null ? enhanceable : plotDice.size() + enhancedDie.size() <= 0;
-    }
 }

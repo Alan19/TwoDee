@@ -38,6 +38,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
     private final boolean opportunity;
     private final int diceKept;
     private final String pool;
+    private final boolean devastating;
     private final Integer originalPlotPoints;
     private final Integer originalDoomPoints;
     private final AtomicReference<ListenerManager<ButtonClickListener>> listenerReference;
@@ -51,6 +52,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
         this.enhanceable = rollParameters.enhanceable();
         this.opportunity = rollParameters.opportunity();
         this.diceKept = rollParameters.diceKept();
+        this.devastating = rollParameters.devastating();
         this.originalPlotPoints = originalPointPair.getLeft();
         this.originalDoomPoints = originalPointPair.getRight();
         this.message = message;
@@ -178,7 +180,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
      * @param interactionMessage The message the button interaction is attached to
      */
     private void handleReroll(ButtonInteraction interaction, Message interactionMessage) {
-        rollBackChanges().thenApply(unused -> RollLogic.rollDice(pool, discount, diceKept, opportunity, user, UtilFunctions.getUsernameFromSlashEvent(interaction, interaction.getUser())))
+        rollBackChanges().thenApply(unused -> RollLogic.rollDice(pool, discount, diceKept, opportunity, devastating, user, UtilFunctions.getUsernameFromSlashEvent(interaction, interaction.getUser())))
                 .thenCompose(outputs -> interaction.createOriginalMessageUpdater()
                         .removeAllComponents()
                         .addEmbeds(interactionMessage.getEmbeds().get(0).toBuilder().setFooter(""))
@@ -191,7 +193,7 @@ public class RollComponentInteractionListener implements ButtonClickListener {
                                 .addComponents(ComponentUtils.createRollComponentRows(false, Optional.ofNullable(enhanceable).orElse(rollOutput.plotDiceUsed()), rollOutput.rollTotal()))
                                 .replyTo(interactionMessage)
                                 .send(interactionMessage.getChannel())
-                                .thenAccept(rerollMessage -> Roller.attachEmotesAndListeners(user, new RollParameters(pool, discount, enhanceable, opportunity, diceKept), Pair.of(originalPlotPoints, originalDoomPoints), rollOutput, rerollMessage))));
+                                .thenAccept(rerollMessage -> Roller.attachEmotesAndListeners(user, new RollParameters(pool, discount, enhanceable, opportunity, diceKept, devastating), Pair.of(originalPlotPoints, originalDoomPoints), rollOutput, rerollMessage))));
     }
 
     /**

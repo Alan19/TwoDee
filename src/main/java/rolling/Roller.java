@@ -97,17 +97,29 @@ public class Roller {
      * Rolls each dice in the dice pool
      *
      * @param diceModifierPair A pair that contains a list of dice to be rolled, and the list of modifiers
+     * @param devastating      If rolled die values should be doubled if they roll max
      * @return A pair with a list of dice roll results, and a list of roll modifiers
      */
-    public static Pair<List<Roll>, List<Integer>> roll(Pair<List<Dice>, List<Integer>> diceModifierPair) {
-        return Pair.of(diceModifierPair.getLeft().stream().map(Roller::createRoll).collect(Collectors.toList()), diceModifierPair.getRight());
+    public static Pair<List<RolledDie>, List<Integer>> roll(Pair<List<Dice>, List<Integer>> diceModifierPair, boolean devastating) {
+        return Pair.of(diceModifierPair.getLeft().stream().map(dice -> createRoll(dice, devastating)).collect(Collectors.toList()), diceModifierPair.getRight());
     }
 
-    private static Roll createRoll(Dice dice) {
-        if (dice.name().equals("pd") || dice.name().equals("ed")) {
-            return new Roll(dice.name(), random.nextInt(dice.value()) + 1, dice.value() / 2);
+    /**
+     * Roll a die, and give it a minimum value if it's a plot die / enhanced die
+     *
+     * @param dice        The information on the die to roll
+     * @param devastating If die value should be doubled in case the roll is maxed
+     * @return The result of the rolled die
+     */
+    private static RolledDie createRoll(Dice dice, boolean devastating) {
+        int rolledValue = random.nextInt(dice.value()) + 1;
+        if (dice.getType() != DiceType.CHAOS_DIE && devastating && rolledValue == dice.value()) {
+            rolledValue = rolledValue * 2;
         }
-        return new Roll(dice.name(), random.nextInt(dice.value()) + 1);
+        if (dice.name().equals("pd") || dice.name().equals("ed")) {
+            return new RolledDie(dice.name(), rolledValue, dice.value() / 2);
+        }
+        return new RolledDie(dice.name(), rolledValue);
     }
 
     /**

@@ -1,16 +1,16 @@
 package rolling;
 
-public class Roll {
+public class RolledDie {
     private String type;
     private int value;
     private int enhancedValue;
 
-    public Roll(String type, int value) {
+    public RolledDie(String type, int value) {
         this.type = type;
         this.value = value;
     }
 
-    public Roll(String type, int value, int enhancedValue) {
+    public RolledDie(String type, int value, int enhancedValue) {
         this.type = type;
         this.value = value;
         this.enhancedValue = enhancedValue;

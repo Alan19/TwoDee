@@ -45,6 +45,7 @@ public class RollLogic implements VelenHybridHandler {
     public static final SlashCommandOption DICE_KEPT = SlashCommandOption.create(SlashCommandOptionType.LONG, "dicekept", "The number of dice kept. Keeps two dice by default.", false);
     public static final SlashCommandOption ENHANCEABLE = SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "enhanceable", "Allows the roll to be enhanced after the roll.", false);
     public static final SlashCommandOption OPPORTUNITY = SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false);
+    public static final SlashCommandOption DEVASTATING = SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "devastating", "Makes dice that rolled max be treated as double its value. Defaults to false", false);
     private final int diceKept;
 
     public RollLogic(int diceKept) {
@@ -54,12 +55,12 @@ public class RollLogic implements VelenHybridHandler {
     public static void setupRollCommand(Velen velen) {
         RollLogic rollLogic = new RollLogic(2);
         VelenCommand.ofHybrid("roll", "Roll some dice!", velen, rollLogic)
-                .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, DICE_KEPT, OPPORTUNITY)
+                .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, DICE_KEPT, OPPORTUNITY, DEVASTATING)
                 .addFormats("roll :[dicepool:of(string):hasMany()]")
                 .addShortcuts("r", "r2")
                 .attach();
         List.of(1, 3, 4, 5).forEach(integer -> VelenCommand.ofHybrid("roll%d".formatted(integer), "Roll some dice and keeps %s dice!".formatted(integer), velen, new RollLogic(integer))
-                .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, OPPORTUNITY)
+                .addOptions(DICE_POOL, DISCOUNT, ENHANCEABLE, OPPORTUNITY, DEVASTATING)
                 .addFormats("roll%d :[dicepool:of(string):hasMany()]".formatted(integer))
                 .addShortcuts("r%d".formatted(integer))
                 .attach());
@@ -74,16 +75,17 @@ public class RollLogic implements VelenHybridHandler {
      * @param diceKept    The number of dice kept
      * @param enhanceable If there is an enhancement override on the roll
      * @param opportunity If opportunities are enabled
+     * @param devastating If dice that rolled max should be treated as double its value
      */
-    public static void handleRoll(VelenGeneralEvent event, String dicePool, Integer discount, Integer diceKept, @Nullable Boolean enhanceable, Boolean opportunity) {
+    public static void handleRoll(VelenGeneralEvent event, String dicePool, Integer discount, Integer diceKept, @Nullable Boolean enhanceable, Boolean opportunity, Boolean devastating) {
         final User user = event.getUser();
-        final RollParameters rollParameters = new RollParameters(dicePool, discount, enhanceable, opportunity, diceKept);
+        final RollParameters rollParameters = new RollParameters(dicePool, discount, enhanceable, opportunity, diceKept, devastating);
         final VelenGeneralResponder updaterFuture = event.createResponder();
         Optional<Pair<Integer, Integer>> originalPointPair = SheetsHandler.getPlotPoints(user)
                 .flatMap(integer -> DoomHandler.getUserDoomPool(user)
                         .map(s -> Pair.of(integer, DoomHandler.getDoom(s)))
                 );
-        rollDice(dicePool, discount, diceKept, opportunity, user, UtilFunctions.getUsernameInChannel(user, event.getChannel()))
+        rollDice(dicePool, discount, diceKept, opportunity, devastating, user, UtilFunctions.getUsernameInChannel(user, event.getChannel()))
                 .onFailure(throwable -> updaterFuture
                         .setFlags(MessageFlag.EPHEMERAL)
                         .setContent(throwable.getMessage()).respond())
@@ -100,34 +102,40 @@ public class RollLogic implements VelenHybridHandler {
      * @param discount    The discount on plot points in the roll
      * @param diceKept    The amount of dice kept
      * @param opportunity If the roll can have opportunities
+     * @param devastating If dice that rolled max should be treated as double its value
      * @param user        The user who made the roll
      * @return A CompletableFuture that contains a Triple that that has a list of the embeds to send, a boolean states if the roll uses any plot dice, and the total of the roll
      */
-    public static Try<RollOutput> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, User user, String username) {
+    public static Try<RollOutput> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, boolean devastating, User user, String username) {
         return Roller.parse(dicePool, pool -> convertSkillsToDice(user, pool))
-                .map(Roller::roll)
+                .map(diceModifierPair -> Roller.roll(diceModifierPair, devastating))
                 .map(pair -> new Result(pair.getLeft(), pair.getRight(), diceKept))
                 // TODO Convert to CompletableFuture earlier
                 .map(result -> Roller.handlePoints(result, discount, opportunity, value -> DoomHandler.addDoomOnOpportunity(user, value), value -> PlotPointUtils.addPlotPointsOnRoll(user, value)))
-                .map(changes -> Roller.output(changes, builder -> postProcessResult(dicePool, user, builder, username), DoomHandler.getDoomPoolOrDefault(user), discount, opportunity));
+                .map(changes -> Roller.output(changes, builder -> postProcessResult(dicePool, user, builder, username, devastating), DoomHandler.getDoomPoolOrDefault(user), discount, opportunity));
     }
 
     /**
      * Modifies the embed generated on a roll to include information about the user, a random color, and a random roll title
      *
-     * @param dicePool The pool of dice that was rolled, after conversion
-     * @param user     The user that rolled
-     * @param builder  The EmbedBuilder that contains the results of the dice roll
-     * @param username The display name for the user, generally their nickname
+     * @param dicePool    The pool of dice that was rolled, after conversion
+     * @param user        The user that rolled
+     * @param builder     The EmbedBuilder that contains the results of the dice roll
+     * @param username    The display name for the user, generally their nickname
+     * @param devastating Flag that adds the Devastating message on a roll
      * @return An embed that has information about the user and the dice pool added to it
      */
-    private static EmbedBuilder postProcessResult(String dicePool, User user, EmbedBuilder builder, String username) {
+    private static EmbedBuilder postProcessResult(String dicePool, User user, EmbedBuilder builder, String username, boolean devastating) {
         // TODO Use server profile and nicknames
         final Try<String> processedDicePool = Roller.preprocessPool(dicePool, s -> convertSkillsToDice(user, s));
+        String description = MessageFormat.format("Here are the results for **{0}**", processedDicePool.getOrElse(dicePool));
+        if (devastating) {
+            description += " on a **Devastating** roll :sparkles:";
+        }
         return builder.setAuthor(username, null, user.getAvatar())
                 .setColor(RandomColor.getRandomColor())
                 .setTitle(Settings.getQuotes().getRandomRollQuote())
-                .setDescription(MessageFormat.format("Here are the results for **{0}**", processedDicePool.getOrElse(dicePool)));
+                .setDescription(description);
     }
 
     /**
@@ -164,8 +172,9 @@ public class RollLogic implements VelenHybridHandler {
         final Boolean opportunity = args.withName("opportunity").flatMap(VelenOption::asBoolean).orElse(true);
         final Boolean enhanceable = args.withName("enhanceable").flatMap(VelenOption::asBoolean).orElse(null);
         final Long discount = args.withName("discount").flatMap(VelenOption::asLong).orElse(0L);
+        final Boolean devastating = args.withName("devastating").flatMap(VelenOption::asBoolean).orElse(false);
 
-        handleRoll(event, dicePool, Math.toIntExact(discount), kept, enhanceable, opportunity);
+        handleRoll(event, dicePool, Math.toIntExact(discount), kept, enhanceable, opportunity, devastating);
 
     }
 }

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import util.Match;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -19,6 +20,7 @@ public class LanguageLogicTest {
 
     private final Language TEST_LANG_1 = new Language("test_lang");
     private final Language TEST_LANG_2 = new Language("test_lang_2");
+    private final Language TEST_LANG_3 = new Language("test_lang_3");
 
     private MutableGraph<Language> createTestGraph() {
         MutableGraph<Language> mutableGraph = GraphBuilder.directed()
@@ -26,6 +28,7 @@ public class LanguageLogicTest {
         mutableGraph.addNode(TEST_LANG_1);
         mutableGraph.addNode(TEST_LANG_2);
         mutableGraph.putEdge(TEST_LANG_1, TEST_LANG_2);
+        mutableGraph.addNode(TEST_LANG_3);
         return mutableGraph;
     }
 
@@ -212,7 +215,8 @@ public class LanguageLogicTest {
                         .collect(Collectors.toSet()),
                 Sets.newHashSet(
                         TEST_LANG_1,
-                        TEST_LANG_2
+                        TEST_LANG_2,
+                        TEST_LANG_3
                 )
         );
     }
@@ -226,4 +230,11 @@ public class LanguageLogicTest {
                 Collections.emptySet()
         );
     }
+
+    @Test
+    void testNoRoutes() {
+        LanguageLogic logic = LanguageLogic.of(createTestGraph());
+        Assertions.assertThrowsExactly(NullPointerException.class, () -> logic.getPath(TEST_LANG_3, List.of(TEST_LANG_1, TEST_LANG_2)));
+    }
+
 }

@@ -8,26 +8,26 @@ import java.util.stream.Stream;
 
 public class Result {
     private final List<Integer> regularDice;
-    private final List<Roll> plotDice;
+    private final List<RolledDie> plotDice;
     private final List<Integer> keptDice;
     private final List<Integer> chaosDice;
     private final List<Integer> flatBonuses;
     private final int kept;
     private final int plotDiceCost;
 
-    public Result(List<Roll> rolls, List<Integer> flatBonuses, int kept) {
+    public Result(List<RolledDie> rolls, List<Integer> flatBonuses, int kept) {
         this.regularDice = new ArrayList<>();
         this.plotDice = new ArrayList<>();
         this.keptDice = new ArrayList<>();
         this.chaosDice = new ArrayList<>();
         this.flatBonuses = flatBonuses;
         this.kept = kept;
-        plotDiceCost = rolls.stream().filter(roll -> roll.getType().equals("pd")).mapToInt(Roll::getEnhancedValue).sum();
+        plotDiceCost = rolls.stream().filter(roll -> roll.getType().equals("pd")).mapToInt(RolledDie::getEnhancedValue).sum();
         rolls.forEach(this::acceptDice);
     }
 
 
-    private void acceptDice(Roll roll) {
+    private void acceptDice(RolledDie roll) {
         switch (roll.getType()) {
             case "pd", "ed" -> plotDice.add(roll);
             case "cd" -> chaosDice.add(roll.getValue());
@@ -77,7 +77,7 @@ public class Result {
     public int getOpportunities() {
         Stream<Integer> streamsToCheck = Stream.concat(regularDice.stream(), keptDice.stream());
         if (plotDice.size() > 1) {
-            streamsToCheck = Stream.concat(streamsToCheck, plotDice.stream().skip(1).map(Roll::getValue));
+            streamsToCheck = Stream.concat(streamsToCheck, plotDice.stream().skip(1).map(RolledDie::getValue));
         }
         return Math.toIntExact(streamsToCheck.filter(integer -> integer == 1).count());
     }

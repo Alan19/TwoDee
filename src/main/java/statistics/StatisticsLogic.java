@@ -126,25 +126,8 @@ public class StatisticsLogic {
         return tempMap;
     }
 
-    private HashMap<BuildablePoolResult, Long> processKeptDice(HashMap<BuildablePoolResult, Long> rollResultOccurrences, DicePoolBuilder dicePool) {
-        HashMap<BuildablePoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
-        // Loop through all kept dice
-        for (Integer keptDice : dicePool.getKeptDice()) {
-            HashMap<BuildablePoolResult, Long> tempMap = new HashMap<>();
-            // Create n BuildablePoolResult Objects with each possible outcomes of the dice
-            // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
-            if (newMap.isEmpty()) {
-                IntStream.rangeClosed(1, keptDice)
-                        .mapToObj(i -> new FastRollResult(dicePool.getDiceKept()).addKeptDice(i))
-                        .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
-            } else {
-                newMap.forEach((key, value) -> IntStream.rangeClosed(1, keptDice)
-                        .mapToObj(key::addKeptDice)
-                        .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + value : value)));
-            }
-            newMap = tempMap;
-        }
-        return newMap;
+    private static int getDiceValue(DicePoolBuilder dicePool, Integer diceFacets, int rolledValue) {
+        return rolledValue == diceFacets && dicePool.isDevastating() ? rolledValue * 2 : rolledValue;
     }
 
     private HashMap<BuildablePoolResult, Long> processChaosDice(HashMap<BuildablePoolResult, Long> rollResultOccurrences, DicePoolBuilder dicePool) {
@@ -170,6 +153,27 @@ public class StatisticsLogic {
         return newMap;
     }
 
+    private HashMap<BuildablePoolResult, Long> processKeptDice(HashMap<BuildablePoolResult, Long> rollResultOccurrences, DicePoolBuilder dicePool) {
+        HashMap<BuildablePoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
+        // Loop through all kept dice
+        for (Integer keptDice : dicePool.getKeptDice()) {
+            HashMap<BuildablePoolResult, Long> tempMap = new HashMap<>();
+            // Create n BuildablePoolResult Objects with each possible outcomes of the dice
+            // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
+            if (newMap.isEmpty()) {
+                IntStream.rangeClosed(1, keptDice)
+                        .mapToObj(i -> new FastRollResult(dicePool.getDiceKept()).addKeptDice(getDiceValue(dicePool, keptDice, i)))
+                        .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
+            } else {
+                newMap.forEach((key, value) -> IntStream.rangeClosed(1, keptDice)
+                        .mapToObj(diceValue -> key.addKeptDice(getDiceValue(dicePool, keptDice, diceValue)))
+                        .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + value : value)));
+            }
+            newMap = tempMap;
+        }
+        return newMap;
+    }
+
     private HashMap<BuildablePoolResult, Long> processPlotDice(HashMap<BuildablePoolResult, Long> rollResultOccurrences, DicePoolBuilder dicePool) {
         HashMap<BuildablePoolResult, Long> newMap = new HashMap<>(rollResultOccurrences);
         // Loop through all the kept dice
@@ -179,11 +183,11 @@ public class StatisticsLogic {
             // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
             if (newMap.isEmpty()) {
                 IntStream.rangeClosed(1, plotDice)
-                        .mapToObj(i -> new FastRollResult(dicePool.getDiceKept()).addPlotDice(getPlotDieValue(plotDice, i, dicePool.getPlotDice().size() > 1)))
+                        .mapToObj(i -> new FastRollResult(dicePool.getDiceKept()).addPlotDice(getPlotDieValue(plotDice, i, dicePool.getPlotDice().size() > 1, dicePool.isDevastating())))
                         .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
             } else {
                 newMap.forEach((key, value) -> IntStream.rangeClosed(1, plotDice)
-                        .mapToObj(i -> key.addPlotDice(getPlotDieValue(plotDice, i, dicePool.getPlotDice().size() > 1)))
+                        .mapToObj(i -> key.addPlotDice(getPlotDieValue(plotDice, i, dicePool.getPlotDice().size() > 1, dicePool.isDevastating())))
                         .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + value : value)));
             }
             newMap = tempMap;
@@ -194,12 +198,17 @@ public class StatisticsLogic {
     /**
      * Gets the value of a rolled plot die
      *
-     * @param plotDice The number of facets in the plot die
-     * @param i        The number rolled
+     * @param plotDice    The number of facets in the plot die
+     * @param rolledValue The number rolled
+     * @param devastating If the value of the die should be doubled if it rolls max
      * @return The result of a plot die, which has a minimum of half its facets if there is only one plot die being rolled
      */
-    private int getPlotDieValue(Integer plotDice, int i, boolean moreThanOnePlotDice) {
-        return moreThanOnePlotDice ? i : Math.max(i, plotDice / 2);
+    private int getPlotDieValue(Integer plotDice, int rolledValue, boolean moreThanOnePlotDice, boolean devastating) {
+        int finalValue = !moreThanOnePlotDice ? Math.max(rolledValue, plotDice / 2) : rolledValue;
+        if (devastating && rolledValue == plotDice) {
+            finalValue = finalValue * 2;
+        }
+        return finalValue;
     }
 
     private HashMap<BuildablePoolResult, Long> processNormalDice(HashMap<BuildablePoolResult, Long> rollResultOccurrences, DicePoolBuilder dicePool) {
@@ -211,11 +220,11 @@ public class StatisticsLogic {
             // Add the occurrences to the new map if that result already exists in the new HashMap, else set the value of that result as the number of occurrences
             if (newMap.isEmpty()) {
                 IntStream.rangeClosed(1, regularDice)
-                        .mapToObj(i -> new FastRollResult(dicePool.getDiceKept()).addRegularDice(i))
+                        .mapToObj(rolledValue -> new FastRollResult(dicePool.getDiceKept()).addRegularDice(getDiceValue(dicePool, regularDice, rolledValue)))
                         .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + 1 : 1));
             } else {
                 newMap.forEach((key, value) -> IntStream.rangeClosed(1, regularDice)
-                        .mapToObj(key::addRegularDice)
+                        .mapToObj(diceValue -> key.addRegularDice(getDiceValue(dicePool, regularDice, diceValue)))
                         .forEach(fastRollResult -> tempMap.compute(fastRollResult, (result, occurrenceCount) -> occurrenceCount != null ? occurrenceCount + value : value)));
             }
             newMap = tempMap;

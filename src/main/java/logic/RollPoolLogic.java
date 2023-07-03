@@ -43,6 +43,7 @@ public class RollPoolLogic implements VelenHybridHandler {
 
         List<SlashCommandOption> poolOptions = new ArrayList<>();
         poolOptions.add(new SlashCommandOptionBuilder().setName(POOL_NAME).setType(SlashCommandOptionType.STRING).setRequired(true).setDescription("The named pool to roll from the character sheet").setAutocompletable(true).build());
+        poolOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "devastating", "Makes dice that rolled max be treated as double its value. Defaults to false", false));
         poolOptions.addAll(rollOptions);
         poolOptions.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "opportunity", "Allows for opportunities on the roll. Defaults to true.", false));
         commandOptions.add(SlashCommandOption.createWithOptions(SlashCommandOptionType.SUB_COMMAND, "saved-pool", "Rolls a saved dice pool in your saved dice pools sheet or combat tracker", poolOptions));
@@ -81,14 +82,15 @@ public class RollPoolLogic implements VelenHybridHandler {
             SheetsHandler.getSavePool(StringUtils.capitalize(pool.toLowerCase()), user)
                     .map(defaultPool -> MessageFormat.format("{0} {1}", defaultPool, bonuses))
                     .onFailure(throwable -> event.getChannel().sendMessage(throwable.getMessage()))
-                    .onSuccess(dicePool -> RollLogic.handleRoll(event, dicePool, discount, diceKept, enhanceable, false));
+                    .onSuccess(dicePool -> RollLogic.handleRoll(event, dicePool, discount, diceKept, enhanceable, false, false));
         }
         else {
             Boolean opportunity = arguments.withName("opportunity").flatMap(VelenOption::asBoolean).orElse(true);
+            Boolean devastating = arguments.withName("devastating").flatMap(VelenOption::asBoolean).orElse(false);
             SheetsHandler.getSavedPool(pool.toLowerCase(), user)
                     .map(defaultPool -> MessageFormat.format("{0} {1}", defaultPool, bonuses))
                     .onFailure(throwable -> event.getChannel().sendMessage(throwable.getMessage()))
-                    .onSuccess(dicePool -> RollLogic.handleRoll(event, dicePool, discount, diceKept, enhanceable, opportunity));
+                    .onSuccess(dicePool -> RollLogic.handleRoll(event, dicePool, discount, diceKept, enhanceable, opportunity, devastating));
         }
     }
 }
