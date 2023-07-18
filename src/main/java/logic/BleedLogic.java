@@ -104,7 +104,7 @@ public class BleedLogic implements VelenHybridHandler {
             }
         }
         final CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(list.toArray(new CompletableFuture[0]));
-        return voidCompletableFuture.thenApply(unused -> getBleedEmbed(sender, channel, changes, errors, bleed.get(), modifier));
+        return voidCompletableFuture.thenApply(unused -> getBleedEmbed(sender, channel, changes, errors, bleed.get() / 2, modifier));
     }
 
 }
