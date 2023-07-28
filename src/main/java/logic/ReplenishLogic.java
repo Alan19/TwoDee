@@ -24,6 +24,7 @@ public class ReplenishLogic implements VelenHybridHandler {
         VelenCommand.ofHybrid("replenish", "Adds plot points for session replenishment, or good role playing", velen, replenishLogic)
                 .addOptions(SlashCommandOption.create(SlashCommandOptionType.ROLE, "party", "the party to add plot points to", true), SlashCommandOption.create(SlashCommandOptionType.LONG, "count", "the number of plot points to add", true))
                 .addFormats("replenish :[party:of(role)] :[count:of(numeric)]")
+                .addFormats("replenish :[count:of(numeric)] :[party:of(role)]")
                 .addShortcuts("sr", "sessionreplenishment")
                 .attach();
     }
