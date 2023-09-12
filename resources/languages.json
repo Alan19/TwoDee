@@ -273,6 +273,18 @@
     },
     {
       "name": "Pummthi"
+    },
+    {
+      "name": "Kerbish"
+    },
+    {
+      "name": "Furbish"
+    },
+    {
+      "name": "Jibberish"
+    },
+    {
+      "name": "Simlish"
     }
   ],
   "connections": [
@@ -663,6 +675,30 @@
     {
       "from": "Pummthi",
       "to": "Tokalaki"
+    },
+    {
+      "from": "Rikki",
+      "to": "Kerbish"
+    },
+    {
+      "from": "Kerbish",
+      "to": "Furbish"
+    },
+    {
+      "from": "Kerbish",
+      "to": "Jibberish"
+    },
+    {
+      "from": "Kerbish",
+      "to": "Simlish"
+    },
+    {
+      "from": "Furbish",
+      "to": "Infernal"
+    },
+    {
+      "from": "Jibberish",
+      "to": "Court Chaos"
     }
   ]
 }
