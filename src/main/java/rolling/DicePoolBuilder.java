@@ -25,6 +25,10 @@ public class DicePoolBuilder {
     private final boolean devastating;
     private int diceKept = 2;
 
+    public DicePoolBuilder(String pool) {
+        this(pool, s -> s, false);
+    }
+
     public DicePoolBuilder(String pool, UnaryOperator<String> parseFunction, boolean devastating) {
         pool = parseFunction.apply(pool);
         regularDice = new ArrayList<>();

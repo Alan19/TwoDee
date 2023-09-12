@@ -5,6 +5,7 @@ import language.LanguageLogic;
 import logic.*;
 import pw.mihou.velen.interfaces.Velen;
 import statistics.StatisticsCommand;
+import statistics.opposed.OpposedLogic;
 
 import java.time.Duration;
 
@@ -20,6 +21,7 @@ public class SlashCommandRegister {
         RollLogic.setupRollCommand(velen);
         TestLogic.setTestCommand(velen);
         StatisticsCommand.setupStatisticsCommand(velen);
+        OpposedLogic.setupOpposedCommand(velen);
         DamageLogic.setupDamageCommand(velen);
         RollPoolLogic.setupPoolCommand(velen);
         CalculationLogic.setup(velen);

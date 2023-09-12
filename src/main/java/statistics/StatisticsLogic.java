@@ -22,7 +22,12 @@ import java.util.stream.Stream;
  */
 public class StatisticsLogic {
     public static final EmbedBuilder OVERLOAD_EMBED = new EmbedBuilder().setDescription("That's way too many dice for me to handle. Try using less dice.");
+
     private final Try<HashMap<BuildablePoolResult, Long>> results;
+
+    public Try<HashMap<BuildablePoolResult, Long>> getResults() {
+        return results;
+    }
 
     public StatisticsLogic(DicePoolBuilder dicePool) {
         //Generate the getResults result to occurrence HashMap
