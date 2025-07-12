@@ -1,16 +1,16 @@
 package statistics;
 
 import io.vavr.control.Try;
+import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import rolling.BuildablePoolResult;
 import rolling.DicePoolBuilder;
 import rolling.FastRollResult;
+import statistics.opposed.strategy.ExtraordinarySuccessStrategy;
+import statistics.opposed.strategy.SuccessStrategy;
 import statistics.strategies.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -53,6 +53,29 @@ public class StatisticsLogic {
                         .mapToLong(Map.Entry::getValue)
                         .reduce(0, Math::addExact)));
     }
+
+    public static Map<Integer, Long> getDifficultyToCountMap(Map<BuildablePoolResult, Long> results) {
+        //noinspection OptionalGetWithoutIsPresent
+        return results.entrySet().stream()
+                .map(resultToOccurrencesEntry -> Map.entry(getTier(resultToOccurrencesEntry.getKey().getTotal()).get(), resultToOccurrencesEntry.getValue()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Long::sum, HashMap::new));
+    }
+
+    public static Map<Integer, Long> getExtraordinaryDifficultyToCountMap(Map<BuildablePoolResult, Long> results) {
+        //noinspection OptionalGetWithoutIsPresent
+        return results.entrySet().stream()
+                .map(resultToOccurrencesEntry -> Map.entry(getExtraordinaryTier(resultToOccurrencesEntry.getKey().getTotal()).get(), resultToOccurrencesEntry.getValue()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Long::sum, HashMap::new));
+    }
+
+    public static Optional<Integer> getTier(int result) {
+        return SuccessStrategy.difficultyRanges.stream().filter(integerRangePair -> integerRangePair.getRight().contains(result)).findFirst().map(Pair::getLeft);
+    }
+
+    public static Optional<Integer> getExtraordinaryTier(int result) {
+        return ExtraordinarySuccessStrategy.extraordinaryDifficultyRanges.stream().filter(integerRangePair -> integerRangePair.getRight().contains(result)).findFirst().map(Pair::getLeft);
+    }
+
 
     /**
      * Generates a hashmap based on the result hashmap to get the number of occurrences for each potential doom point output on a roll
