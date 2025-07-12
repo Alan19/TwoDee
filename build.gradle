@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
     implementation 'org.junit.jupiter:junit-jupiter:5.9.0'
-    implementation group: 'org.codehaus.mojo', name: 'exec-maven-plugin', version: '3.8.1'
+    implementation group: 'org.codehaus.mojo', name: 'exec-maven-plugin', version: '3.0.0'
     implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.15.0'
     implementation group: 'org.javacord', name: 'javacord', version: '3.8.0'
     implementation group: 'com.google.api-client', name: 'google-api-client', version: '1.35.1'
