@@ -1,7 +1,6 @@
 package rolling;
 
 import com.google.common.collect.Range;
-import com.vdurmont.emoji.EmojiParser;
 import io.vavr.control.Either;
 import io.vavr.control.Try;
 import listeners.RollComponentInteractionListener;
@@ -250,7 +249,7 @@ public class Roller {
 
     public static void attachEmotesAndListeners(User user, RollParameters rollParameters, Pair<Integer, Integer> originalPointPair, RollOutput rollOutput, Message message) {
         if (rollOutput.opportunity()) {
-            message.addReaction(EmojiParser.parseToUnicode(":eight_pointed_black_star:"));
+            message.addReaction("goldendoom:1392582605978996847");
         }
         attachListener(user, rollParameters, message, originalPointPair);
     }
