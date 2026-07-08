@@ -48,6 +48,10 @@ public class Settings {
         return instance.quotes;
     }
 
+    public static RemoteDataSettings getRemoteDataSettings() {
+        return getSettingsInstance().getRemoteDataSettings();
+    }
+
     private static SettingsInstance getSettingsInstance() {
         return instance.settingsInstance;
     }
@@ -61,7 +65,7 @@ public class Settings {
             new GsonBuilder().setPrettyPrinting().create().toJson(Settings.getSettingsInstance(), writer);
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Unable to serialize settings file!", e);
         }
     }
 
@@ -71,7 +75,7 @@ public class Settings {
             new GsonBuilder().setPrettyPrinting().create().toJson(Settings.getQuotes(), writer);
             writer.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Unable to serialize quotes file!", e);
         }
     }
 
@@ -93,12 +97,14 @@ public class Settings {
     private static class SettingsInstance {
         private final DoomSettings doom;
         private final DiscordSettings discordSettings;
+        private final RemoteDataSettings remoteDataSettings;
         private final List<Player> players;
 
         public SettingsInstance() {
             doom = new DoomSettings();
             discordSettings = new DiscordSettings();
             players = new ArrayList<>();
+            this.remoteDataSettings = new RemoteDataSettings();
         }
 
         public DoomSettings getDoom() {
@@ -111,6 +117,10 @@ public class Settings {
 
         public List<Player> getPlayers() {
             return players;
+        }
+
+        public RemoteDataSettings getRemoteDataSettings() {
+            return remoteDataSettings;
         }
     }
 }

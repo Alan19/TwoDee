@@ -1,6 +1,7 @@
 package discord;
 
 import configs.Settings;
+import doom.DoomHandler;
 import language.LanguageLogic;
 import listeners.DoomPoolAutocomplete;
 import listeners.LanguageAutocompleteListener;
@@ -22,6 +23,8 @@ public class TwoDee {
     private static final Logger LOGGER = LogManager.getLogger(TwoDee.class);
 
     public static void main(String[] args) {
+
+        DoomHandler.setupRemoteDoom();
         String token = Settings.getDiscordSettings().getToken();
 
         LanguageLogic languageLogic = LanguageLogic.of(new File("resources/languages.json"))

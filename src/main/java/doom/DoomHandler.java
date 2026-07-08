@@ -1,6 +1,8 @@
 package doom;
 
 import com.google.common.collect.Lists;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import configs.DoomSettings;
 import configs.Settings;
 import org.apache.logging.log4j.LogManager;
@@ -10,25 +12,94 @@ import org.javacord.api.entity.user.User;
 import roles.Player;
 import roles.PlayerHandler;
 import roles.Storytellers;
+import util.CachedValue;
 import util.DamerauLevenshtein;
 
 import javax.annotation.Nullable;
 import java.awt.*;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.text.MessageFormat;
+import java.time.Duration;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public final class DoomHandler {
 
     private static final Logger LOGGER = LogManager.getLogger(DoomHandler.class);
 
     public static final String DOOM = "Doom!";
+    private static final Gson GSON = new Gson();
     private static final DoomHandler instance = new DoomHandler();
-    private final DoomSettings doomSettings;
+    public final DoomSettings doomSettings;
+
+    private final CachedValue<List<RemoteDoom>> remoteDooms;
 
     private DoomHandler() {
         doomSettings = Settings.getDoom();
+        remoteDooms = new CachedValue<>(Duration.ofHours(4).toMillis(), this::getRemoteDoom);
+    }
+
+    public static void setupRemoteDoom() {
+        if (!getDoomPools().isEmpty()) {
+            instance.doomSettings
+                    .getDoomPools()
+                    .entrySet()
+                    .removeIf(doomPool -> createDoomPool(doomPool.getKey(), doomPool.getValue()));
+            Settings.serializePersonalSettings();
+        }
+
+        instance.remoteDooms.initialize();
+    }
+
+    private static boolean createDoomPool(String name, int count) {
+        HttpClient httpClient = HttpClient.newHttpClient();
+
+        String body = GSON.toJson(new RemoteDoomRequest(name, count));
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(Settings.getRemoteDataSettings().getUrl() + "/doompool"))
+                .header("Authorization", "Bearer " + Settings.getRemoteDataSettings().getToken())
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        try {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            LOGGER.info("Wrote Remote Doom: {}", response.body());
+            if (response.statusCode() == 200) {
+                return true;
+            } else {
+                LOGGER.error("Received {}, {}", response.statusCode(), response.body());
+                return false;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to create doom pool", e);
+            return false;
+        }
+
+    }
+
+    private List<RemoteDoom> getRemoteDoom() {
+        try {
+            HttpClient httpClient = HttpClient.newHttpClient();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(Settings.getRemoteDataSettings().getUrl() + "/doompool"))
+                    .header("Authorization", "Bearer " + Settings.getRemoteDataSettings().getToken())
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            return GSON.fromJson(response.body(), new TypeToken<List<RemoteDoom>>() {
+            }.getType());
+        } catch (Exception e) {
+            LOGGER.error("Failed to read Remote Doom", e);
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -40,15 +111,24 @@ public final class DoomHandler {
      * @return An embed that shows the change in doom points for the specified doom pool
      */
     public static EmbedBuilder addDoom(String pool, int doomVal) {
-        final int oldDoom = getDoom(pool);
-        if (oldDoom == 0) {
-            return new EmbedBuilder()
-                    .setTitle("Error")
-                    .setDescription("No Doom Pool with Name ''**" + pool + "**'' exists.");
-        }
-        final int newDoom = getDoomPools().compute(pool, (s, integer) -> integer != null ? integer + doomVal : doomVal);
-        Settings.serializePersonalSettings();
-        return generateDoomEmbed(pool, oldDoom, newDoom);
+        return getDoomPool(pool)
+                .map(doomPool -> {
+                    try {
+                        DoomChange doomChange = doomPool.changeDoom(doomVal).get();
+                        return generateDoomEmbed(pool, doomChange.old(), doomChange.current());
+                    } catch (InterruptedException | ExecutionException e) {
+                        LOGGER.error("Failed to update doom", e);
+                        return new EmbedBuilder()
+                                .setTitle("Error")
+                                .setDescription("Failed to update doom: " + e.getMessage());
+                    }
+                })
+                .orElseGet(() -> new EmbedBuilder()
+                        .setTitle("Error")
+                        .setDescription("No Doom Pool with Name ''**" + pool + "**'' exists.")
+                );
+
+
     }
 
     /**
@@ -72,8 +152,7 @@ public final class DoomHandler {
     public static int addDoomOnOpportunity(User user, int count) {
         if (Storytellers.isUserStoryteller(user)) {
             return getDoom();
-        }
-        else {
+        } else {
             final String doomPool = PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).orElse(getActivePool());
             addDoom(doomPool, count);
             return getDoom(doomPool);
@@ -87,7 +166,42 @@ public final class DoomHandler {
      * @return The number of doom points in that pool
      */
     public static int getDoom(String pool) {
-        return getDoomPools().getOrDefault(pool, 0);
+        return getDoomPool(pool)
+                .flatMap(doomPool -> {
+                    try {
+                        return Optional.of(doomPool.getDoom().get());
+                    } catch (InterruptedException | ExecutionException e) {
+                        LOGGER.error("Failed to call getDoom(String pool)", e);
+                        return Optional.empty();
+                    }
+                })
+                .orElse(0);
+    }
+
+    public static Optional<Doom> getDoomPool(String pool) {
+        return getDoomPools()
+                .stream()
+                .filter(doomPool -> doomPool.getName().equalsIgnoreCase(pool))
+                .findFirst();
+    }
+
+    public static List<RemoteDoom> getRemoteDoomPools() {
+        return instance.remoteDooms.get();
+    }
+
+    public static List<ConfigDoom> getOldDoomPools() {
+        return instance.doomSettings.getDoomPools()
+                .entrySet()
+                .stream()
+                .map(entry -> new ConfigDoom(entry.getKey(), entry.getValue()))
+                .toList();
+    }
+
+    public static List<Doom> getDoomPools() {
+        ArrayList<Doom> dooms = new ArrayList<>();
+        dooms.addAll(getRemoteDoomPools());
+        dooms.addAll(getOldDoomPools());
+        return dooms;
     }
 
     /**
@@ -105,23 +219,34 @@ public final class DoomHandler {
      * @param newDoom The new value of the doom pool
      * @return The embed with a new doom value
      */
-    public static EmbedBuilder setDoom(String pool, int newDoom) {
-        int oldDoom = getDoom(pool);
-        if (oldDoom == 0) {
+    public static EmbedBuilder setDoom(String poolName, int newDoom) {
+        try {
+            return setDoomAsync(poolName, newDoom).get();
+        } catch (InterruptedException | ExecutionException e) {
+            LOGGER.error("Failed to set doom", e);
             return new EmbedBuilder()
                     .setTitle("Error")
-                    .setDescription("No Doom Pool with Name ''**" + pool + "**'' exists.");
+                    .setDescription("Failed to set doom for ''**" + poolName + "**'':" + e.getMessage());
         }
-        getDoomPools().put(pool, newDoom);
-        Settings.serializePersonalSettings();
-        return generateDoomEmbed(pool, oldDoom, newDoom);
+    }
+
+    public static CompletableFuture<EmbedBuilder> setDoomAsync(String poolName, int newDoom) {
+        return getDoomPool(poolName)
+                .map(pool -> pool.getDoom()
+                        .thenCompose(doom -> pool.changeDoom(newDoom - doom))
+                        .thenApply(doomChange -> generateDoomEmbed(pool.getName(), doomChange.old(), doomChange.current()))
+                )
+                .orElseGet(() -> CompletableFuture.completedFuture(new EmbedBuilder()
+                        .setTitle("Error")
+                        .setDescription("No Doom Pool with Name ''**" + poolName + "**'' exists.")
+                ));
     }
 
     /**
      * Generates an embed that shows the amount of doom points in the specified doom pool.
      *
      * @param pool The name of the doom pool to check
-     * @return The an embed containing the value of the doom pool
+     * @return The embed containing the value of the doom pool
      */
     public static EmbedBuilder generateDoomEmbed(String pool) {
         final int doom = getDoom(pool);
@@ -154,28 +279,35 @@ public final class DoomHandler {
      * @return An embed containing information about the deleted doom pool and the number of doom points it had
      */
     public static EmbedBuilder deletePool(String pool) {
-        final Integer removedDoom = getDoomPools().remove(pool);
-        final String description = Optional.ofNullable(removedDoom).map(doom -> MessageFormat.format("I''ve removed the ''**{0}**'' doom pool, which contained {1} doom points.", pool, doom)).orElseGet(() -> MessageFormat.format("I was unable to find the ''**{0}**'' doom pool", pool));
-        Settings.serializePersonalSettings();
+        String description = getDoomPool(pool)
+                .map(doom -> MessageFormat.format("I''ve removed the ''**{0}**'' doom pool, which contained {1} doom points.", pool, doom))
+                .orElseGet(() -> MessageFormat.format("I was unable to find the ''**{0}**'' doom pool", pool));
+
         return new EmbedBuilder()
                 .setTitle(DOOM)
                 .setDescription(description);
     }
 
     /**
-     * Generates an embed that provides a summary of all of the doom pools.
+     * Generates an embed that provides a summary of the doom pools.
      *
      * @return Am embed with information on the names and values of all available doom pools and the name and value of
      * the active doom pool
      */
     public static EmbedBuilder generateDoomEmbed() {
-        final EmbedBuilder embedBuilder = new EmbedBuilder().setTitle(DOOM).setDescription(MessageFormat.format("Here are the values of all doom pools.\nThe current active doom pool is ''**{0}**'' with {1} doom points", getActivePool(), getDoom(getActivePool()))).setColor(new Color((int) (getDoom() % 101 * (2.55))));
-        getDoomPools().forEach((key, value) -> embedBuilder.addField(key, String.valueOf(value)));
+        final EmbedBuilder embedBuilder = new EmbedBuilder()
+                .setTitle(DOOM)
+                .setDescription(MessageFormat.format(
+                        "Here are the values of all doom pools.\nThe current active doom pool is ''**{0}**'' with {1} doom points",
+                        getActivePool(),
+                        getDoom(getActivePool())
+                ))
+                .setColor(new Color((int) (getDoom() % 101 * (2.55))));
+        getDoomPools().forEach(doomPool -> embedBuilder.addField(
+                doomPool.getName(),
+                String.valueOf(doomPool.getDoom())
+        ));
         return embedBuilder;
-    }
-
-    public static Map<String, Integer> getDoomPools() {
-        return instance.doomSettings.getDoomPools();
     }
 
     /**
@@ -208,49 +340,52 @@ public final class DoomHandler {
     }
 
     public static EmbedBuilder createPool(String poolName, int count) {
-        getDoomPools().put(poolName, count);
-        Settings.serializePersonalSettings();
-        return new EmbedBuilder()
-                .setTitle(DOOM)
-                .setDescription(MessageFormat.format("I''ve created the doom pool ''**{0}**'', which contains {1} doom points.", poolName, count));
+        if (createDoomPool(poolName, count)) {
+            return new EmbedBuilder()
+                    .setTitle(DOOM)
+                    .setDescription(MessageFormat.format("I''ve created the doom pool ''**{0}**'', which contains {1} doom points.", poolName, count));
+        } else {
+            return new EmbedBuilder()
+                    .setTitle(DOOM)
+                    .setDescription(MessageFormat.format("Failed to create doom pool ''**{0}**''.", poolName));
+        }
     }
 
     @Nullable
     public static String findPool(String poolName) {
-        if (getDoomPools().containsKey(poolName)) {
+        if (getDoomPools().stream().anyMatch(pool -> pool.getName().equalsIgnoreCase(poolName))) {
             return poolName;
-        }
-        else {
+        } else {
             List<String> potentialPoolNames = Lists.newArrayList();
             int currentDistance = Integer.MAX_VALUE;
-            for (String existingPool : getDoomPools().keySet()) {
-                int distance = DamerauLevenshtein.calculateDistance(poolName, existingPool);
+            for (Doom existingPool : getDoomPools()) {
+                int distance = DamerauLevenshtein.calculateDistance(poolName, existingPool.getName());
                 if (distance < currentDistance) {
                     potentialPoolNames.clear();
-                    potentialPoolNames.add(existingPool);
+                    potentialPoolNames.add(existingPool.getName());
                     currentDistance = distance;
-                }
-                else if (distance == currentDistance) {
-                    potentialPoolNames.add(existingPool);
+                } else if (distance == currentDistance) {
+                    potentialPoolNames.add(existingPool.getName());
                 }
             }
 
             if (potentialPoolNames.isEmpty()) {
                 return null;
-            }
-            else if (potentialPoolNames.size() == 1) {
+            } else if (potentialPoolNames.size() == 1) {
                 if (currentDistance <= 2) {
                     return potentialPoolNames.get(0);
-                }
-                else {
+                } else {
                     return null;
                 }
-            }
-            else {
+            } else {
                 LOGGER.warn("Found multiple doom pool names with same level of similarity");
                 return null;
             }
         }
+    }
+
+    public static DoomHandler getInstance() {
+        return instance;
     }
 
 }
