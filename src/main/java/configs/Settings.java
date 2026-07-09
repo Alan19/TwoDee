@@ -11,6 +11,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Settings {
@@ -20,14 +21,37 @@ public class Settings {
     private Quotes quotes;
 
     private Settings() {
-        try {
-            settingsInstance = new Gson().fromJson(new BufferedReader(new FileReader("resources/settings.json")), new TypeToken<SettingsInstance>() {
-            }.getType());
-            quotes = new Gson().fromJson(new BufferedReader(new FileReader("resources/quotes.json")), new TypeToken<Quotes>() {
-            }.getType());
-        } catch (FileNotFoundException e) {
+        String settingsFileLocation = Optional.ofNullable(System.getenv("SETTINGS_FILE"))
+                .orElse("resources/settings.json");
+        Gson gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .create();
+        try (
+                FileReader fileReader = new FileReader(settingsFileLocation);
+                BufferedReader bufferedReader = new BufferedReader(fileReader)
+        ) {
+            settingsInstance = gson.fromJson(
+                    bufferedReader,
+                    new TypeToken<SettingsInstance>() {
+                    }.getType()
+            );
+        } catch (IOException e) {
             LOGGER.error("Unable to find settings file!");
             settingsInstance = new SettingsInstance();
+        }
+        String quotesFileLocation = Optional.ofNullable(System.getenv("QUOTES_FILE"))
+                .orElse("resources/quotes.json");
+        try (
+                FileReader fileReader = new FileReader(quotesFileLocation);
+                BufferedReader bufferedReader = new BufferedReader(fileReader)
+        ) {
+            quotes = gson.fromJson(
+                    bufferedReader,
+                    new TypeToken<Quotes>() {
+                    }.getType()
+            );
+        } catch (IOException e) {
+            LOGGER.error("Unable to find quotes file!");
             quotes = new Quotes();
         }
     }

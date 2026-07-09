@@ -208,7 +208,6 @@ public class RollComponentInteractionListener implements ButtonClickListener {
                         .map(s -> DoomHandler.setDoomAsync(s, originalDoomPoints))
                         .orElseGet(() -> CompletableFuture.completedFuture(null)),
                 SheetsHandler.setPlotPoints(user, originalPlotPoints)
-                        .thenAccept(integer -> {})
         );
     }
 
