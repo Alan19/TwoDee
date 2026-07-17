@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import configs.DoomSettings;
 import configs.Settings;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
@@ -38,7 +39,7 @@ public final class DoomHandler {
     private static final DoomHandler instance = new DoomHandler();
     public final DoomSettings doomSettings;
 
-    private final CachedValue<List<RemoteDoom>> remoteDooms;
+    private final CachedValue<List<RemoteDoomPool>> remoteDooms;
 
     private DoomHandler() {
         doomSettings = Settings.getDoom();
@@ -46,7 +47,7 @@ public final class DoomHandler {
     }
 
     public static void setupRemoteDoom() {
-        if (!getDoomPools().isEmpty()) {
+        if (!getOldDoomPools().isEmpty()) {
             instance.doomSettings
                     .getDoomPools()
                     .entrySet()
@@ -83,7 +84,7 @@ public final class DoomHandler {
 
     }
 
-    private List<RemoteDoom> getRemoteDoom() {
+    private List<RemoteDoomPool> getRemoteDoom() {
         try {
             HttpClient httpClient = HttpClient.newHttpClient();
 
@@ -95,7 +96,7 @@ public final class DoomHandler {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            return GSON.fromJson(response.body(), RemoteDoom.LIST_TYPE_TOKEN.getType());
+            return GSON.fromJson(response.body(), RemoteDoomPool.LIST_TYPE_TOKEN.getType());
         } catch (Exception e) {
             LOGGER.error("Failed to read Remote Doom", e);
             return Collections.emptyList();
@@ -178,14 +179,14 @@ public final class DoomHandler {
                 .orElse(0);
     }
 
-    public static Optional<Doom> getDoomPool(String pool) {
+    public static Optional<DoomPool> getDoomPool(String pool) {
         return getDoomPools()
                 .stream()
                 .filter(doomPool -> doomPool.getName().equalsIgnoreCase(pool))
                 .findFirst();
     }
 
-    public static List<RemoteDoom> getRemoteDoomPools() {
+    public static List<RemoteDoomPool> getRemoteDoomPools() {
         return instance.remoteDooms.get();
     }
 
@@ -197,11 +198,11 @@ public final class DoomHandler {
                 .toList();
     }
 
-    public static List<Doom> getDoomPools() {
-        ArrayList<Doom> dooms = new ArrayList<>();
-        dooms.addAll(getRemoteDoomPools());
-        dooms.addAll(getOldDoomPools());
-        return dooms;
+    public static List<DoomPool> getDoomPools() {
+        ArrayList<DoomPool> doomPools = new ArrayList<>();
+        doomPools.addAll(getRemoteDoomPools());
+        doomPools.addAll(getOldDoomPools());
+        return doomPools;
     }
 
     /**
@@ -280,7 +281,7 @@ public final class DoomHandler {
      */
     public static EmbedBuilder deletePool(String pool) {
         String description = getDoomPool(pool)
-                .map(doom -> MessageFormat.format("I''ve removed the ''**{0}**'' doom pool, which contained {1} doom points.", pool, doom))
+                .map(doomPool -> MessageFormat.format("I''ve removed the ''**{0}**'' doom pool, which contained {1} doom points.", pool, doomPool))
                 .orElseGet(() -> MessageFormat.format("I was unable to find the ''**{0}**'' doom pool", pool));
 
         return new EmbedBuilder()
@@ -294,7 +295,7 @@ public final class DoomHandler {
      * @return Am embed with information on the names and values of all available doom pools and the name and value of
      * the active doom pool
      */
-    public static EmbedBuilder generateDoomEmbed() {
+    public static CompletableFuture<EmbedBuilder> generateDoomEmbed() {
         final EmbedBuilder embedBuilder = new EmbedBuilder()
                 .setTitle(DOOM)
                 .setDescription(MessageFormat.format(
@@ -303,11 +304,19 @@ public final class DoomHandler {
                         getDoom(getActivePool())
                 ))
                 .setColor(new Color((int) (getDoom() % 101 * (2.55))));
-        getDoomPools().forEach(doomPool -> embedBuilder.addField(
-                doomPool.getName(),
-                String.valueOf(doomPool.getDoom())
-        ));
-        return embedBuilder;
+        List<CompletableFuture<Pair<String, Integer>>> futures = new ArrayList<>();
+        for (DoomPool doomPool : getDoomPools()) {
+            futures.add(doomPool.getDoom().thenApply(doom -> Pair.of(doomPool.getName(), doom)));
+        }
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v -> {
+                    futures.forEach(pairFuture -> {
+                        Pair<String, Integer> pair = pairFuture.join();
+                        embedBuilder.addField(pair.getLeft(), String.valueOf(pair.getRight()));
+                    });
+
+                    return embedBuilder;
+                });
     }
 
     /**
@@ -358,7 +367,7 @@ public final class DoomHandler {
         } else {
             List<String> potentialPoolNames = Lists.newArrayList();
             int currentDistance = Integer.MAX_VALUE;
-            for (Doom existingPool : getDoomPools()) {
+            for (DoomPool existingPool : getDoomPools()) {
                 int distance = DamerauLevenshtein.calculateDistance(poolName, existingPool.getName());
                 if (distance < currentDistance) {
                     potentialPoolNames.clear();

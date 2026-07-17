@@ -15,6 +15,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Settings {
+    private static final Gson GSON = new GsonBuilder()
+            .setPrettyPrinting()
+            .create();
     public static final Settings instance = new Settings();
     private static final Logger LOGGER = LogManager.getLogger(Settings.class);
     private SettingsInstance settingsInstance;
@@ -23,14 +26,11 @@ public class Settings {
     private Settings() {
         String settingsFileLocation = Optional.ofNullable(System.getenv("SETTINGS_FILE"))
                 .orElse("resources/settings.json");
-        Gson gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .create();
         try (
                 FileReader fileReader = new FileReader(settingsFileLocation);
                 BufferedReader bufferedReader = new BufferedReader(fileReader)
         ) {
-            settingsInstance = gson.fromJson(
+            settingsInstance = GSON.fromJson(
                     bufferedReader,
                     new TypeToken<SettingsInstance>() {
                     }.getType()
@@ -45,7 +45,7 @@ public class Settings {
                 FileReader fileReader = new FileReader(quotesFileLocation);
                 BufferedReader bufferedReader = new BufferedReader(fileReader)
         ) {
-            quotes = gson.fromJson(
+            quotes = GSON.fromJson(
                     bufferedReader,
                     new TypeToken<Quotes>() {
                     }.getType()
@@ -84,20 +84,26 @@ public class Settings {
      * Serializes the values of the settings and writes it to settings.json. Generally used to update doom pools.
      */
     public static void serializePersonalSettings() {
-        try {
-            final BufferedWriter writer = new BufferedWriter(new FileWriter("resources/settings.json"));
-            new GsonBuilder().setPrettyPrinting().create().toJson(Settings.getSettingsInstance(), writer);
-            writer.close();
+        String settingsFileLocation = Optional.ofNullable(System.getenv("SETTINGS_FILE"))
+                .orElse("resources/settings.json");
+        try (
+                FileWriter fileWriter = new FileWriter(settingsFileLocation);
+                BufferedWriter writer = new BufferedWriter(fileWriter)
+        ) {
+            GSON.toJson(Settings.getSettingsInstance(), writer);
         } catch (IOException e) {
             LOGGER.error("Unable to serialize settings file!", e);
         }
     }
 
     protected static void serializeQuotes() {
-        try {
-            final BufferedWriter writer = new BufferedWriter(new FileWriter("resources/quotes.json"));
-            new GsonBuilder().setPrettyPrinting().create().toJson(Settings.getQuotes(), writer);
-            writer.close();
+        String quotesFileLocation = Optional.ofNullable(System.getenv("QUOTES_FILE"))
+                .orElse("resources/quotes.json");
+        try (
+                FileWriter fileWriter = new FileWriter(quotesFileLocation);
+                BufferedWriter writer = new BufferedWriter(fileWriter)
+        ) {
+            GSON.toJson(Settings.getQuotes(), writer);
         } catch (IOException e) {
             LOGGER.error("Unable to serialize quotes file!", e);
         }

@@ -9,14 +9,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public record RemoteDoom(
+public record RemoteDoomPool(
         long id,
         String name,
         int doom
-) implements Doom {
-    public static final TypeToken<List<RemoteDoom>> LIST_TYPE_TOKEN = new TypeToken<>() {
+) implements DoomPool {
+    public static final TypeToken<List<RemoteDoomPool>> LIST_TYPE_TOKEN = new TypeToken<>() {
     };
 
     private static final Gson GSON = new Gson();
@@ -39,7 +40,7 @@ public record RemoteDoom(
         ).thenComposeAsync(httpResponse -> {
             if (httpResponse.statusCode() == 200) {
                 try {
-                    RemoteDoom doomPool = GSON.fromJson(httpResponse.body(), RemoteDoom.class);
+                    RemoteDoomPool doomPool = GSON.fromJson(httpResponse.body(), RemoteDoomPool.class);
                     return CompletableFuture.completedFuture(doomPool.doom());
                 } catch (Exception e) {
                     return CompletableFuture.failedFuture(e);
@@ -54,8 +55,27 @@ public record RemoteDoom(
 
     @Override
     public CompletableFuture<DoomChange> changeDoom(int amount) {
-        //Todo Implement
-        return CompletableFuture.completedFuture(new DoomChange(0, amount));
+        return httpClient.sendAsync(
+                HttpRequest.newBuilder()
+                        .POST(HttpRequest.BodyPublishers.ofString(GSON.toJson(Map.of("amount", amount))))
+                        .uri(URI.create(Settings.getRemoteDataSettings().getUrl() + "/doompool/" + this.id() + "/doom"))
+                        .header("Authorization", "Bearer " + Settings.getRemoteDataSettings().getToken())
+                        .build(),
+                BodyHandlers.ofString()
+        ).thenComposeAsync(httpResponse -> {
+            if (httpResponse.statusCode() == 200) {
+                try {
+                    DoomChange doomChange = GSON.fromJson(httpResponse.body(), DoomChange.class);
+                    return CompletableFuture.completedFuture(doomChange);
+                } catch (Exception e) {
+                    return CompletableFuture.failedFuture(e);
+                }
+            } else {
+                return CompletableFuture.failedFuture(
+                        new Exception("Received %s for Http Response for getDoom".formatted(httpResponse.statusCode()))
+                );
+            }
+        });
     }
 
     @Override

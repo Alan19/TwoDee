@@ -7,7 +7,7 @@ import java.util.concurrent.CompletableFuture;
 public record ConfigDoom(
         String name,
         int doom
-) implements Doom {
+) implements DoomPool {
 
     @Override
     public String getName() {
