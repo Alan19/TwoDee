@@ -1,7 +1,6 @@
 package doom;
 
 import com.google.common.collect.Lists;
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import configs.DoomSettings;
 import configs.Settings;
@@ -23,8 +22,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.MessageFormat;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -94,8 +95,7 @@ public final class DoomHandler {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            return GSON.fromJson(response.body(), new TypeToken<List<RemoteDoom>>() {
-            }.getType());
+            return GSON.fromJson(response.body(), RemoteDoom.LIST_TYPE_TOKEN.getType());
         } catch (Exception e) {
             LOGGER.error("Failed to read Remote Doom", e);
             return Collections.emptyList();
