@@ -35,7 +35,7 @@ public class TwoDee {
 
         final Velen velen = SlashCommandRegister.setupVelen(languageLogic);
         new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
-                    System.out.println("You can invite the bot by using the following url: " + api.createBotInvite() + "&scope=bot%20applications.commands");
+                    LOGGER.info("You can invite the bot by using the following url: {}&scope=bot%20applications.commands", api.createBotInvite());
                     velen.registerAllSlashCommands(api);
                     //Send startup message
                     Settings.getDiscordSettings().getAnnouncementChannels().forEach(id -> {
@@ -44,7 +44,7 @@ public class TwoDee {
                             channel.get().sendMessage(Settings.getQuotes().getRandomStartupQuote());
                         }
                         else {
-                            LOGGER.error("Failed to find channel for ID: %d".formatted(id));
+                            LOGGER.error("Failed to find channel for ID: {}", id);
                         }
                     });
                     AwardContextMenu.setupContextMenu(api);
