@@ -80,7 +80,21 @@ public record RemoteDoomPool(
 
     @Override
     public CompletableFuture<Boolean> delete() {
-        //Todo Implement
-        return CompletableFuture.completedFuture(false);
+        return httpClient.sendAsync(
+                HttpRequest.newBuilder()
+                        .DELETE()
+                        .uri(URI.create(Settings.getRemoteDataSettings().getUrl() + "/doompool/" + this.id()))
+                        .header("Authorization", "Bearer " + Settings.getRemoteDataSettings().getToken())
+                        .build(),
+                BodyHandlers.ofString()
+        ).thenComposeAsync(httpResponse -> {
+            if (httpResponse.statusCode() == 200) {
+                return CompletableFuture.completedFuture(true);
+            } else {
+                return CompletableFuture.failedFuture(
+                        new Exception("Received %s for Http Response for getDoom".formatted(httpResponse.statusCode()))
+                );
+            }
+        });
     }
 }
