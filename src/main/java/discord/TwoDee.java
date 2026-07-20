@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import pw.mihou.velen.interfaces.Velen;
 import pw.mihou.velen.internals.observer.VelenObserver;
 import pw.mihou.velen.internals.observer.modes.ObserverMode;
+import roles.PlayerHandler;
 import slashcommands.SlashCommandRegister;
 
 import java.io.File;
@@ -34,7 +35,14 @@ public class TwoDee {
                 );
 
         final Velen velen = SlashCommandRegister.setupVelen(languageLogic);
-        new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
+        new DiscordApiBuilder()
+                .setToken(token)
+                .setAllIntentsExcept(Intent.GUILD_PRESENCES)
+                .setUserCacheEnabled(true)
+                .addListener(velen)
+                .login()
+                .thenCompose(PlayerHandler.getInstance()::uploadPlayersToRemote)
+                .thenAccept(api -> {
                     LOGGER.info("You can invite the bot by using the following url: {}&scope=bot%20applications.commands", api.createBotInvite());
                     velen.registerAllSlashCommands(api);
                     //Send startup message
@@ -42,8 +50,7 @@ public class TwoDee {
                         var channel = api.getTextChannelById(id);
                         if (channel.isPresent()) {
                             channel.get().sendMessage(Settings.getQuotes().getRandomStartupQuote());
-                        }
-                        else {
+                        } else {
                             LOGGER.error("Failed to find channel for ID: {}", id);
                         }
                     });

@@ -32,6 +32,7 @@ import java.security.GeneralSecurityException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 public class SheetsHandler {
@@ -292,5 +293,21 @@ public class SheetsHandler {
         return instance.service.spreadsheets().values()
                 .get(spreadsheetID, range)
                 .execute();
+    }
+
+    public static CompletableFuture<String> getName(String spreadsheetId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                ValueRange valueRange = getRange(spreadsheetId, "B1:L2");
+                return valueRange.getValues()
+                        .stream()
+                        .flatMap(List::stream)
+                        .findFirst()
+                        .map(Object::toString)
+                        .orElse("");
+            } catch (IOException e) {
+                throw new CompletionException(e);
+            }
+        });
     }
 }
