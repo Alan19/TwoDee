@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public class DoomLogic implements VelenHybridHandler {
 
@@ -73,38 +74,29 @@ public class DoomLogic implements VelenHybridHandler {
                 .setRequired(false);
     }
 
-    private EmbedBuilder handleCommand(String mode, String poolName, int count) {
+    private CompletableFuture<EmbedBuilder> handleCommand(String mode, String poolName, int count) {
         String actualPoolName = DoomHandler.findPool(poolName);
         if (actualPoolName == null) {
             if (mode == null || mode.isEmpty() || mode.equalsIgnoreCase("list")) {
                 return DoomHandler.generateDoomEmbed();
-            }
-            else {
-                return new EmbedBuilder()
+            } else {
+                return CompletableFuture.completedFuture(new EmbedBuilder()
                         .setTitle("Error")
-                        .setDescription("No Doom Pool with Name ''**" + poolName + "**'' exists.");
+                        .setDescription("No Doom Pool with Name ''**" + poolName + "**'' exists.")
+                );
             }
-        }
-        else {
-            switch (mode) {
-                case "add":
-                    return DoomHandler.addDoom(actualPoolName, count);
-                case "sub":
-                    return DoomHandler.addDoom(actualPoolName, count * -1);
-                case "select":
-                    return DoomHandler.setActivePool(actualPoolName);
-                case "set":
-                    return DoomHandler.setDoom(actualPoolName, count);
-                case "delete":
-                    return DoomHandler.deletePool(actualPoolName);
-                case "create":
-                    return DoomHandler.createPool(actualPoolName, count);
-                case "list":
-                    return DoomHandler.generateDoomEmbed();
-                case "query":
-                default:
-                    return actualPoolName.equals("") ? DoomHandler.generateDoomEmbed() : DoomHandler.generateDoomEmbed(actualPoolName);
-            }
+        } else {
+            return switch (mode) {
+                case "add" -> CompletableFuture.completedFuture(DoomHandler.addDoom(actualPoolName, count));
+                case "sub" -> CompletableFuture.completedFuture(DoomHandler.addDoom(actualPoolName, count * -1));
+                case "select" -> CompletableFuture.completedFuture(DoomHandler.setActivePool(actualPoolName));
+                case "set" -> CompletableFuture.completedFuture(DoomHandler.setDoom(actualPoolName, count));
+                case "delete" -> CompletableFuture.completedFuture(DoomHandler.deletePool(actualPoolName));
+                case "create" -> CompletableFuture.completedFuture(DoomHandler.createPool(actualPoolName, count));
+                case "list" -> DoomHandler.generateDoomEmbed();
+                default ->
+                        actualPoolName.isEmpty() ? DoomHandler.generateDoomEmbed() : CompletableFuture.completedFuture(DoomHandler.generateDoomEmbed(actualPoolName));
+            };
         }
     }
 
@@ -120,7 +112,8 @@ public class DoomLogic implements VelenHybridHandler {
             final String name = subcommand.flatMap(velenSubcommand -> velenSubcommand.withName(POOL_NAME))
                     .flatMap(VelenOption::asString)
                     .orElse(DoomHandler.getActivePool());
-            responder.addEmbed(handleCommand(subcommandName, name, count)).respond();
+            handleCommand(subcommandName, name, count)
+                    .thenCompose(embed -> responder.addEmbed(embed).respond());
         }
     }
 }

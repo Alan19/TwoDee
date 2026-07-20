@@ -19,6 +19,8 @@ import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.SlashCommandOptionChoice;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import roles.Player;
 import roles.PlayerHandler;
 
@@ -30,9 +32,11 @@ import java.security.GeneralSecurityException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 public class SheetsHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SheetsHandler.class);
     private static final String APPLICATION_NAME = "Skill Lookup";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
@@ -117,7 +121,7 @@ public class SheetsHandler {
             try {
                 return Optional.of(instance.service.spreadsheets().values().get(spreadsheetForUser.get(), "PlotPoints").execute());
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("Error while reading plot point range for user {}", spreadsheetForUser, e);
             }
         }
         return Optional.empty();
@@ -159,22 +163,12 @@ public class SheetsHandler {
                     final int updatedPlotPointCount = Integer.parseInt((String) plotPointsCellUpdateRequest.getUpdatedData().getValues().get(0).get(0));
                     return Optional.of(updatedPlotPointCount);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    LOGGER.error("Error while setting plot points for user {}", user, e);
                 }
                 return Optional.empty();
             }
             return Optional.empty();
         });
-    }
-
-    /**
-     * A functon used to throw an exception. Used in completable futures to allow exceptions to be handled in exceptonally
-     *
-     * @throws T The exception to throw
-     */
-    @SuppressWarnings("all")
-    public static <R, T extends Throwable> R sneakyThrow(Throwable t) throws T {
-        throw (T) t;
     }
 
 
@@ -190,7 +184,7 @@ public class SheetsHandler {
             try {
                 return Optional.of(instance.service.spreadsheets().values().get(spreadsheetForUser.get(), "PlotPointBleed").execute()).map(valueRange -> Integer.parseInt((String) valueRange.getValues().get(0).get(0)));
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.error("Error while reading player bleed for user {}", user, e);
             }
         }
         return Optional.empty();
@@ -299,5 +293,21 @@ public class SheetsHandler {
         return instance.service.spreadsheets().values()
                 .get(spreadsheetID, range)
                 .execute();
+    }
+
+    public static CompletableFuture<String> getName(String spreadsheetId) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                ValueRange valueRange = getRange(spreadsheetId, "B1:L2");
+                return valueRange.getValues()
+                        .stream()
+                        .flatMap(List::stream)
+                        .findFirst()
+                        .map(Object::toString)
+                        .orElse("");
+            } catch (IOException e) {
+                throw new CompletionException(e);
+            }
+        });
     }
 }
