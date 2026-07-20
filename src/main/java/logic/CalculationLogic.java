@@ -9,8 +9,6 @@ import exceptions.InvalidUserInputException;
 import exceptions.UserException;
 import io.vavr.Tuple;
 import io.vavr.control.Try;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.channel.Channel;
 import org.javacord.api.entity.channel.ChannelType;
 import org.javacord.api.entity.channel.TextChannel;
@@ -20,6 +18,8 @@ import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.event.message.MessageCreateEvent;
 import org.javacord.api.interaction.*;
 import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pw.mihou.velen.interfaces.*;
 import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
 
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  * Command Class for Calculation. Handles IO, as well as streaming all messages into the Collector
  */
 public class CalculationLogic implements VelenEvent, VelenSlashEvent {
-    private final static Logger LOGGER = LogManager.getLogger(CalculationLogic.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(CalculationLogic.class);
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override

@@ -3,8 +3,8 @@ package configs;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import roles.Player;
 
 import java.io.*;
@@ -19,7 +19,7 @@ public class Settings {
             .setPrettyPrinting()
             .create();
     public static final Settings instance = new Settings();
-    private static final Logger LOGGER = LogManager.getLogger(Settings.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Settings.class);
     private SettingsInstance settingsInstance;
     private Quotes quotes;
 

@@ -5,10 +5,10 @@ import com.google.gson.Gson;
 import configs.DoomSettings;
 import configs.Settings;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import roles.Player;
 import roles.PlayerHandler;
 import roles.Storytellers;
@@ -32,7 +32,7 @@ import java.util.concurrent.ExecutionException;
 
 public final class DoomHandler {
 
-    private static final Logger LOGGER = LogManager.getLogger(DoomHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DoomHandler.class);
 
     public static final String DOOM = "Doom!";
     private static final Gson GSON = new Gson();

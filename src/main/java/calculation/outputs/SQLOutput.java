@@ -5,8 +5,8 @@ import calculation.models.Info;
 import calculation.models.RollInfo;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rolling.Roller;
 
 import javax.annotation.Nullable;
@@ -24,7 +24,7 @@ import java.util.Optional;
  * Output that creates a SQLite Database with two Tables: rolls and dice with rolls being the parent table
  */
 public class SQLOutput implements IOutput, AutoCloseable {
-    private static final Logger LOGGER = LogManager.getLogger(SQLOutput.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SQLOutput.class);
 
     private final Connection connection;
     private final String fileLocation;

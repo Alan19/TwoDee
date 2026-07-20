@@ -8,11 +8,11 @@ import com.google.common.graph.MutableGraph;
 import com.google.gson.*;
 import io.vavr.control.Try;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.graph.guava.MutableGraphAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import util.DamerauLevenshtein;
 import util.GsonHelper;
 import util.Match;
@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("UnstableApiUsage")
 public class LanguageLogic {
-    private static final Logger LOGGER = LogManager.getLogger(LanguageLogic.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LanguageLogic.class);
     private static final Gson GSON = new GsonBuilder()
             .setPrettyPrinting()
             .create();
