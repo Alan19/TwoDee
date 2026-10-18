@@ -12,7 +12,7 @@ import java.util.stream.IntStream;
 //TODO Have statistics use something different
 public class DicePoolBuilder {
 
-    public static final Pattern DICE_PATTERN = Pattern.compile("(?<count>\\d*)(?<type>[kpec]?d)(?<facets>\\d+)");
+    public static final Pattern DICE_PATTERN = Pattern.compile("(?<count>\\d*)(?<type>[kpeca]?d)(?<facets>\\d+)");
     public static final Pattern FLAT_BONUS_PATTERN = Pattern.compile("\\+(?<value>[1-9]\\d*)");
     public static final Pattern FLAT_PENALTY_PATTERN = Pattern.compile("-(?<value>[1-9]\\d*)");
 
@@ -22,6 +22,7 @@ public class DicePoolBuilder {
     private final List<Integer> keptDice;
     private final List<Integer> enhancedDie;
     private final List<Integer> flatBonus;
+    private final List<Integer> assuredDice;
     private final boolean devastating;
     private int diceKept = 2;
 
@@ -37,6 +38,7 @@ public class DicePoolBuilder {
         keptDice = new ArrayList<>();
         enhancedDie = new ArrayList<>();
         flatBonus = new ArrayList<>();
+        assuredDice = new ArrayList<>();
         this.devastating = devastating;
 
         if (pool.isEmpty()) {
@@ -76,6 +78,7 @@ public class DicePoolBuilder {
             case "cd" -> IntStream.range(0, count).forEach(i -> chaosDice.add(facets));
             case "kd" -> IntStream.range(0, count).forEach(i -> keptDice.add(facets));
             case "ed" -> IntStream.range(0, count).forEach(i -> enhancedDie.add(facets));
+            case "ad" -> IntStream.range(0, count).forEach(i -> assuredDice.add(facets));
             default -> IntStream.range(0, count).forEach(i -> regularDice.add(facets));
         }
     }
@@ -113,4 +116,7 @@ public class DicePoolBuilder {
         return diceKept;
     }
 
+    public List<Integer> getAssuredDice() {
+        return assuredDice;
+    }
 }

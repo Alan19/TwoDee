@@ -108,7 +108,7 @@ public class RollLogic implements VelenHybridHandler {
      */
     public static Try<RollOutput> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, boolean devastating, User user, String username) {
         return Roller.parse(dicePool, pool -> convertSkillsToDice(user, pool))
-                .map(diceModifierPair -> Roller.roll(diceModifierPair, devastating))
+                .map(Roller::roll)
                 .map(pair -> new Result(pair.getLeft(), pair.getRight(), diceKept))
                 // TODO Convert to CompletableFuture earlier
                 .map(result -> Roller.handlePoints(result, discount, opportunity, value -> DoomHandler.addDoomOnOpportunity(user, value), value -> PlotPointUtils.addPlotPointsOnRoll(user, value)))
@@ -148,7 +148,9 @@ public class RollLogic implements VelenHybridHandler {
     private static Try<String> convertSkillsToDice(User user, String pool) {
         // We use join to get access to CompletionException, which would allow us to handle the exceptions thrown in the CompletableFuture
         return Try.of(() -> SheetsHandler.getSkills(user).get())
-                .map(map -> Arrays.stream(pool.split(" ")).map(s -> map.getOrDefault(s, s)).collect(Collectors.joining(" ")));
+                .map(map -> Arrays.stream(pool.split(" "))
+                        .map(s -> map.getOrDefault(s, s))
+                        .collect(Collectors.joining(" ")));
     }
 
     /**
