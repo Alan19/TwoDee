@@ -24,7 +24,7 @@ class DiceRollerTest {
     @BeforeEach
     void setUp() {
         pool = Roller.parse("2d8 d6 pd4 cd8 +1 stealth", s -> Try.success(s.replace("stealth", "d8")));
-        roll = Roller.roll(Pair.of(Arrays.asList(new Dice("d", 12), new Dice("pd", 12), new Dice("cd", 12)), Arrays.asList(3, -2)), false);
+        roll = Roller.roll(Pair.of(Arrays.asList(new Dice("d", 12), new Dice("pd", 12), new Dice("cd", 12)), Arrays.asList(3, -2)));
         result = new Result(Arrays.asList(new RolledDie("d", 4),
                 new RolledDie("d", 1),
                 new RolledDie("pd", 12, 6),

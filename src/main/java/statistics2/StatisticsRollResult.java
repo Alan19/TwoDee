@@ -10,8 +10,6 @@ import java.util.Comparator;
 import java.util.List;
 
 public class StatisticsRollResult {
-
-    //TODO Use tree multiset
     private final Multiset<Integer> keptDice;
     private List<Integer> normalDice;
     private int chosenPlotDie;
@@ -88,6 +86,7 @@ public class StatisticsRollResult {
         return copy;
     }
 
+    // Same logic as plot die, the calling function will set the flat bonus since it's more efficient to sum it there
     public StatisticsRollResult setFlatBonus(int flatBonus) {
         StatisticsRollResult copy = copy();
         copy.flatBonus = flatBonus;
@@ -108,5 +107,9 @@ public class StatisticsRollResult {
 
     public int getTotal() {
         return flatBonus + chosenPlotDie + keptDice.stream().mapToInt(value -> value).sum() + normalDice.stream().mapToInt(value -> value).sum();
+    }
+
+    public int getDoomGenerated() {
+        return doomGenerated;
     }
 }

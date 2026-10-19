@@ -1,17 +1,16 @@
 package statistics.strategies;
 
-import rolling.BuildablePoolResult;
 import statistics.StatisticsLogic;
+import statistics2.StatisticsRollResult;
 import util.EmbedField;
 
 import java.text.DecimalFormat;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class StatisticsStrategy implements ResultStrategy {
     @Override
-    public List<EmbedField> executeStrategy(HashMap<BuildablePoolResult, Long> resultMap, long totalCombinations) {
+    public List<EmbedField> executeStrategy(Map<StatisticsRollResult, Long> resultMap, long totalCombinations) {
         Map<Integer, Long> rollResultToOccurancesMap = StatisticsLogic.getRollResultToOccurancesMap(resultMap);
         final double mean = rollResultToOccurancesMap.entrySet().stream()
                 .mapToDouble(value -> (double) value.getKey() * value.getValue() / totalCombinations)

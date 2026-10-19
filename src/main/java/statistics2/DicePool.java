@@ -5,15 +5,12 @@ import rolling.DicePoolBuilder;
 import rolling.DiceType;
 
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 
 public class DicePool {
     private final List<Integer> flatBonus = new ArrayList<>();
-    private final HashMap<DiceType, List<Integer>> dicePoolMap = new HashMap<>();
+    private final EnumMap<DiceType, List<Integer>> dicePoolMap = new EnumMap<>(DiceType.class);
     private final String input;
 
     public DicePool(String input) throws InvalidUserInputException {
@@ -47,7 +44,7 @@ public class DicePool {
         return input;
     }
 
-    public HashMap<DiceType, List<Integer>> getDicePoolMap() {
+    public Map<DiceType, List<Integer>> getDicePoolMap() {
         return dicePoolMap;
     }
 

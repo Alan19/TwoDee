@@ -1,5 +1,6 @@
 package statistics2;
 
+import com.google.common.math.LongMath;
 import rolling.DiceType;
 
 import java.util.HashMap;
@@ -11,7 +12,7 @@ public class DicePoolStatistics {
     private Map<StatisticsRollResult, Long> results = new HashMap<>();
 
     public DicePoolStatistics(DicePool dicePool) {
-        HashMap<DiceType, List<Integer>> dicePoolMap = dicePool.getDicePoolMap();
+        Map<DiceType, List<Integer>> dicePoolMap = dicePool.getDicePoolMap();
 
         StatisticsRollResult seed = new StatisticsRollResult().setFlatBonus(dicePool.getFlatBonus().stream().mapToInt(integer -> integer).sum());
         results.put(seed, 1L);
@@ -19,7 +20,6 @@ public class DicePoolStatistics {
             for (Integer dieFacets : dieFacetsList) {
                 List<Integer> sampleSpace = type.getSampleSpace(dieFacets);
                 // Special handling for plot dice
-                // TODO Maybe move this into StatisticsRollResult.java?
                 if ((type == DiceType.PLOT_DIE || type == DiceType.ENHANCED_DIE) && dieFacetsList.size() == 1) {
                     sampleSpace = sampleSpace.stream().map(result -> Math.max(dieFacets / 2, result)).toList();
                 }
@@ -27,7 +27,7 @@ public class DicePoolStatistics {
             }
         });
         Map<Integer, Long> resultToOccurrences = new TreeMap<>();
-        results.forEach((statisticsRollResult, aLong) -> resultToOccurrences.merge(statisticsRollResult.getTotal(), aLong, Long::sum));
+        results.forEach((statisticsRollResult, aLong) -> resultToOccurrences.merge(statisticsRollResult.getTotal(), aLong, LongMath::checkedAdd));
         resultToOccurrences.forEach((integer, aLong) -> System.out.println(integer + ": " + String.format("%.5f", (double) aLong / results.values().stream().mapToLong(value -> value).sum() * 100) + "%"));
     }
 
@@ -36,8 +36,7 @@ public class DicePoolStatistics {
         results.forEach((key, value) -> {
             for (int i : sampleSpace) {
                 StatisticsRollResult updatedResult = key.addDie(i, type);
-                boolean containsKey = tempResults.containsKey(updatedResult);
-                tempResults.put(updatedResult, containsKey ? Long.valueOf(value + tempResults.get(updatedResult)) : value);
+                tempResults.merge(updatedResult, value, LongMath::checkedAdd);
             }
         });
         return tempResults;

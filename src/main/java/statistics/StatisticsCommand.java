@@ -1,9 +1,7 @@
 package statistics;
 
+import io.vavr.control.Try;
 import org.javacord.api.entity.message.Message;
-import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.entity.message.MessageDecoration;
-import org.javacord.api.entity.message.MessageFlag;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
@@ -16,23 +14,27 @@ import org.javacord.api.interaction.callback.InteractionImmediateResponseBuilder
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import pw.mihou.velen.interfaces.*;
 import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
-import rolling.DicePoolBuilder;
+import statistics.strategies.*;
+import statistics2.DicePool;
+import statistics2.DicePoolStatistics;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 
 public class StatisticsCommand implements VelenSlashEvent, VelenEvent {
 
+    public static final String NONEPHEMERAL = "nonephemeral";
+    public static final String DICEPOOL = "dicepool";
+
     public static void setupStatisticsCommand(Velen velen) {
         final StatisticsCommand statisticsCommand = new StatisticsCommand();
         List<SlashCommandOption> options = new ArrayList<>();
-        options.add(SlashCommandOption.create(SlashCommandOptionType.STRING, "dicepool", "The dice pool to roll with.", true));
-        options.add(SlashCommandOption.create(SlashCommandOptionType.LONG, "dicekept", "The number of dice kept. Keeps two dice by default.", false));
-        options.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "nonephemeral", "Makes the statistics for the roll visible. Defaults to false.", false));
-        options.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, "devastating", "Makes dice that rolled max be treated as double its value. Defaults to false", false));
+        options.add(SlashCommandOption.create(SlashCommandOptionType.STRING, DICEPOOL, "The dice pool to roll with.", true));
+        options.add(SlashCommandOption.create(SlashCommandOptionType.BOOLEAN, NONEPHEMERAL, "Makes the statistics for the roll visible. Defaults to false.", false));
         VelenCommand.ofHybrid("statistics", "Generates the statistics for a dice pool!", velen, statisticsCommand, statisticsCommand)
                 .addOptions(options.toArray(new SlashCommandOption[0]))
                 .addShortcuts("s", "stat", "stats")
@@ -40,42 +42,45 @@ public class StatisticsCommand implements VelenSlashEvent, VelenEvent {
                 .attach();
     }
 
-    private static String getContent(String dicePool, boolean devastating) {
-        String output = "Here are the statistics for **" + dicePool + "**";
-        if (devastating) {
-            output += " on a **Devastating** roll :sparkles:";
-        }
-        return output;
-    }
-
     @Override
     public void onEvent(MessageCreateEvent event, Message message, User user, String[] args, VelenRoutedOptions options) {
         // Add delete component
         String dicePool = String.join(" ", args);
-        final DicePoolBuilder builder = new DicePoolBuilder(dicePool, s -> s, false);
-        final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new StatisticsLogic(builder).generateEmbed());
-        CompletableFuture<Message> statisticsPM = new MessageBuilder()
-                .setContent("Sent you a PM with your statistics for ")
-                .append(message.getContent(), MessageDecoration.BOLD)
-                .append(" " + user.getMentionTag())
-                .send(event.getChannel());
-        result.thenCompose(builder1 -> new MessageBuilder().setContent("Here are the statistics for **" + dicePool).addEmbed(builder1).send(user)).thenAcceptBoth(statisticsPM, (message1, message2) -> message.delete());
+        final EmbedBuilder result = getStatisticsEmbed(new DicePool(dicePool));
+        user.sendMessage("Here are the statistics for **" + dicePool, result);
     }
 
     @Override
     public void onEvent(SlashCommandCreateEvent originalEvent, SlashCommandInteraction event, User user, VelenArguments args, List<SlashCommandInteractionOption> options, InteractionImmediateResponseBuilder firstResponder) {
-        final Optional<String> dicePool = event.getArgumentStringValueByName("dicepool");
-        final boolean devastating = event.getArgumentBooleanValueByName("devastating").orElse(false);
-        if (dicePool.isPresent()) {
-            final CompletableFuture<EmbedBuilder> result = CompletableFuture.supplyAsync(() -> new StatisticsLogic(new DicePoolBuilder(dicePool.get(), s -> s, devastating).withDiceKept(event.getArgumentLongValueByName("dicekept").map(Math::toIntExact).orElse(2))).generateEmbed());
-
-            final boolean ephemeral = !event.getArgumentBooleanValueByName("nonephemeral").orElse(false);
-            event.respondLater(ephemeral).thenAcceptBoth(result, (updater, embedBuilder) -> {
-                InteractionOriginalResponseUpdater responseUpdater = updater.addEmbed(embedBuilder).setContent(getContent(dicePool.get(), devastating));
-                responseUpdater.update();
-            });
-        } else {
-            firstResponder.setContent("Dice pool not found!").setFlags(MessageFlag.EPHEMERAL).respond();
+        boolean nonephemeral = !event.getArgumentBooleanValueByName(NONEPHEMERAL).orElse(false);
+        CompletableFuture<InteractionOriginalResponseUpdater> updaterFuture = event.respondLater(nonephemeral);
+        Try<DicePool> dicePoolTry = Try.of(() -> event.getArgumentStringValueByName(DICEPOOL).orElseThrow(() -> new IllegalArgumentException("Dice pool not found!")))
+                .mapTry(DicePool::new)
+                .onFailure(throwable -> firstResponder.addEmbed(new EmbedBuilder().setTitle("Error when running command!").setDescription(throwable.getMessage())).respond());
+        if (dicePoolTry.isSuccess()) {
+            DicePool dicePool = dicePoolTry.get();
+            EmbedBuilder results = getStatisticsEmbed(dicePool);
+            updaterFuture.thenAccept(updater -> updater.addEmbed(results).update());
         }
+    }
+
+    private static EmbedBuilder getStatisticsEmbed(DicePool dicePool) {
+        List<ResultStrategy> resultStrategies = List.of(
+                new SumStrategy(),
+                new DifficultyStrategy(),
+                new DoomStrategy(),
+                new OpportunityStrategy(),
+                new StatisticsStrategy()
+        );
+        return Try.of(() -> CompletableFuture.supplyAsync(() -> new DicePoolStatistics(dicePool)).get(30, TimeUnit.SECONDS))
+                .fold(throwable -> new EmbedBuilder().setTitle("Error when running command!").setDescription(throwable.getMessage()),
+                        statistics -> {
+                            EmbedBuilder embed = new EmbedBuilder().setTitle(MessageFormat.format("Statistics for **{0}**", dicePool)).setDescription("Statistics formatting WIP");
+                            resultStrategies.stream()
+                                    .flatMap(resultStrategy -> resultStrategy.executeStrategy(statistics.getResults(), statistics.getResults().values().stream().mapToLong(value -> value).sum()).stream())
+                                    .forEach(embedField -> embed.addInlineField(embedField.getTitle(), embedField.getContent()));
+                            return embed;
+                        });
+
     }
 }
