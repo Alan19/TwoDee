@@ -4,8 +4,8 @@ import calculation.models.Info;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.vavr.control.Try;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.BufferedWriter;
@@ -19,7 +19,7 @@ import java.util.Calendar;
  * Output class for output a json new line delimited form for Google's Big Query. Dice end up being an array object in the Roll Object
  */
 public class BigQueryOutput implements IOutput {
-    private final static Logger LOGGER = LogManager.getLogger(BigQueryOutput.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(BigQueryOutput.class);
     private final static Gson GSON = new GsonBuilder()
             .create();
 

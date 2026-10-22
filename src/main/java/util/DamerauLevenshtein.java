@@ -1,16 +1,15 @@
 package util;
 
 import com.google.common.collect.Lists;
-import doom.DoomHandler;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 public class DamerauLevenshtein {
-    private static final Logger LOGGER = LogManager.getLogger(DamerauLevenshtein.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DamerauLevenshtein.class);
 
     /**
      * Calculates the string distance between source and target strings using

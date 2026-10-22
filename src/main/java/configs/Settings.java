@@ -3,31 +3,55 @@ package configs;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import roles.Player;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Settings {
+    private static final Gson GSON = new GsonBuilder()
+            .setPrettyPrinting()
+            .create();
     public static final Settings instance = new Settings();
-    private static final Logger LOGGER = LogManager.getLogger(Settings.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Settings.class);
     private SettingsInstance settingsInstance;
     private Quotes quotes;
 
     private Settings() {
-        try {
-            settingsInstance = new Gson().fromJson(new BufferedReader(new FileReader("resources/settings.json")), new TypeToken<SettingsInstance>() {
-            }.getType());
-            quotes = new Gson().fromJson(new BufferedReader(new FileReader("resources/quotes.json")), new TypeToken<Quotes>() {
-            }.getType());
-        } catch (FileNotFoundException e) {
+        String settingsFileLocation = Optional.ofNullable(System.getenv("SETTINGS_FILE"))
+                .orElse("resources/settings.json");
+        try (
+                FileReader fileReader = new FileReader(settingsFileLocation);
+                BufferedReader bufferedReader = new BufferedReader(fileReader)
+        ) {
+            settingsInstance = GSON.fromJson(
+                    bufferedReader,
+                    new TypeToken<SettingsInstance>() {
+                    }.getType()
+            );
+        } catch (IOException e) {
             LOGGER.error("Unable to find settings file!");
             settingsInstance = new SettingsInstance();
+        }
+        String quotesFileLocation = Optional.ofNullable(System.getenv("QUOTES_FILE"))
+                .orElse("resources/quotes.json");
+        try (
+                FileReader fileReader = new FileReader(quotesFileLocation);
+                BufferedReader bufferedReader = new BufferedReader(fileReader)
+        ) {
+            quotes = GSON.fromJson(
+                    bufferedReader,
+                    new TypeToken<Quotes>() {
+                    }.getType()
+            );
+        } catch (IOException e) {
+            LOGGER.error("Unable to find quotes file!");
             quotes = new Quotes();
         }
     }
@@ -48,6 +72,10 @@ public class Settings {
         return instance.quotes;
     }
 
+    public static RemoteDataSettings getRemoteDataSettings() {
+        return getSettingsInstance().getRemoteDataSettings();
+    }
+
     private static SettingsInstance getSettingsInstance() {
         return instance.settingsInstance;
     }
@@ -56,22 +84,28 @@ public class Settings {
      * Serializes the values of the settings and writes it to settings.json. Generally used to update doom pools.
      */
     public static void serializePersonalSettings() {
-        try {
-            final BufferedWriter writer = new BufferedWriter(new FileWriter("resources/settings.json"));
-            new GsonBuilder().setPrettyPrinting().create().toJson(Settings.getSettingsInstance(), writer);
-            writer.close();
+        String settingsFileLocation = Optional.ofNullable(System.getenv("SETTINGS_FILE"))
+                .orElse("resources/settings.json");
+        try (
+                FileWriter fileWriter = new FileWriter(settingsFileLocation);
+                BufferedWriter writer = new BufferedWriter(fileWriter)
+        ) {
+            GSON.toJson(Settings.getSettingsInstance(), writer);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Unable to serialize settings file!", e);
         }
     }
 
     protected static void serializeQuotes() {
-        try {
-            final BufferedWriter writer = new BufferedWriter(new FileWriter("resources/quotes.json"));
-            new GsonBuilder().setPrettyPrinting().create().toJson(Settings.getQuotes(), writer);
-            writer.close();
+        String quotesFileLocation = Optional.ofNullable(System.getenv("QUOTES_FILE"))
+                .orElse("resources/quotes.json");
+        try (
+                FileWriter fileWriter = new FileWriter(quotesFileLocation);
+                BufferedWriter writer = new BufferedWriter(fileWriter)
+        ) {
+            GSON.toJson(Settings.getQuotes(), writer);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Unable to serialize quotes file!", e);
         }
     }
 
@@ -93,12 +127,14 @@ public class Settings {
     private static class SettingsInstance {
         private final DoomSettings doom;
         private final DiscordSettings discordSettings;
+        private final RemoteDataSettings remoteDataSettings;
         private final List<Player> players;
 
         public SettingsInstance() {
             doom = new DoomSettings();
             discordSettings = new DiscordSettings();
             players = new ArrayList<>();
+            this.remoteDataSettings = new RemoteDataSettings();
         }
 
         public DoomSettings getDoom() {
@@ -111,6 +147,10 @@ public class Settings {
 
         public List<Player> getPlayers() {
             return players;
+        }
+
+        public RemoteDataSettings getRemoteDataSettings() {
+            return remoteDataSettings;
         }
     }
 }

@@ -15,9 +15,9 @@ public class DoomPoolAutocomplete implements AutocompleteCreateListener {
     public void onAutocompleteCreate(AutocompleteCreateEvent event) {
         if (event.getAutocompleteInteraction().getFocusedOption().getName().equals(DoomLogic.POOL_NAME)) {
             final String enteredValue = event.getAutocompleteInteraction().getFocusedOption().getStringValue().orElse("");
-            final List<SlashCommandOptionChoice> choices = DoomHandler.getDoomPools().keySet().stream()
-                    .filter(poolName -> UtilFunctions.containsIgnoreCase(poolName, enteredValue))
-                    .map(s -> SlashCommandOptionChoice.create(s, s))
+            final List<SlashCommandOptionChoice> choices = DoomHandler.getDoomPools().stream()
+                    .filter(pool -> UtilFunctions.containsIgnoreCase(pool.getName(), enteredValue))
+                    .map(s -> SlashCommandOptionChoice.create(s.getName(), s.getName()))
                     .collect(Collectors.toList());
             event.getAutocompleteInteraction().respondWithChoices(choices);
         }
