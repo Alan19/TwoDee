@@ -11,7 +11,7 @@
     "storytellerRoles": []
   },
   "remoteDataSettings": {
-    "url": "http://localhost:8080",
+    "url": "",
     "token": ""
   },
   "players": []

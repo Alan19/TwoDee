@@ -47,7 +47,7 @@ public final class DoomHandler {
     }
 
     public static void setupRemoteDoom() {
-        if (!getOldDoomPools().isEmpty()) {
+        if (!getOldDoomPools().isEmpty() && !Settings.getRemoteDataSettings().getUrl().isEmpty()) {
             instance.doomSettings
                     .getDoomPools()
                     .entrySet()
@@ -85,20 +85,24 @@ public final class DoomHandler {
     }
 
     private List<RemoteDoomPool> getRemoteDoom() {
-        try {
-            HttpClient httpClient = HttpClient.newHttpClient();
+        if (!Settings.getRemoteDataSettings().getUrl().isEmpty()) {
+            try {
+                HttpClient httpClient = HttpClient.newHttpClient();
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(Settings.getRemoteDataSettings().getUrl() + "/doompool"))
-                    .header("Authorization", "Bearer " + Settings.getRemoteDataSettings().getToken())
-                    .GET()
-                    .build();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(Settings.getRemoteDataSettings().getUrl() + "/doompool"))
+                        .header("Authorization", "Bearer " + Settings.getRemoteDataSettings().getToken())
+                        .GET()
+                        .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            return GSON.fromJson(response.body(), RemoteDoomPool.LIST_TYPE_TOKEN.getType());
-        } catch (Exception e) {
-            LOGGER.error("Failed to read Remote Doom", e);
+                return GSON.fromJson(response.body(), RemoteDoomPool.LIST_TYPE_TOKEN.getType());
+            } catch (Exception e) {
+                LOGGER.error("Failed to read Remote Doom", e);
+                return Collections.emptyList();
+            }
+        } else {
             return Collections.emptyList();
         }
     }

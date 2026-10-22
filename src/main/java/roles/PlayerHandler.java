@@ -68,23 +68,27 @@ public class PlayerHandler {
     }
 
     public CompletableFuture<DiscordApi> uploadPlayersToRemote(DiscordApi discordApi) {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(Settings.getRemoteDataSettings().getUrl() + "/character"))
-                .header("Authorization", "Bearer " + Settings.getRemoteDataSettings().getToken())
-                .GET()
-                .build();
+        if (!Settings.getRemoteDataSettings().getUrl().isEmpty()) {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(Settings.getRemoteDataSettings().getUrl() + "/character"))
+                    .header("Authorization", "Bearer " + Settings.getRemoteDataSettings().getToken())
+                    .GET()
+                    .build();
 
-        return HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .<List<RemoteCharacter>>thenApply(response -> GSON.fromJson(
-                        response.body(),
-                        RemoteCharacter.LIST_TYPE_TOKEN.getType()
-                ))
-                .thenApply(this::getPlayersWithoutRemoteCharacters)
-                .thenCompose(players -> CompletableFuture.allOf(players.stream()
-                        .map(player -> createCharacterFor(discordApi, player))
-                        .toArray(CompletableFuture[]::new)
-                ))
-                .thenApply(ignore -> discordApi);
+            return HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .<List<RemoteCharacter>>thenApply(response -> GSON.fromJson(
+                            response.body(),
+                            RemoteCharacter.LIST_TYPE_TOKEN.getType()
+                    ))
+                    .thenApply(this::getPlayersWithoutRemoteCharacters)
+                    .thenCompose(players -> CompletableFuture.allOf(players.stream()
+                            .map(player -> createCharacterFor(discordApi, player))
+                            .toArray(CompletableFuture[]::new)
+                    ))
+                    .thenApply(ignore -> discordApi);
+        } else {
+            return CompletableFuture.completedFuture(discordApi);
+        }
     }
 
     private List<Player> getPlayersWithoutRemoteCharacters(List<RemoteCharacter> remoteCharacters) {
