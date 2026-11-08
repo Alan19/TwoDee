@@ -1,14 +1,13 @@
 package statistics.opposed.strategy;
 
-import rolling.BuildablePoolResult;
 import statistics.StatisticsLogic;
+import statistics2.StatisticsRollResult;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class SuccessStrategy implements OpposedStrategy {
     @Override
-    public double getProbability(boolean attacker, HashMap<BuildablePoolResult, Long> attackerResults, HashMap<BuildablePoolResult, Long> defenderResults) {
+    public double getProbability(boolean attacker, Map<StatisticsRollResult, Long> attackerResults, Map<StatisticsRollResult, Long> defenderResults) {
         long totalSampleSpace = getTotalSampleSpace(attackerResults, defenderResults);
         Map<Integer, Long> defenderRollStatistics = StatisticsLogic.getRollResultToOccurancesMap(defenderResults);
         long successCount = StatisticsLogic.getRollResultToOccurancesMap(attackerResults)

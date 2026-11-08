@@ -6,22 +6,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Result {
+public class RollResult {
     private final List<Integer> regularDice;
     private final List<RolledDie> plotDice;
     private final List<Integer> keptDice;
     private final List<Integer> chaosDice;
     private final List<Integer> flatBonuses;
-    private final int kept;
+    private final int kept = 2;
     private final int plotDiceCost;
 
-    public Result(List<RolledDie> rolls, List<Integer> flatBonuses, int kept) {
+    public RollResult(List<RolledDie> rolls, List<Integer> flatBonuses) {
         this.regularDice = new ArrayList<>();
         this.plotDice = new ArrayList<>();
         this.keptDice = new ArrayList<>();
         this.chaosDice = new ArrayList<>();
         this.flatBonuses = flatBonuses;
-        this.kept = kept;
         plotDiceCost = rolls.stream().filter(roll -> roll.getType().equals("pd")).mapToInt(RolledDie::getEnhancedValue).sum();
         rolls.forEach(this::acceptDice);
     }

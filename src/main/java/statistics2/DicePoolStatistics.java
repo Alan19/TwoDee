@@ -14,7 +14,7 @@ public class DicePoolStatistics {
     public DicePoolStatistics(DicePool dicePool) {
         Map<DiceType, List<Integer>> dicePoolMap = dicePool.getDicePoolMap();
 
-        StatisticsRollResult seed = new StatisticsRollResult().setFlatBonus(dicePool.getFlatBonus().stream().mapToInt(integer -> integer).sum());
+        StatisticsRollResult seed = new StatisticsRollResult().setFlatBonus(dicePool.getFlatBonusSum());
         results.put(seed, 1L);
         dicePoolMap.forEach((type, dieFacetsList) -> {
             for (Integer dieFacets : dieFacetsList) {

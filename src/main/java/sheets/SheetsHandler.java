@@ -101,7 +101,7 @@ public class SheetsHandler {
         Map<String, String> skills = new HashMap<>();
         valueRange.getValues().stream()
                 .filter(objects -> objects.size() == 2 && ((String) objects.get(1)).matches("([1-9]\\d*)?[kcp]?d[1-9]\\d?"))
-                .forEach(objects -> skills.put(((String) objects.get(0)).toLowerCase().replaceAll("\\s", ""), ((String) (objects.get(1)))));
+                .forEach(objects -> skills.put(((String) objects.getFirst()).toLowerCase().replaceAll("\\s", ""), ((String) (objects.get(1)))));
         return skills;
     }
 
@@ -132,7 +132,7 @@ public class SheetsHandler {
      * @return The number of plot points a user has in an optional, or empty if the user does not have a linked character sheet
      */
     public static Optional<Integer> getPlotPoints(User user) {
-        return getPlotPointRange(user).map(valueRange -> Integer.parseInt((String) valueRange.getValues().get(0).get(0)));
+        return getPlotPointRange(user).map(valueRange -> Integer.parseInt((String) valueRange.getValues().getFirst().getFirst()));
     }
 
     /**
@@ -156,7 +156,7 @@ public class SheetsHandler {
                             .setIncludeValuesInResponse(true)
                             .setValueInputOption("RAW")
                             .execute();
-                    final int updatedPlotPointCount = Integer.parseInt((String) plotPointsCellUpdateRequest.getUpdatedData().getValues().get(0).get(0));
+                    final int updatedPlotPointCount = Integer.parseInt((String) plotPointsCellUpdateRequest.getUpdatedData().getValues().getFirst().getFirst());
                     return Optional.of(updatedPlotPointCount);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -188,7 +188,7 @@ public class SheetsHandler {
         final Optional<String> spreadsheetForUser = getSpreadsheetForPartyMember(user);
         if (spreadsheetForUser.isPresent()) {
             try {
-                return Optional.of(instance.service.spreadsheets().values().get(spreadsheetForUser.get(), "PlotPointBleed").execute()).map(valueRange -> Integer.parseInt((String) valueRange.getValues().get(0).get(0)));
+                return Optional.of(instance.service.spreadsheets().values().get(spreadsheetForUser.get(), "PlotPointBleed").execute()).map(valueRange -> Integer.parseInt((String) valueRange.getValues().getFirst().getFirst()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -223,7 +223,7 @@ public class SheetsHandler {
                             .values()
                             .get(spreadsheetForUser.get(), saveType)
                             .execute())
-                    .map(valueRange -> ((String) (valueRange.getValues().get(0).get(0))).replace(" + ", " "));
+                    .map(valueRange -> ((String) (valueRange.getValues().getFirst().getFirst())).replace(" + ", " "));
 
         }
         return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
@@ -252,7 +252,7 @@ public class SheetsHandler {
                             .execute())
                     .map(valueRange -> valueRange.getValues().stream()
                             .filter(objects -> objects.size() == 2)
-                            .map(objects -> Pair.of(((String) (objects.get(0))).replaceAll("\\s", ""), ((String) (objects.get(1))).replace(" + ", " ")))
+                            .map(objects -> Pair.of(((String) (objects.getFirst())).replaceAll("\\s", ""), ((String) (objects.get(1))).replace(" + ", " ")))
                             .collect(Collectors.toList()));
         }
         return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
@@ -266,7 +266,7 @@ public class SheetsHandler {
                             .execute())
                     .map(valueRange -> valueRange.getValues().stream()
                             .filter(objects -> objects.size() == 2)
-                            .map(objects -> SlashCommandOptionChoice.create(((String) (objects.get(0))), ((String) (objects.get(0))).replaceAll("\\s", "")))
+                            .map(objects -> SlashCommandOptionChoice.create(((String) (objects.getFirst())), ((String) (objects.getFirst())).replaceAll("\\s", "")))
                             .collect(Collectors.toList()));
         }
         return Try.failure(new NoSuchFieldError(MessageFormat.format("Unable to find spreadsheet for user {0}", user.getName())));
@@ -280,7 +280,7 @@ public class SheetsHandler {
      */
     public static Try<Collection<String>> getLanguages(Player player) {
         return Try.of(() -> getRange(player.getSheetId(), "Languages"))
-                .map(valueRange -> (String) valueRange.getValues().get(0).get(0))
+                .map(valueRange -> (String) valueRange.getValues().getFirst().getFirst())
                 .map(value -> Arrays.stream(value.split(","))
                         .map(String::trim)
                         .collect(Collectors.toSet())

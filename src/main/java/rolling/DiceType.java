@@ -24,7 +24,7 @@ public enum DiceType {
     public List<Integer> getSampleSpace(int facets) {
         return switch (this) {
             case REGULAR, PLOT_DIE, KEPT_DIE, ENHANCED_DIE -> IntStream.rangeClosed(1, facets).boxed().toList();
-            case CHAOS_DIE -> IntStream.rangeClosed(-1, facets * -1).boxed().toList();
+            case CHAOS_DIE -> IntStream.rangeClosed(facets * -1, -1).boxed().toList();
             case ASSURED_DIE -> List.of(facets);
         };
     }

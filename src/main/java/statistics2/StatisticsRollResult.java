@@ -50,7 +50,7 @@ public class StatisticsRollResult {
     private StatisticsRollResult addChaosDie(int die) {
         StatisticsRollResult copy = copy();
         copy.chaosDice.add(die);
-        copy.chaosDice.sort(Comparator.reverseOrder());
+        copy.chaosDice.sort(Comparator.naturalOrder());
         copy.chaosDice = copy.chaosDice.subList(0, Math.min(2, copy.chaosDice.size()));
         return copy;
     }
@@ -67,9 +67,18 @@ public class StatisticsRollResult {
     }
 
     // Adds a plot die to the pool. We are accepting the result from the calling function since the calling function knows if a minimum value should be set.
+    // If there's already a plot die, then move the lower of the two to a normal die
     private StatisticsRollResult addPlotDie(int die) {
         StatisticsRollResult copy = copy();
-        copy.chosenPlotDie = Math.max(copy.chosenPlotDie, die);
+        if (copy.chosenPlotDie == 0) {
+            copy.chosenPlotDie = die;
+        }
+        else {
+            copy.chosenPlotDie = Math.max(die, chosenPlotDie);
+            copy.normalDice.add(Math.min(die, chosenPlotDie));
+            copy.normalDice.sort(Comparator.reverseOrder());
+            copy.normalDice = copy.normalDice.subList(0, Math.min(2, copy.normalDice.size()));
+        }
         if (die == 1) {
             copy.doomGenerated++;
         }
@@ -106,7 +115,7 @@ public class StatisticsRollResult {
     }
 
     public int getTotal() {
-        return flatBonus + chosenPlotDie + keptDice.stream().mapToInt(value -> value).sum() + normalDice.stream().mapToInt(value -> value).sum();
+        return flatBonus + chosenPlotDie + keptDice.stream().mapToInt(value -> value).sum() + normalDice.stream().mapToInt(value -> value).sum() + chaosDice.stream().mapToInt(value -> value).sum();
     }
 
     public int getDoomGenerated() {

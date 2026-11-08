@@ -3,6 +3,7 @@ package statistics2;
 import exceptions.InvalidUserInputException;
 import rolling.DicePoolBuilder;
 import rolling.DiceType;
+import rolling.RollResult2;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -48,8 +49,8 @@ public class DicePool {
         return dicePoolMap;
     }
 
-    public List<Integer> getFlatBonus() {
-        return flatBonus;
+    public int getFlatBonusSum() {
+        return flatBonus.stream().mapToInt(value -> value).sum();
     }
 
     private void addDiceToPool(Matcher diceMatcher) {
@@ -62,12 +63,15 @@ public class DicePool {
         int diceCount = count.isEmpty() ? 1 : Integer.parseInt(count);
         int facets = Integer.parseInt(diceMatcher.group("facets"));
         for (int i = 0; i < diceCount; i++) {
-            if (dicePoolMap.containsKey(matchedDieType)) {
-                dicePoolMap.get(matchedDieType).add(facets);
-            }
-            else {
-                dicePoolMap.put(matchedDieType, new ArrayList<>(List.of(facets)));
-            }
+            dicePoolMap.computeIfAbsent(matchedDieType, _ -> new ArrayList<>()).add(facets);
         }
+    }
+
+    public RollResult2 roll() {
+        return new RollResult2(dicePoolMap, getFlatBonusSum());
+    }
+
+    public boolean isPlotDiceUsed() {
+        return !dicePoolMap.getOrDefault(DiceType.PLOT_DIE, new ArrayList<>()).isEmpty() && !dicePoolMap.getOrDefault(DiceType.PLOT_DIE, new ArrayList<>()).isEmpty();
     }
 }
