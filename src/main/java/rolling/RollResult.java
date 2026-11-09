@@ -27,7 +27,7 @@ public class RollResult {
             rolledDice.put(category, new ArrayList<>());
         }
 
-        boolean plotDieMinimum = dicePool.get(DiceType.PLOT_DIE).size() + dicePool.get(DiceType.ENHANCED_DIE).size() > 1;
+        boolean plotDieMinimum = dicePool.getOrDefault(DiceType.PLOT_DIE, new ArrayList<>()).size() + dicePool.getOrDefault(DiceType.ENHANCED_DIE, new ArrayList<>()).size() > 1;
         plotDiceCost = dicePool.getOrDefault(DiceType.PLOT_DIE, new ArrayList<>()).stream().mapToInt(integer -> integer / 2).sum();
         dicePool.forEach((diceType, diceFacets) -> {
             for (Integer facets : diceFacets) {

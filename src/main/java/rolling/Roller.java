@@ -25,9 +25,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static rolling.DicePoolBuilder.*;
-
 public class Roller {
+    public static final Pattern DICE_PATTERN = Pattern.compile("(?<count>\\d*)(?<type>[kpeca]?d)(?<facets>\\d+)");
+    public static final Pattern FLAT_BONUS_PATTERN = Pattern.compile("\\+(?<value>[1-9]\\d*)");
+    public static final Pattern FLAT_PENALTY_PATTERN = Pattern.compile("-(?<value>[1-9]\\d*)");
+
     private Roller() {
         /* This utility class should not be instantiated */
     }
@@ -81,7 +83,7 @@ public class Roller {
             final int count = UtilFunctions.tryParseInt(diceMatcher.group("count")).orElse(1);
             final String type = diceMatcher.group("type");
             final int facets = Integer.parseInt(diceMatcher.group("facets"));
-            return Try.success(Either.left(IntStream.range(0, count).mapToObj(value -> new Dice(type, facets)).toList()));
+            return Try.success(Either.left(IntStream.range(0, count).mapToObj(_ -> new Dice(type, facets)).toList()));
         }
         //Flat bonus
         else if (flatBonusMatcher.matches()) {

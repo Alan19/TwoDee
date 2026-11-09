@@ -5,7 +5,6 @@ public record RollParameters(
         int discount,
         Boolean enhanceable,
         boolean opportunity,
-        int diceKept,
-        boolean devastating
+        int diceKept
 ) {
 }

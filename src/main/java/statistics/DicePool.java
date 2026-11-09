@@ -1,9 +1,9 @@
 package statistics;
 
 import exceptions.InvalidUserInputException;
-import rolling.DicePoolBuilder;
 import rolling.DiceType;
 import rolling.RollResult;
+import rolling.Roller;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -18,9 +18,9 @@ public class DicePool {
         this.input = input;
         String[] dicePoolArray = input.split(" ");
         for (String die : dicePoolArray) {
-            final Matcher diceMatcher = DicePoolBuilder.DICE_PATTERN.matcher(die);
-            final Matcher flatBonusMatcher = DicePoolBuilder.FLAT_BONUS_PATTERN.matcher(die);
-            final Matcher flatPenaltyMatcher = DicePoolBuilder.FLAT_PENALTY_PATTERN.matcher(die);
+            final Matcher diceMatcher = Roller.DICE_PATTERN.matcher(die);
+            final Matcher flatBonusMatcher = Roller.FLAT_BONUS_PATTERN.matcher(die);
+            final Matcher flatPenaltyMatcher = Roller.FLAT_PENALTY_PATTERN.matcher(die);
             //Any type of dice
             if (diceMatcher.matches()) {
                 addDiceToPool(diceMatcher);
