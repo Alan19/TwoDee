@@ -202,8 +202,13 @@ public class RollComponentInteractionListener implements ButtonClickListener {
      * @return A completable future indicating that the plot points and doom points have been rolled back
      */
     private CompletableFuture<Void> rollBackChanges() {
-        PlayerHandler.getPlayerFromUser(user).map(Player::getDoomPool).ifPresent(s -> DoomHandler.setDoom(s, originalDoomPoints));
-        return SheetsHandler.setPlotPoints(user, originalPlotPoints).thenAccept(integer -> {});
+        return CompletableFuture.allOf(
+                PlayerHandler.getPlayerFromUser(user)
+                        .map(Player::getDoomPool)
+                        .map(s -> DoomHandler.setDoomAsync(s, originalDoomPoints))
+                        .orElseGet(() -> CompletableFuture.completedFuture(null)),
+                SheetsHandler.setPlotPoints(user, originalPlotPoints)
+        );
     }
 
     /**

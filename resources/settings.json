@@ -10,5 +10,9 @@
     "token": "",
     "storytellerRoles": []
   },
+  "remoteDataSettings": {
+    "url": "",
+    "token": ""
+  },
   "players": []
 }

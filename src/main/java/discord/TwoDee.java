@@ -1,27 +1,31 @@
 package discord;
 
 import configs.Settings;
+import doom.DoomHandler;
 import language.LanguageLogic;
 import listeners.DoomPoolAutocomplete;
 import listeners.LanguageAutocompleteListener;
 import listeners.PoolAutocompleteListener;
 import logic.AwardContextMenu;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.util.logging.ExceptionLogger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pw.mihou.velen.interfaces.Velen;
 import pw.mihou.velen.internals.observer.VelenObserver;
 import pw.mihou.velen.internals.observer.modes.ObserverMode;
+import roles.PlayerHandler;
 import slashcommands.SlashCommandRegister;
 
 import java.io.File;
 
 public class TwoDee {
-    private static final Logger LOGGER = LogManager.getLogger(TwoDee.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TwoDee.class);
 
     public static void main(String[] args) {
+
+        DoomHandler.setupRemoteDoom();
         String token = Settings.getDiscordSettings().getToken();
 
         LanguageLogic languageLogic = LanguageLogic.of(new File("resources/languages.json"))
@@ -31,17 +35,23 @@ public class TwoDee {
                 );
 
         final Velen velen = SlashCommandRegister.setupVelen(languageLogic);
-        new DiscordApiBuilder().setToken(token).setAllIntentsExcept(Intent.GUILD_PRESENCES).setUserCacheEnabled(true).addListener(velen).login().thenAccept(api -> {
-                    System.out.println("You can invite the bot by using the following url: " + api.createBotInvite() + "&scope=bot%20applications.commands");
+        new DiscordApiBuilder()
+                .setToken(token)
+                .setAllIntentsExcept(Intent.GUILD_PRESENCES)
+                .setUserCacheEnabled(true)
+                .addListener(velen)
+                .login()
+                .thenCompose(PlayerHandler.getInstance()::uploadPlayersToRemote)
+                .thenAccept(api -> {
+                    LOGGER.info("You can invite the bot by using the following url: {}&scope=bot%20applications.commands", api.createBotInvite());
                     velen.registerAllSlashCommands(api);
                     //Send startup message
                     Settings.getDiscordSettings().getAnnouncementChannels().forEach(id -> {
                         var channel = api.getTextChannelById(id);
                         if (channel.isPresent()) {
                             channel.get().sendMessage(Settings.getQuotes().getRandomStartupQuote());
-                        }
-                        else {
-                            LOGGER.error("Failed to find channel for ID: %d".formatted(id));
+                        } else {
+                            LOGGER.error("Failed to find channel for ID: {}", id);
                         }
                     });
                     AwardContextMenu.setupContextMenu(api);
