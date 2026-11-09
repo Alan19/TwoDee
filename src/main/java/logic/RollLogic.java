@@ -143,7 +143,7 @@ public class RollLogic implements VelenHybridHandler {
      * @param pool The pool that entered
      * @return A Try that attempts to convert a string with a skill into a string with only dice, or an exception if a skill cannot be found
      */
-    private static Try<String> convertSkillsToDice(User user, String pool) {
+    public static Try<String> convertSkillsToDice(User user, String pool) {
         // We use join to get access to CompletionException, which would allow us to handle the exceptions thrown in the CompletableFuture
         return Try.of(() -> SheetsHandler.getSkills(user).get())
                 .map(map -> Arrays.stream(pool.split(" "))
