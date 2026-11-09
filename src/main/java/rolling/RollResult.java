@@ -1,37 +1,59 @@
 package rolling;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.security.SecureRandom;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class RollResult {
-    private final List<Integer> regularDice;
-    private final List<RolledDie> plotDice;
-    private final List<Integer> keptDice;
-    private final List<Integer> chaosDice;
-    private final List<Integer> flatBonuses;
-    private final int kept = 2;
+    private final EnumMap<ResultDiceCategories, List<Integer>> rolledDice = new EnumMap<>(ResultDiceCategories.class);
+    private final int kept;
     private final int plotDiceCost;
+    private final Random random = new SecureRandom();
 
-    public RollResult(List<RolledDie> rolls, List<Integer> flatBonuses) {
-        this.regularDice = new ArrayList<>();
-        this.plotDice = new ArrayList<>();
-        this.keptDice = new ArrayList<>();
-        this.chaosDice = new ArrayList<>();
-        this.flatBonuses = flatBonuses;
+    // Manual entry for testing
+    public RollResult(List<RolledDie> rolls, List<Integer> flatBonuses, int diceKept) {
+        kept = diceKept;
+        Arrays.stream(ResultDiceCategories.values()).forEach(category -> rolledDice.put(category, new ArrayList<>()));
+
         plotDiceCost = rolls.stream().filter(roll -> roll.getType().equals("pd")).mapToInt(RolledDie::getEnhancedValue).sum();
         rolls.forEach(this::acceptDice);
+        rolledDice.put(ResultDiceCategories.FLAT_BONUS, flatBonuses);
+    }
+
+    // Alternative constructor that rolls the dice in the constructor
+    public RollResult(Map<DiceType, List<Integer>> dicePool, int flatBonusSum, int diceKept) {
+        kept = diceKept;
+        for (ResultDiceCategories category : ResultDiceCategories.values()) {
+            rolledDice.put(category, new ArrayList<>());
+        }
+
+        boolean plotDieMinimum = dicePool.get(DiceType.PLOT_DIE).size() + dicePool.get(DiceType.ENHANCED_DIE).size() > 1;
+        plotDiceCost = dicePool.getOrDefault(DiceType.PLOT_DIE, new ArrayList<>()).stream().mapToInt(integer -> integer / 2).sum();
+        dicePool.forEach((diceType, diceFacets) -> {
+            for (Integer facets : diceFacets) {
+                acceptDice(diceType, facets, plotDieMinimum);
+            }
+        });
+        rolledDice.put(ResultDiceCategories.FLAT_BONUS, List.of(flatBonusSum));
     }
 
 
+    private void acceptDice(DiceType dice, int facets, boolean plotDieMinimum) {
+        switch (dice) {
+            case REGULAR -> rolledDice.get(ResultDiceCategories.REGULAR).add(random.nextInt(1, facets + 1));
+            case ASSURED_DIE -> rolledDice.get(ResultDiceCategories.REGULAR).add(facets);
+            case PLOT_DIE, ENHANCED_DIE -> rolledDice.get(ResultDiceCategories.PLOT_DIE).add(plotDieMinimum ? Math.max(facets / 2, random.nextInt(1, facets + 1)) : random.nextInt(1, facets + 1));
+            case KEPT_DIE -> rolledDice.get(ResultDiceCategories.KEPT_DIE).add(random.nextInt(1, facets + 1));
+            case CHAOS_DIE -> rolledDice.get(ResultDiceCategories.CHAOS_DIE).add(random.nextInt(facets * -1 + 1, 0));
+        }
+    }
+
     private void acceptDice(RolledDie roll) {
         switch (roll.getType()) {
-            case "pd", "ed" -> plotDice.add(roll);
-            case "cd" -> chaosDice.add(roll.getValue());
-            case "kd" -> keptDice.add(roll.getValue());
-            default -> regularDice.add(roll.getValue());
+            case "pd", "ed" -> rolledDice.get(ResultDiceCategories.PLOT_DIE).add(roll.getValue());
+            case "cd" -> rolledDice.get(ResultDiceCategories.CHAOS_DIE).add(roll.getValue() * -1);
+            case "kd" -> rolledDice.get(ResultDiceCategories.KEPT_DIE).add(roll.getValue());
+            default -> rolledDice.get(ResultDiceCategories.REGULAR).add(roll.getValue());
         }
     }
 
@@ -40,45 +62,42 @@ public class RollResult {
     }
 
     public List<Integer> getDroppedDice() {
-        final Stream<Integer> droppedRegularDice = Stream.concat(regularDice.stream(), getPlotDice().stream().skip(1)).sorted(Comparator.reverseOrder()).skip(kept);
-        return Stream.concat(getChaosDiceStream().sorted(Comparator.naturalOrder()).skip(2), droppedRegularDice).collect(Collectors.toList());
+        final Stream<Integer> droppedRegularDice = Stream.concat(rolledDice.get(ResultDiceCategories.REGULAR).stream(), getPlotDice().stream().skip(1)).sorted(Comparator.reverseOrder()).skip(kept);
+        return Stream.concat(getChaosDiceStream().sorted(Comparator.naturalOrder()).skip(2), droppedRegularDice).toList();
     }
 
     public List<Integer> getFlatBonuses() {
-        return flatBonuses;
+        return rolledDice.get(ResultDiceCategories.FLAT_BONUS);
     }
 
     public List<Integer> getPickedDice() {
-        Stream<Integer> pickedRegularDice = Stream.concat(regularDice.stream(), getPlotDice().stream().sorted(Comparator.reverseOrder()).skip(1)).sorted(Comparator.reverseOrder()).limit(kept);
+        Stream<Integer> pickedRegularDice = Stream.concat(rolledDice.get(ResultDiceCategories.REGULAR).stream(), getPlotDice().stream().sorted(Comparator.reverseOrder()).skip(1)).sorted(Comparator.reverseOrder()).limit(kept);
         pickedRegularDice = Stream.concat(pickedRegularDice, getPlotDice().stream().sorted(Comparator.reverseOrder()).limit(1));
-        final Stream<Integer> pickedChaosDiceAndKeptDice = Stream.concat(getChaosDiceStream().sorted(Comparator.naturalOrder()).limit(2), keptDice.stream());
-        return Stream.concat(pickedRegularDice, pickedChaosDiceAndKeptDice).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+        final Stream<Integer> pickedChaosDiceAndKeptDice = Stream.concat(getChaosDiceStream().sorted(Comparator.naturalOrder()).limit(2), rolledDice.get(ResultDiceCategories.KEPT_DIE).stream());
+        return Stream.concat(pickedRegularDice, pickedChaosDiceAndKeptDice).sorted(Comparator.reverseOrder()).toList();
     }
 
     public List<Integer> getKeptDice() {
-        return keptDice;
+        return rolledDice.get(ResultDiceCategories.KEPT_DIE);
     }
 
     public List<Integer> getPlotDice() {
-        return plotDice.stream()
-                .map(integer -> (plotDice.size() <= 1) ? Math.max(integer.getValue(), integer.getEnhancedValue()) : integer.getValue())
-                .collect(Collectors.toList());
+        return rolledDice.get(ResultDiceCategories.PLOT_DIE);
     }
 
     private Stream<Integer> getChaosDiceStream() {
-        return chaosDice.stream().map(integer -> integer * -1);
+        return rolledDice.get(ResultDiceCategories.CHAOS_DIE).stream();
     }
 
     public List<Integer> getRegularAndChaosDice() {
-        return Stream.concat(regularDice.stream(), getChaosDiceStream()).collect(Collectors.toList());
+        return Stream.concat(rolledDice.get(ResultDiceCategories.REGULAR).stream(), rolledDice.get(ResultDiceCategories.CHAOS_DIE).stream()).toList();
     }
 
     public int getOpportunities() {
-        Stream<Integer> streamsToCheck = Stream.concat(regularDice.stream(), keptDice.stream());
-        if (plotDice.size() > 1) {
-            streamsToCheck = Stream.concat(streamsToCheck, plotDice.stream().skip(1).map(RolledDie::getValue));
-        }
-        return Math.toIntExact(streamsToCheck.filter(integer -> integer == 1).count());
+        return Math.toIntExact(Stream.of(rolledDice.get(ResultDiceCategories.REGULAR), rolledDice.get(ResultDiceCategories.PLOT_DIE), rolledDice.get(ResultDiceCategories.KEPT_DIE))
+                .flatMap(Collection::stream)
+                .filter(integer -> integer == 1)
+                .count());
     }
 
     public int getPlotDiceCost() {

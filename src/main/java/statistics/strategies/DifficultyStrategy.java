@@ -3,7 +3,7 @@ package statistics.strategies;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.tuple.Triple;
 import statistics.StatisticsLogic;
-import statistics2.StatisticsRollResult;
+import statistics.StatisticsRollResult;
 import util.EmbedField;
 
 import java.util.List;

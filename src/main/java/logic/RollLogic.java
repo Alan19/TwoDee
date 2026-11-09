@@ -18,12 +18,10 @@ import pw.mihou.velen.interfaces.hybrid.event.VelenGeneralEvent;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenHybridArguments;
 import pw.mihou.velen.interfaces.hybrid.objects.VelenOption;
 import pw.mihou.velen.interfaces.hybrid.responder.VelenGeneralResponder;
-import rolling.Result;
-import rolling.RollOutput;
-import rolling.RollParameters;
-import rolling.Roller;
+import rolling.*;
 import sheets.PlotPointUtils;
 import sheets.SheetsHandler;
+import statistics.DicePool;
 import util.ComponentUtils;
 import util.RandomColor;
 import util.UtilFunctions;
@@ -107,9 +105,9 @@ public class RollLogic implements VelenHybridHandler {
      * @return A CompletableFuture that contains a Triple that that has a list of the embeds to send, a boolean states if the roll uses any plot dice, and the total of the roll
      */
     public static Try<RollOutput> rollDice(String dicePool, Integer discount, Integer diceKept, Boolean opportunity, boolean devastating, User user, String username) {
-        return Roller.parse(dicePool, pool -> convertSkillsToDice(user, pool))
-                .map(Roller::roll)
-                .map(pair -> new Result(pair.getLeft(), pair.getRight(), diceKept))
+        return convertSkillsToDice(user, dicePool)
+                .map(DicePool::new)
+                .map(pool -> pool.roll(diceKept))
                 // TODO Convert to CompletableFuture earlier
                 .map(result -> Roller.handlePoints(result, discount, opportunity, value -> DoomHandler.addDoomOnOpportunity(user, value), value -> PlotPointUtils.addPlotPointsOnRoll(user, value)))
                 .map(changes -> Roller.output(changes, builder -> postProcessResult(dicePool, user, builder, username, devastating), DoomHandler.getDoomPoolOrDefault(user), discount, opportunity));

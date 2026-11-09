@@ -1,4 +1,4 @@
-package statistics2;
+package statistics;
 
 import com.google.common.math.LongMath;
 import rolling.DiceType;

@@ -1,4 +1,4 @@
-package statistics2;
+package statistics;
 
 import java.util.Scanner;
 

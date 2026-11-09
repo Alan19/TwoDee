@@ -13,7 +13,7 @@ public enum DiceType {
 
     private final String abbreviation;
 
-    private DiceType(String abbreviation) {
+    DiceType(String abbreviation) {
         this.abbreviation = abbreviation;
     }
 

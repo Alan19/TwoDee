@@ -1,6 +1,6 @@
 package statistics.strategies;
 
-import statistics2.StatisticsRollResult;
+import statistics.StatisticsRollResult;
 import util.EmbedField;
 
 import java.util.List;

@@ -1,7 +1,7 @@
 package statistics.opposed.strategy;
 
 import statistics.StatisticsLogic;
-import statistics2.StatisticsRollResult;
+import statistics.StatisticsRollResult;
 
 import java.util.Map;
 

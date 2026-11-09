@@ -1,9 +1,9 @@
-package statistics2;
+package statistics;
 
 import exceptions.InvalidUserInputException;
 import rolling.DicePoolBuilder;
 import rolling.DiceType;
-import rolling.RollResult2;
+import rolling.RollResult;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -67,8 +67,8 @@ public class DicePool {
         }
     }
 
-    public RollResult2 roll() {
-        return new RollResult2(dicePoolMap, getFlatBonusSum());
+    public RollResult roll(int diceKept) {
+        return new RollResult(dicePoolMap, getFlatBonusSum(), diceKept);
     }
 
     public boolean isPlotDiceUsed() {

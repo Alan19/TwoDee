@@ -28,6 +28,10 @@ import java.util.stream.IntStream;
 import static rolling.DicePoolBuilder.*;
 
 public class Roller {
+    private Roller() {
+        /* This utility class should not be instantiated */
+    }
+
 
     private static final Random random = new SecureRandom();
     public static final String NONE = "*none*";
@@ -77,7 +81,7 @@ public class Roller {
             final int count = UtilFunctions.tryParseInt(diceMatcher.group("count")).orElse(1);
             final String type = diceMatcher.group("type");
             final int facets = Integer.parseInt(diceMatcher.group("facets"));
-            return Try.success(Either.left(IntStream.range(0, count).mapToObj(value -> new Dice(type, facets)).collect(Collectors.toList())));
+            return Try.success(Either.left(IntStream.range(0, count).mapToObj(value -> new Dice(type, facets)).toList()));
         }
         //Flat bonus
         else if (flatBonusMatcher.matches()) {
@@ -99,7 +103,7 @@ public class Roller {
      * @return A pair with a list of dice roll results, and a list of roll modifiers
      */
     public static Pair<List<RolledDie>, List<Integer>> roll(Pair<List<Dice>, List<Integer>> diceModifierPair) {
-        return Pair.of(diceModifierPair.getLeft().stream().map(Roller::createRoll).collect(Collectors.toList()), diceModifierPair.getRight());
+        return Pair.of(diceModifierPair.getLeft().stream().map(Roller::createRoll).toList(), diceModifierPair.getRight());
     }
 
     /**
@@ -126,7 +130,7 @@ public class Roller {
      * @param plotPointHandler Function to handle changes in plot points from plot dice and opportunities
      * @return An object with the result and the changes in plot and doom points
      */
-    public static PointChange handlePoints(Result result, int discount, boolean opportunities, IntFunction<Integer> doomHandler, IntFunction<CompletableFuture<Integer>> plotPointHandler) {
+    public static PointChange handlePoints(RollResult result, int discount, boolean opportunities, IntFunction<Integer> doomHandler, IntFunction<CompletableFuture<Integer>> plotPointHandler) {
         int doomCount = opportunities ? result.getOpportunities() : 0;
         int plotPointsSpent = result.getPlotDiceCost() - discount;
         if (doomCount > 0) {

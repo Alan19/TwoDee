@@ -19,23 +19,24 @@ class DiceRollerTest {
 
     private Try<Pair<List<Dice>, List<Integer>>> pool;
     private Pair<List<RolledDie>, List<Integer>> roll;
-    private Result result;
+    private RollResult result;
 
     @BeforeEach
     void setUp() {
-        pool = Roller.parse("2d8 d6 pd4 cd8 +1 stealth", s -> Try.success(s.replace("stealth", "d8")));
+        pool = Roller.parse("2d8 d6 pd4 cd8 +1 stealth ad8", s -> Try.success(s.replace("stealth", "d8")));
         roll = Roller.roll(Pair.of(Arrays.asList(new Dice("d", 12), new Dice("pd", 12), new Dice("cd", 12)), Arrays.asList(3, -2)));
-        result = new Result(Arrays.asList(new RolledDie("d", 4),
+        result = new RollResult(Arrays.asList(new RolledDie("d", 4),
                 new RolledDie("d", 1),
                 new RolledDie("pd", 12, 6),
                 new RolledDie("ed", 12, 6),
                 new RolledDie("cd", 3),
+                new RolledDie("ad", 8),
                 new RolledDie("kd", 1)), Arrays.asList(6, -3), 2);
     }
 
     @Test
     void testDiceCount() {
-        assertEquals(6, pool.map(Pair::getLeft).get().size());
+        assertEquals(7, pool.map(Pair::getLeft).get().size());
     }
 
     @Test
@@ -58,7 +59,7 @@ class DiceRollerTest {
 
     @Test
     void testResult() {
-        assertEquals(29, result.getTotal());
+        assertEquals(33, result.getTotal());
     }
 
     @AfterEach

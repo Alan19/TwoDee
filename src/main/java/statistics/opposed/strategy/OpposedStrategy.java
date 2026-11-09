@@ -1,6 +1,6 @@
 package statistics.opposed.strategy;
 
-import statistics2.StatisticsRollResult;
+import statistics.StatisticsRollResult;
 
 import java.text.DecimalFormat;
 import java.util.Map;

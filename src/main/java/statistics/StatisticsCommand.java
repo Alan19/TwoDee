@@ -15,8 +15,6 @@ import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import pw.mihou.velen.interfaces.*;
 import pw.mihou.velen.interfaces.routed.VelenRoutedOptions;
 import statistics.strategies.*;
-import statistics2.DicePool;
-import statistics2.DicePoolStatistics;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;

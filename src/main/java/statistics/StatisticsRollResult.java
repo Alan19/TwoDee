@@ -1,4 +1,4 @@
-package statistics2;
+package statistics;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultiset;

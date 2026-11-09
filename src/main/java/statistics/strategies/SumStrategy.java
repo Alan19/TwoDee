@@ -1,7 +1,7 @@
 package statistics.strategies;
 
 import statistics.StatisticsLogic;
-import statistics2.StatisticsRollResult;
+import statistics.StatisticsRollResult;
 import util.EmbedField;
 
 import java.util.ArrayList;

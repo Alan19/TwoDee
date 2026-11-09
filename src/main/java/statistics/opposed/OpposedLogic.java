@@ -20,7 +20,7 @@
 //import statistics.opposed.strategy.ExtraordinarySuccessStrategy;
 //import statistics.opposed.strategy.OpposedStrategy;
 //import statistics.opposed.strategy.SuccessStrategy;
-//import statistics2.StatisticsRollResult;
+//import statistics.StatisticsRollResult;
 //
 //import java.util.HashMap;
 //import java.util.List;

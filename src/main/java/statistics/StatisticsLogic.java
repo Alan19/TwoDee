@@ -2,7 +2,6 @@ package statistics;
 
 import com.google.common.math.LongMath;
 import io.vavr.control.Try;
-import statistics2.StatisticsRollResult;
 
 import java.util.HashMap;
 import java.util.Map;
