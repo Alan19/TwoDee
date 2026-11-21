@@ -25,9 +25,15 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static rolling.DicePoolBuilder.*;
-
 public class Roller {
+    public static final Pattern DICE_PATTERN = Pattern.compile("(?<count>\\d*)(?<type>[kpeca]?d)(?<facets>\\d+)");
+    public static final Pattern FLAT_BONUS_PATTERN = Pattern.compile("\\+(?<value>[1-9]\\d*)");
+    public static final Pattern FLAT_PENALTY_PATTERN = Pattern.compile("-(?<value>[1-9]\\d*)");
+
+    private Roller() {
+        /* This utility class should not be instantiated */
+    }
+
 
     private static final Random random = new SecureRandom();
     public static final String NONE = "*none*";
@@ -77,7 +83,7 @@ public class Roller {
             final int count = UtilFunctions.tryParseInt(diceMatcher.group("count")).orElse(1);
             final String type = diceMatcher.group("type");
             final int facets = Integer.parseInt(diceMatcher.group("facets"));
-            return Try.success(Either.left(IntStream.range(0, count).mapToObj(value -> new Dice(type, facets)).collect(Collectors.toList())));
+            return Try.success(Either.left(IntStream.range(0, count).mapToObj(_ -> new Dice(type, facets)).toList()));
         }
         //Flat bonus
         else if (flatBonusMatcher.matches()) {
@@ -96,29 +102,25 @@ public class Roller {
      * Rolls each dice in the dice pool
      *
      * @param diceModifierPair A pair that contains a list of dice to be rolled, and the list of modifiers
-     * @param devastating      If rolled die values should be doubled if they roll max
      * @return A pair with a list of dice roll results, and a list of roll modifiers
      */
-    public static Pair<List<RolledDie>, List<Integer>> roll(Pair<List<Dice>, List<Integer>> diceModifierPair, boolean devastating) {
-        return Pair.of(diceModifierPair.getLeft().stream().map(dice -> createRoll(dice, devastating)).collect(Collectors.toList()), diceModifierPair.getRight());
+    public static Pair<List<RolledDie>, List<Integer>> roll(Pair<List<Dice>, List<Integer>> diceModifierPair) {
+        return Pair.of(diceModifierPair.getLeft().stream().map(Roller::createRoll).toList(), diceModifierPair.getRight());
     }
 
     /**
      * Roll a die, and give it a minimum value if it's a plot die / enhanced die
      *
      * @param dice        The information on the die to roll
-     * @param devastating If die value should be doubled in case the roll is maxed
      * @return The result of the rolled die
      */
-    private static RolledDie createRoll(Dice dice, boolean devastating) {
+    private static RolledDie createRoll(Dice dice) {
         int rolledValue = random.nextInt(dice.value()) + 1;
-        if (dice.getType() != DiceType.CHAOS_DIE && devastating && rolledValue == dice.value()) {
-            rolledValue = rolledValue * 2;
-        }
-        if (dice.name().equals("pd") || dice.name().equals("ed")) {
-            return new RolledDie(dice.name(), rolledValue, dice.value() / 2);
-        }
-        return new RolledDie(dice.name(), rolledValue);
+        return switch (dice.getType()) {
+            case REGULAR, CHAOS_DIE, KEPT_DIE -> new RolledDie(dice.name(), rolledValue);
+            case PLOT_DIE, ENHANCED_DIE -> new RolledDie(dice.name(), rolledValue, dice.value() / 2);
+            case ASSURED_DIE -> new RolledDie(dice.name(), dice.value());
+        };
     }
 
     /**
@@ -130,7 +132,7 @@ public class Roller {
      * @param plotPointHandler Function to handle changes in plot points from plot dice and opportunities
      * @return An object with the result and the changes in plot and doom points
      */
-    public static PointChange handlePoints(Result result, int discount, boolean opportunities, IntFunction<Integer> doomHandler, IntFunction<CompletableFuture<Integer>> plotPointHandler) {
+    public static PointChange handlePoints(RollResult result, int discount, boolean opportunities, IntFunction<Integer> doomHandler, IntFunction<CompletableFuture<Integer>> plotPointHandler) {
         int doomCount = opportunities ? result.getOpportunities() : 0;
         int plotPointsSpent = result.getPlotDiceCost() - discount;
         if (doomCount > 0) {

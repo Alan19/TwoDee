@@ -17,6 +17,10 @@ import java.util.stream.Stream;
  * Class to manage modifications to the plot point and bleed cells
  */
 public class PlotPointUtils {
+    private PlotPointUtils() {
+        /* This utility class should not be instantiated */
+    }
+
 
     public static CompletableFuture<Optional<Integer>> addPlotPointsToUser(User user, Integer amount) {
         final Optional<Integer> oldPlotPointCount = SheetsHandler.getPlotPoints(user);
@@ -62,6 +66,6 @@ public class PlotPointUtils {
                     }
                 }));
 
-        return CompletableFuture.allOf(addPointsFuture.toArray(CompletableFuture[]::new)).thenApply(unused -> new PlotPointChangeResult(changes, errors));
+        return CompletableFuture.allOf(addPointsFuture.toArray(CompletableFuture[]::new)).thenApply(_ -> new PlotPointChangeResult(changes, errors));
     }
 }
