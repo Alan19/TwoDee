@@ -25,18 +25,4 @@ public interface ResultStrategy {
         return df.format(resultProbability);
     }
 
-    /**
-     * Gets the total sample space of the opposed check, which is equal to the product of all the dice in both pools
-     *
-     * @param attackerMap The Map of all rolls for the attacker
-     * @param defenderMap The Map of all rolls for the defender
-     * @return The sample space of the union of the sample spaces of the outcomes for the attack and defense pool
-     * @throws ArithmeticException If the total sample space is larger than the long integer limit
-     */
-    default Long getTotalSampleSpace(Map<StatisticsRollResult, Long> attackerMap, Map<StatisticsRollResult, Long> defenderMap) throws ArithmeticException {
-        Long attackerSampleSpace = attackerMap.values().stream().reduce(0L, Math::addExact);
-        Long defenderSampleSpace = defenderMap.values().stream().reduce(0L, Math::addExact);
-
-        return Math.multiplyExact(attackerSampleSpace, defenderSampleSpace);
-    }
 }
